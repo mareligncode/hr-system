@@ -6,7 +6,11 @@ import ForgotPasswordPage from './pages/auth/ForgotPasswordPage.jsx';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage.jsx';
 import VerifyEmailPage from './pages/auth/VerifyEmailPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
+import DepartmentsPage from './pages/organization/DepartmentsPage.jsx';
+import PositionsPage from './pages/organization/PositionsPage.jsx';
+import OrgChartPage from './pages/organization/OrgChartPage.jsx';
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
+import DashboardLayout from './components/layout/DashboardLayout.jsx';
 
 function App() {
   const { isAuthenticated } = useSelector((state) => state.auth);
@@ -28,14 +32,12 @@ function App() {
         <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
 
         {/* Protected routes */}
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
+        <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/departments" element={<DepartmentsPage />} />
+          <Route path="/positions" element={<PositionsPage />} />
+          <Route path="/org-chart" element={<OrgChartPage />} />
+        </Route>
 
         {/* Default redirect */}
         <Route

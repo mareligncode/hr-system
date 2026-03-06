@@ -51,6 +51,11 @@ const translations = {
 
         // Navbar
         dashboard: 'Dashboard',
+        profile: 'Profile',
+        departments: 'Departments',
+        positions: 'Positions',
+        orgChart: 'Org Chart',
+        management: 'Management',
         logout: 'Logout',
 
         // Profile
@@ -155,6 +160,11 @@ const translations = {
 
         // Navbar
         dashboard: 'ዳሽቦርድ',
+        profile: 'ፕሮፋይል',
+        departments: 'ዲፓርትመንቶች',
+        positions: 'የስራ መደቦች',
+        orgChart: 'የድርጅት መዋቅር',
+        management: 'አስተዳደር',
         logout: 'ውጣ',
 
         // Profile

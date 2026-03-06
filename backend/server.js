@@ -5,6 +5,14 @@ import { connectDB } from './config/database.js';
 import { apiLimiter } from './middlewares/rateLimiter.js';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import departmentRoutes from './routes/departmentRoutes.js';
+import positionRoutes from './routes/positionRoutes.js';
+
+// Import models to ensure they are registered for sync
+import './models/User.js';
+import './models/Department.js';
+import './models/Position.js';
+import './models/Employee.js';
 
 dotenv.config();
 
@@ -42,6 +50,8 @@ app.use(express.urlencoded({ extended: true }));
 // Setup routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/departments', departmentRoutes);
+app.use('/api/positions', positionRoutes);
 
 // Basic health check route
 app.get('/api/health', (req, res) => {
