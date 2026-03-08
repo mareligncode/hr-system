@@ -1,5 +1,4 @@
-import Position from '../models/Position.js';
-import Department from '../models/Department.js';
+import { Position, Department } from '../models/index.js';
 import sequelize from '../config/database.js';
 
 // Get all positions with advanced filtering

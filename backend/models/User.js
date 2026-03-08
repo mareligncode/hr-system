@@ -43,6 +43,10 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING(10),
         defaultValue: 'en'
     },
+    role: {
+        type: DataTypes.ENUM('admin', 'hr', 'manager', 'finance', 'employee', 'recruiter'),
+        defaultValue: 'employee'
+    },
     status: {
         type: DataTypes.STRING(20),
         defaultValue: 'pending'

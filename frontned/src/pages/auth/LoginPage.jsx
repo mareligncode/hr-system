@@ -18,7 +18,7 @@ const LoginPage = () => {
     const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
-        if (isAuthenticated) navigate('/profile', { replace: true });
+        if (isAuthenticated) navigate('/dashboard', { replace: true });
         return () => dispatch(clearErrors());
     }, [isAuthenticated, navigate, dispatch]);
 
@@ -92,13 +92,6 @@ const LoginPage = () => {
                 <Button type="submit" loading={loading}>
                     {loading ? t('signingIn') : t('signIn')}
                 </Button>
-
-                <p className="text-center text-[var(--text-soft)] text-sm">
-                    {t('noAccount')}{' '}
-                    <Link to="/register" className="text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium transition-colors">
-                        {t('createAccount')}
-                    </Link>
-                </p>
             </form>
         </AuthLayout>
     );

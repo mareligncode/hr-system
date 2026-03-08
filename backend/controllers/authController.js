@@ -1,7 +1,8 @@
-import User from '../models/User.js';
+import { User, Role, Permission, Employee, Department, Position } from '../models/index.js';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../services/emailService.js';
+import { logActivity } from '../services/auditService.js';
 
 // Helper to generate generic JWT tokens
 const generateToken = (id) => {
@@ -56,20 +57,51 @@ export const register = async (req, res) => {
             });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error('Auth Error:', error);
+        res.status(500).json({
+            message: 'Server error',
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 };
 
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await User.findOne({ where: { email } });
+        const user = await User.findOne({
+            where: { email },
+            include: [{
+                model: Employee,
+                include: [Department, Position]
+            }]
+        });
 
         if (user && (await user.validPassword(password))) {
 
             user.last_login_at = new Date();
             user.last_login_ip = req.ip;
             await user.save();
+
+            await logActivity(user.id, 'LOGIN', 'User', user.id, null, { ip: req.ip }, req);
+
+            // Fetch primary role and its permissions based on the user's string 'role' enum
+            const primaryRole = await Role.findOne({
+                where: { code: user.role },
+                include: [Permission]
+            });
+
+            const permissions = new Set();
+            primaryRole?.Permissions?.forEach(p => permissions.add(p.code));
+
+            // Also check join table if they have additional roles
+            const userWithPerms = await User.findByPk(user.id, {
+                include: [{ model: Role, include: [Permission] }]
+            });
+
+            userWithPerms.Roles?.forEach(role => {
+                role.Permissions?.forEach(p => permissions.add(p.code));
+            });
 
             res.json({
                 message: 'Login successful',
@@ -79,7 +111,17 @@ export const login = async (req, res) => {
                     email: user.email,
                     first_name: user.first_name,
                     last_name: user.last_name,
-                    status: user.status
+                    status: user.status,
+                    role: user.role,
+                    permissions: Array.from(permissions),
+                    employee_details: user.Employee ? {
+                        id: user.Employee.id,
+                        department: user.Employee.Department?.name,
+                        department_id: user.Employee.Department?.id,
+                        position: user.Employee.Position?.title,
+                        position_id: user.Employee.Position?.id,
+                        employee_number: user.Employee.employee_number
+                    } : null
                 },
                 token: generateToken(user.id),
             });
@@ -87,7 +129,12 @@ export const login = async (req, res) => {
             res.status(401).json({ message: 'Invalid email or password' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error('Auth Error:', error);
+        res.status(500).json({
+            message: 'Server error',
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 };
 
@@ -99,16 +146,38 @@ export const logout = async (req, res) => {
 export const getProfile = async (req, res) => {
     try {
         const user = await User.findByPk(req.user.id, {
-            attributes: { exclude: ['password_hash'] }
+            attributes: { exclude: ['password_hash'] },
+            include: [{ model: Role, include: [Permission] }]
         });
 
         if (user) {
-            res.json(user);
+            const permissions = new Set();
+
+            // Add from primary role string
+            const primaryRole = await Role.findOne({
+                where: { code: user.role },
+                include: [Permission]
+            });
+            primaryRole?.Permissions?.forEach(p => permissions.add(p.code));
+
+            // Add from joined roles
+            user.Roles?.forEach(role => {
+                role.Permissions?.forEach(p => permissions.add(p.code));
+            });
+
+            const userData = user.toJSON();
+            userData.permissions = Array.from(permissions);
+            res.json(userData);
         } else {
             res.status(404).json({ message: 'User not found' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error('Auth Error:', error);
+        res.status(500).json({
+            message: 'Server error',
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 };
 
@@ -126,19 +195,29 @@ export const updateProfile = async (req, res) => {
                 user.password_hash = req.body.password;
             }
 
+            if (req.file) {
+                user.profile_picture = req.file.path;
+            }
+
             const updatedUser = await user.save();
             res.json({
                 id: updatedUser.id,
                 email: updatedUser.email,
                 first_name: updatedUser.first_name,
                 last_name: updatedUser.last_name,
-                phone: updatedUser.phone
+                phone: updatedUser.phone,
+                profile_picture: updatedUser.profile_picture
             });
         } else {
             res.status(404).json({ message: 'User not found' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error('Auth Error:', error);
+        res.status(500).json({
+            message: 'Server error',
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 };
 
@@ -165,25 +244,36 @@ export const forgotPassword = async (req, res) => {
             res.status(500).json({ message: 'Email could not be sent' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error('Auth Error:', error);
+        res.status(500).json({
+            message: 'Server error',
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 };
 
 export const resetPassword = async (req, res) => {
     try {
         const { email, code, password } = req.body;
+        console.log(`Reset password attempt for: ${email}, Code provided: ${code}`);
 
         const user = await User.findOne({ where: { email } });
 
         if (!user) {
+            console.log(`Reset password failed: User not found for ${email}`);
             return res.status(404).json({ message: 'User not found' });
         }
 
+        console.log(`User found. Stored code: ${user.reset_code}, Expires at: ${user.reset_code_expires_at}`);
+
         if (!user.reset_code || user.reset_code !== code) {
+            console.log(`Reset password failed: Code mismatch. Stored: ${user.reset_code}, Provided: ${code}`);
             return res.status(400).json({ message: 'Invalid reset code' });
         }
 
         if (new Date() > user.reset_code_expires_at) {
+            console.log(`Reset password failed: Code expired. Now: ${new Date()}, Expires at: ${user.reset_code_expires_at}`);
             return res.status(400).json({ message: 'Reset code has expired' });
         }
 
@@ -194,7 +284,12 @@ export const resetPassword = async (req, res) => {
 
         res.json({ message: 'Password reset successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error('Auth Error:', error);
+        res.status(500).json({
+            message: 'Server error',
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 };
 
@@ -229,7 +324,12 @@ export const refresh = async (req, res) => {
             token: newToken
         });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error('Auth Error:', error);
+        res.status(500).json({
+            message: 'Server error',
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 };
 
@@ -255,6 +355,11 @@ export const changePassword = async (req, res) => {
 
         res.json({ message: 'Password changed successfully' });
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        console.error('Auth Error:', error);
+        res.status(500).json({
+            message: 'Server error',
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 };

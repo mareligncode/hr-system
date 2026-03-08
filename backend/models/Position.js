@@ -93,7 +93,4 @@ const Position = sequelize.define('Position', {
     deletedAt: 'deleted_at'
 });
 
-Position.belongsTo(Department, { foreignKey: 'department_id' });
-Department.hasMany(Position, { foreignKey: 'department_id' });
-
 export default Position;

@@ -125,6 +125,79 @@ const Employee = sequelize.define('Employee', {
     social_security_number: {
         type: DataTypes.STRING(50),
         allowNull: true
+    },
+    termination_reason: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    // Address Info
+    address_line1: {
+        type: DataTypes.STRING(255),
+        allowNull: true
+    },
+    address_line2: {
+        type: DataTypes.STRING(255),
+        allowNull: true
+    },
+    city: {
+        type: DataTypes.STRING(100),
+        allowNull: true
+    },
+    state: {
+        type: DataTypes.STRING(100),
+        allowNull: true
+    },
+    postal_code: {
+        type: DataTypes.STRING(20),
+        allowNull: true
+    },
+    country: {
+        type: DataTypes.STRING(100),
+        allowNull: true
+    },
+    // Emergency Contact
+    emergency_contact_name: {
+        type: DataTypes.STRING(100),
+        allowNull: true
+    },
+    emergency_contact_phone: {
+        type: DataTypes.STRING(20),
+        allowNull: true
+    },
+    emergency_contact_relation: {
+        type: DataTypes.STRING(50),
+        allowNull: true
+    },
+    // More Financial Info
+    bank_iban: {
+        type: DataTypes.STRING(34),
+        allowNull: true
+    },
+    bank_swift: {
+        type: DataTypes.STRING(20),
+        allowNull: true
+    },
+    // Work Contact Info
+    work_email: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+        validate: { isEmail: true }
+    },
+    work_phone: {
+        type: DataTypes.STRING(20),
+        allowNull: true
+    },
+    office_location: {
+        type: DataTypes.STRING(100),
+        allowNull: true
+    },
+    created_by: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: 'users',
+            key: 'id'
+        }
     }
 }, {
     tableName: 'employees',
@@ -132,12 +205,5 @@ const Employee = sequelize.define('Employee', {
     createdAt: 'created_at',
     updatedAt: 'updated_at'
 });
-
-Employee.belongsTo(User, { foreignKey: 'user_id' });
-Employee.belongsTo(Department, { foreignKey: 'department_id' });
-Employee.belongsTo(Position, { foreignKey: 'position_id' });
-Employee.belongsTo(User, { as: 'Manager', foreignKey: 'reports_to' });
-
-User.hasOne(Employee, { foreignKey: 'user_id' });
 
 export default Employee;

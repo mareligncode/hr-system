@@ -1,5 +1,4 @@
-import Department from '../models/Department.js';
-import User from '../models/User.js';
+import { Department, User } from '../models/index.js';
 import sequelize from '../config/database.js';
 
 // Get all departments with related data
@@ -44,7 +43,19 @@ export const getDepartmentHierarchy = async (req, res) => {
     try {
         const allDepartments = await Department.findAll({
             include: [
-                { model: User, as: 'Manager', attributes: ['id', 'first_name', 'last_name', 'profile_picture'] }
+                {
+                    model: User,
+                    as: 'Manager',
+                    attributes: ['id', 'first_name', 'last_name', 'profile_picture']
+                },
+                {
+                    model: Employee,
+                    as: 'Employees',
+                    include: [{
+                        model: User,
+                        attributes: ['id', 'first_name', 'last_name', 'profile_picture']
+                    }]
+                }
             ]
         });
         const hierarchy = buildHierarchy(allDepartments);
@@ -95,6 +106,25 @@ export const updateDepartment = async (req, res) => {
         if (!department) {
             await t.rollback();
             return res.status(404).json({ error: 'Department not found' });
+        }
+
+        // Prevent circular reference
+        if (req.body.parent_department_id) {
+            if (String(req.body.parent_department_id) === String(req.params.id)) {
+                await t.rollback();
+                return res.status(400).json({ error: 'A department cannot be its own parent.' });
+            }
+
+            // Check for deeper circular reference
+            let currentParentId = req.body.parent_department_id;
+            while (currentParentId) {
+                if (String(currentParentId) === String(req.params.id)) {
+                    await t.rollback();
+                    return res.status(400).json({ error: 'Circular reference detected: Cannot move a department under its own sub-department.' });
+                }
+                const parentDept = await Department.findByPk(currentParentId, { transaction: t });
+                currentParentId = parentDept ? parentDept.parent_department_id : null;
+            }
         }
 
         await department.update(req.body, { transaction: t });

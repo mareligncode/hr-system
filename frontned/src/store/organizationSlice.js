@@ -81,6 +81,29 @@ export const createPosition = createAsyncThunk(
     }
 );
 
+export const updatePosition = createAsyncThunk(
+    'organization/updatePosition',
+    async ({ id, data }, { rejectWithValue }) => {
+        try {
+            return await organizationService.updatePosition(id, data);
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.details || error.response?.data?.error || 'Failed to update position');
+        }
+    }
+);
+
+export const deletePosition = createAsyncThunk(
+    'organization/deletePosition',
+    async (id, { rejectWithValue }) => {
+        try {
+            await organizationService.deletePosition(id);
+            return id;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.error || 'Failed to delete position');
+        }
+    }
+);
+
 const initialState = {
     departments: [],
     hierarchy: [],
@@ -129,6 +152,9 @@ const organizationSlice = createSlice({
                 state.departments = state.departments.filter(d => d.id !== action.payload);
                 state.successMessage = 'Department deleted successfully';
             })
+            .addCase(deleteDepartment.rejected, (state, action) => {
+                state.error = action.payload;
+            })
             // Fetch Positions
             .addCase(fetchPositions.pending, (state) => { state.loading = true; })
             .addCase(fetchPositions.fulfilled, (state, action) => {
@@ -139,6 +165,17 @@ const organizationSlice = createSlice({
             .addCase(createPosition.fulfilled, (state, action) => {
                 state.positions.push(action.payload);
                 state.successMessage = 'Position created successfully';
+            })
+            // Update Position
+            .addCase(updatePosition.fulfilled, (state, action) => {
+                const index = state.positions.findIndex(p => p.id === action.payload.id);
+                if (index !== -1) state.positions[index] = action.payload;
+                state.successMessage = 'Position updated successfully';
+            })
+            // Delete Position
+            .addCase(deletePosition.fulfilled, (state, action) => {
+                state.positions = state.positions.filter(p => p.id !== action.payload);
+                state.successMessage = 'Position deleted successfully';
             });
     }
 });

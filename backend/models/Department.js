@@ -81,9 +81,4 @@ const Department = sequelize.define('Department', {
     deletedAt: 'deleted_at'
 });
 
-// Self-referencing association for hierarchy
-Department.belongsTo(Department, { as: 'ParentDepartment', foreignKey: 'parent_department_id' });
-Department.hasMany(Department, { as: 'SubDepartments', foreignKey: 'parent_department_id' });
-Department.belongsTo(User, { as: 'Manager', foreignKey: 'manager_id' });
-
 export default Department;

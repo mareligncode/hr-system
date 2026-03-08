@@ -1,0 +1,13 @@
+import express from 'express';
+import { getDashboardStats, getExpiringAssets, getRecentActivity } from '../controllers/dashboardController.js';
+import { protect, authorize } from '../middlewares/authMiddleware.js';
+
+const router = express.Router();
+
+router.use(protect); // All dashboard routes require authentication
+
+router.get('/stats', authorize('admin', 'hr', 'manager'), getDashboardStats);
+router.get('/expiring', authorize('admin', 'hr'), getExpiringAssets);
+router.get('/activity', authorize('admin', 'hr'), getRecentActivity);
+
+export default router;

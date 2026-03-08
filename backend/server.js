@@ -1,22 +1,42 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import helmet from 'helmet';
 import { connectDB } from './config/database.js';
 import { apiLimiter } from './middlewares/rateLimiter.js';
+// Centralized model registration (CRITICAL: Load before routes)
+import './models/index.js';
+
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import departmentRoutes from './routes/departmentRoutes.js';
 import positionRoutes from './routes/positionRoutes.js';
 
-// Import models to ensure they are registered for sync
-import './models/User.js';
-import './models/Department.js';
-import './models/Position.js';
-import './models/Employee.js';
+import employeeRoutes from './routes/employeeRoutes.js';
+import documentRoutes from './routes/documentRoutes.js';
+import certificationRoutes from './routes/certificationRoutes.js';
+import auditRoutes from './routes/auditRoutes.js';
+import roleRoutes from './routes/roleRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
 
 dotenv.config();
 
 const app = express();
+
+// Security headers with configured CSP for Cloudinary
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+            "img-src": ["'self'", "data:", "res.cloudinary.com"],
+            "connect-src": ["'self'", "res.cloudinary.com"],
+            "frame-src": ["'self'", "res.cloudinary.com"],
+            "object-src": ["'self'", "res.cloudinary.com"],
+        },
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+}));
 
 // Connect to the database
 connectDB();
@@ -25,8 +45,10 @@ connectDB();
 const allowedOrigins = [
     process.env.FRONTEND_URL,
     'http://localhost:5173',
+    'http://localhost:5174',
     'http://localhost:3000',
     'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174',
 ].filter(Boolean);
 
 app.use(cors({
@@ -52,6 +74,12 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/positions', positionRoutes);
+app.use('/api/employees', employeeRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api/certifications', certificationRoutes);
+app.use('/api/audit', auditRoutes);
+app.use('/api/roles', roleRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Basic health check route
 app.get('/api/health', (req, res) => {
@@ -60,11 +88,24 @@ app.get('/api/health', (req, res) => {
 
 // Basic error handler
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    console.error('Global Error Handler:', err.stack);
     res.status(err.status || 500).json({
-        error: err.message || 'Internal Server Error'
+        error: err.message || 'Internal Server Error',
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
 });
+
+// Schedule automated expiry checks (Every 24 hours)
+import { checkAndNotifyExpiries } from './services/notificationService.js';
+const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+setInterval(() => {
+    checkAndNotifyExpiries().catch(err => console.error('Scheduled Expiry Check Failed:', err));
+}, TWENTY_FOUR_HOURS);
+
+// Initial check on server start (with a delay to ensure DB is ready)
+setTimeout(() => {
+    checkAndNotifyExpiries().catch(err => console.error('Initial Expiry Check Failed:', err));
+}, 10000);
 
 const PORT = process.env.PORT || 5000;
 
