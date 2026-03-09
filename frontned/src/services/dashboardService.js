@@ -12,6 +12,10 @@ const dashboardService = {
     getActivity: async () => {
         const response = await api.get('/dashboard/activity');
         return response.data;
+    },
+    getEmployeeDashboard: async () => {
+        const response = await api.get('/dashboard/employee');
+        return response.data;
     }
 };
 

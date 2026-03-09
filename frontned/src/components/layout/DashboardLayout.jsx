@@ -12,14 +12,14 @@ const DashboardLayout = () => {
     const { role, hasPermission } = usePermission();
 
     const menuItems = [
-        { path: '/dashboard', label: 'Dashboard', icon: '📊' },
+        { path: '/dashboard', label: t('dashboard'), icon: '📊' },
         { path: '/profile', label: t('profile'), icon: '👤' },
         { path: '/employees', label: t('employees'), icon: '👥', permission: 'view_employees' },
         { path: '/departments', label: t('departments'), icon: '🏢' },
         { path: '/positions', label: t('positions'), icon: '👔' },
         { path: '/org-chart', label: t('orgChart'), icon: '📊', permission: 'view_employees' },
-        { path: '/admin/roles', label: 'Roles & Security', icon: '🛡️', role: 'admin' },
-        { path: '/admin/audit', label: 'Audit Logs', icon: '📜', permission: 'view_audit_logs' },
+        { path: '/admin/roles', label: t('rolesAndSecurity'), icon: '🛡️', role: 'admin' },
+        { path: '/admin/audit', label: t('auditLogs'), icon: '📜', permission: 'view_audit_logs' },
     ];
 
     const filteredMenuItems = menuItems.filter(item => {

@@ -5,7 +5,6 @@ import { Op } from 'sequelize';
 import { logActivity } from '../services/auditService.js';
 import { sendTemporaryPasswordEmail } from '../services/emailService.js';
 
-// Helper to generate a unique employee number (e.g., EMP-2026-0001)
 const generateEmployeeNumber = async () => {
     const year = new Date().getFullYear();
     const count = await Employee.count();
@@ -105,14 +104,11 @@ export const createEmployee = async (req, res) => {
 
         // Check if user with email already exists
         let user = await User.findOne({ where: { email } });
-        let tempPassword = null;
+        let tempPassword = req.body.password || email; // Default to email if no password provided
 
         const employeeNumber = await generateEmployeeNumber();
 
         if (!user) {
-            // Generate temporary password
-            tempPassword = Math.random().toString(36).slice(-10) + 'A1!';
-
             user = await User.create({
                 employee_id: employeeNumber,
                 email,
@@ -187,9 +183,10 @@ export const updateEmployee = async (req, res) => {
         if (req.body.first_name) userUpdates.first_name = req.body.first_name;
         if (req.body.last_name) userUpdates.last_name = req.body.last_name;
         if (req.file) userUpdates.profile_picture = req.file.path;
+        if (req.body.role && req.user.role === 'admin') userUpdates.role = req.body.role;
 
         if (Object.keys(userUpdates).length > 0) {
-            await employee.User.update(userUpdates, { transaction: t });
+            await User.update(userUpdates, { where: { id: id }, transaction: t });
         }
 
         // Restrict fields for non-admin/hr users

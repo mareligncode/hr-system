@@ -9,6 +9,7 @@ const storage = new CloudinaryStorage({
         let folder = process.env.CLOUDINARY_FOLDER || 'hr-system';
 
         // Extract and clean filename
+        const extension = file.originalname.split('.').pop();
         const cleanName = file.originalname
             .split('.')
             .slice(0, -1)
@@ -27,7 +28,7 @@ const storage = new CloudinaryStorage({
         return {
             folder: folder,
             resource_type: 'auto',
-            public_id: `${Date.now()}-${cleanName}`,
+            public_id: `${Date.now()}-${cleanName}.${extension}`,
         };
     },
 });

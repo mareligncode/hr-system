@@ -10,6 +10,7 @@ import { fetchRoles, fetchPermissions } from '../../store/roleSlice';
 import { fetchEmployees } from '../../store/employeeSlice';
 import { fetchDepartments } from '../../store/organizationSlice';
 import roleService from '../../services/roleService';
+import employeeService from '../../services/employeeService';
 import Button from '../../components/ui/Button';
 import Alert from '../../components/ui/Alert';
 import { useSettings } from '../../context/SettingsContext';
@@ -65,11 +66,28 @@ const RoleManagement = () => {
             setSaving(true);
             const departmentId = selectedDeptMap[userId] || null;
             await roleService.assignRole({ userId, roleId, departmentId });
-            setAssignmentStatus({ type: 'success', message: 'Role assigned successfully!' });
+            setAssignmentStatus({ type: 'success', message: t('roleAssignedSuccess') });
             dispatch(fetchEmployees({ search: searchQuery }));
             setTimeout(() => setAssignmentStatus({ type: '', message: '' }), 3000);
         } catch (err) {
-            setAssignmentStatus({ type: 'error', message: err.response?.data?.error || 'Failed to assign role' });
+            setAssignmentStatus({ type: 'error', message: err.response?.data?.error || t('roleAssignedError') });
+            setTimeout(() => setAssignmentStatus({ type: '', message: '' }), 3000);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleChangePrimaryRole = async (userId, newRole) => {
+        try {
+            setSaving(true);
+            const formData = new FormData();
+            formData.append('role', newRole);
+            await employeeService.updateEmployee(userId, formData);
+            setAssignmentStatus({ type: 'success', message: t('primaryRoleUpdatedSuccess') });
+            dispatch(fetchEmployees({ search: searchQuery }));
+            setTimeout(() => setAssignmentStatus({ type: '', message: '' }), 3000);
+        } catch (err) {
+            setAssignmentStatus({ type: 'error', message: err.response?.data?.error || t('primaryRoleUpdatedError') });
             setTimeout(() => setAssignmentStatus({ type: '', message: '' }), 3000);
         } finally {
             setSaving(false);
@@ -80,11 +98,11 @@ const RoleManagement = () => {
         try {
             setSaving(true);
             await roleService.unassignRole({ userId, roleId });
-            setAssignmentStatus({ type: 'success', message: 'Role removed successfully!' });
+            setAssignmentStatus({ type: 'success', message: t('roleRemovedSuccess') });
             dispatch(fetchEmployees({ search: searchQuery }));
             setTimeout(() => setAssignmentStatus({ type: '', message: '' }), 3000);
         } catch (err) {
-            setAssignmentStatus({ type: 'error', message: err.response?.data?.error || 'Failed to remove role' });
+            setAssignmentStatus({ type: 'error', message: err.response?.data?.error || t('roleRemovedError') });
             setTimeout(() => setAssignmentStatus({ type: '', message: '' }), 3000);
         } finally {
             setSaving(false);
@@ -97,7 +115,7 @@ const RoleManagement = () => {
         return acc;
     }, {});
 
-    if (rolesLoading && roles.length === 0) return <div className="p-20 text-center animate-pulse text-[var(--text-soft)]">Loading security systems...</div>;
+    if (rolesLoading && roles.length === 0) return <div className="p-20 text-center animate-pulse text-[var(--text-soft)]">{t('loadingSecuritySystems')}</div>;
 
     return (
         <div className="space-y-8 pb-20">
@@ -305,14 +323,28 @@ const RoleManagement = () => {
                                     </div>
 
                                     <div className="space-y-6">
-                                        <div className="flex flex-wrap gap-2">
+                                        <div className="flex flex-wrap gap-2 items-center">
                                             <div className="w-full mb-1">
-                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">{t('definedRoles')}</p>
+                                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">{t('primaryRole')}</p>
                                             </div>
-                                            <span className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-[10px] font-black shadow-sm border border-blue-700 flex items-center gap-2">
-                                                <Lock className="w-3.5 h-3.5" />
-                                                {emp.User?.role?.toUpperCase() || 'EMPLOYEE'}
-                                            </span>
+                                            <div className="flex items-center bg-blue-600 text-white rounded-xl shadow-sm border border-blue-700 overflow-hidden">
+                                                <div className="px-3 border-r border-blue-700 py-1.5 flex items-center justify-center">
+                                                    <Lock className="w-3.5 h-3.5" />
+                                                </div>
+                                                <select
+                                                    className="bg-blue-600 text-white text-[10px] font-black outline-none px-3 py-1.5 appearance-none min-w-[100px] cursor-pointer disabled:opacity-50"
+                                                    value={emp.User?.role || 'employee'}
+                                                    onChange={(e) => handleChangePrimaryRole(emp.user_id, e.target.value)}
+                                                    disabled={saving}
+                                                >
+                                                    <option value="admin">ADMIN</option>
+                                                    <option value="hr">HR</option>
+                                                    <option value="manager">MANAGER</option>
+                                                    <option value="finance">FINANCE</option>
+                                                    <option value="general_manager">GENERAL MANAGER</option>
+                                                    <option value="employee">EMPLOYEE</option>
+                                                </select>
+                                            </div>
                                             {emp.User?.Roles?.map(role => {
                                                 const deptScope = departments.find(d => d.id === role.UserRole?.department_id);
                                                 return (

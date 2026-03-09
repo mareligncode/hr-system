@@ -1,4 +1,4 @@
-import { Department, User } from '../models/index.js';
+import { Department, User, Employee } from '../models/index.js';
 import sequelize from '../config/database.js';
 
 // Get all departments with related data
@@ -71,7 +71,16 @@ export const createDepartment = async (req, res) => {
     try {
         const department = await Department.create(req.body, { transaction: t });
         await t.commit();
-        res.status(201).json(department);
+
+        // Fetch the created department with its relationships
+        const createdDepartment = await Department.findByPk(department.id, {
+            include: [
+                { model: Department, as: 'ParentDepartment', attributes: ['id', 'name', 'code'] },
+                { model: User, as: 'Manager', attributes: ['id', 'first_name', 'last_name', 'email'] }
+            ]
+        });
+
+        res.status(201).json(createdDepartment);
     } catch (error) {
         await t.rollback();
         if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
@@ -131,7 +140,10 @@ export const updateDepartment = async (req, res) => {
         await t.commit();
 
         const updatedDepartment = await Department.findByPk(req.params.id, {
-            include: [{ model: Department, as: 'ParentDepartment' }]
+            include: [
+                { model: Department, as: 'ParentDepartment', attributes: ['id', 'name', 'code'] },
+                { model: User, as: 'Manager', attributes: ['id', 'first_name', 'last_name', 'email'] }
+            ]
         });
         res.status(200).json(updatedDepartment);
     } catch (error) {

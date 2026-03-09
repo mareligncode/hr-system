@@ -67,9 +67,9 @@ const AuditLogList = () => {
                         <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 shadow-inner">
                             <History className="w-6 h-6" />
                         </div>
-                        <h1 className="text-2xl font-black tracking-tight tracking-tight">{'Audit & Transparency'}</h1>
+                        <h1 className="text-2xl font-black tracking-tight tracking-tight">{t('auditAndTransparency')}</h1>
                     </div>
-                    <p className="text-[var(--text-soft)] text-xs font-medium leading-relaxed max-w-md">{'Monitor system-wide activities and changes'}</p>
+                    <p className="text-[var(--text-soft)] text-xs font-medium leading-relaxed max-w-md">{t('monitorSystemWide')}</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="bg-[var(--bg-base)] p-1 rounded-xl border border-[var(--border-main)] flex">
@@ -77,17 +77,17 @@ const AuditLogList = () => {
                             onClick={() => setViewMode('table')}
                             className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${viewMode === 'table' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-[var(--text-soft)] hover:text-[var(--text-main)]'}`}
                         >
-                            {'Table'}
+                            {t('table')}
                         </button>
                         <button
                             onClick={() => setViewMode('timeline')}
                             className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${viewMode === 'timeline' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-[var(--text-soft)] hover:text-[var(--text-main)]'}`}
                         >
-                            {'Timeline'}
+                            {t('timeline')}
                         </button>
                     </div>
                     <Button onClick={handleExport} variant="secondary" className="bg-white border-[var(--border-main)] py-4 rounded-2xl shadow-sm active:scale-95 transition-all">
-                        <Download className="w-4 h-4 mr-2" /> {'Export'}
+                        <Download className="w-4 h-4 mr-2" /> {t('export')}
                     </Button>
                 </div>
             </div>
@@ -98,22 +98,26 @@ const AuditLogList = () => {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                     <input
                         className="w-full pl-12 pr-4 py-3 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl text-sm focus:ring-2 ring-blue-500/20 outline-none"
-                        placeholder={'Search Logs'}
+                        placeholder={t('searchLogs')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
                 <select className="px-4 py-3 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl text-sm outline-none">
-                    <option value="">{'All Models'}</option>
-                    <option value="User">User</option>
-                    <option value="Employee">Employee</option>
-                    <option value="Department">Department</option>
+                    <option value="">{t('allModels')}</option>
+                    <option value="User">{t('user')}</option>
+                    <option value="Employee">{t('employee')}</option>
+                    <option value="Department">{t('department')}</option>
+                    <option value="Position">{t('position')}</option>
+                    <option value="Role">{t('role')}</option>
+                    <option value="Document">{t('document')}</option>
+                    <option value="Certification">{t('certification')}</option>
                 </select>
                 <select className="px-4 py-3 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl text-sm outline-none">
-                    <option value="">{'All Actions'}</option>
-                    <option value="CREATE">CREATE</option>
-                    <option value="UPDATE">UPDATE</option>
-                    <option value="DELETE">DELETE</option>
+                    <option value="">{t('allActions')}</option>
+                    <option value="CREATE">{t('create')}</option>
+                    <option value="UPDATE">{t('update')}</option>
+                    <option value="DELETE">{t('delete')}</option>
                 </select>
                 <div className="flex items-center justify-end">
                     <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">{pagination.total} {t('eventsLogged')}</p>
@@ -157,7 +161,7 @@ const AuditLogList = () => {
                                                 <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
                                                     <User className="w-4 h-4" />
                                                 </div>
-                                                <span className="text-sm font-bold">{log.User?.first_name || 'System'}</span>
+                                                <span className="text-sm font-bold">{log.User?.first_name || t('system')}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-5">

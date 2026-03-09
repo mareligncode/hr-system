@@ -94,7 +94,7 @@ const Navbar = () => {
                                 </p>
                                 <div className="flex justify-end gap-2 items-center">
                                     <span className="text-[10px] font-bold text-blue-500 bg-blue-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider">
-                                        {user?.role}
+                                        {t(user?.role)}
                                     </span>
                                     <p className="text-[10px] text-[var(--text-muted)] truncate max-w-[80px]">{user?.email}</p>
                                 </div>

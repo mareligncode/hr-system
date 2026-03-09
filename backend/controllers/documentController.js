@@ -100,42 +100,48 @@ export const getDownloadUrl = async (req, res) => {
         const document = await EmployeeDocument.findByPk(req.params.id);
         if (!document) return res.status(404).json({ error: 'Document not found' });
 
-        // Extract public ID and resource type from the full Cloudinary URL
-        // Example: https://res.cloudinary.com/cloud_name/image/upload/v12345/folder/public_id.jpg
         const urlParts = document.file_path.split('/');
         const uploadIndex = urlParts.indexOf('upload');
 
-        if (uploadIndex === -1) {
-            throw new Error('Invalid Cloudinary URL');
-        }
+        if (uploadIndex === -1) throw new Error('Invalid Cloudinary URL');
 
         const resourceType = urlParts[uploadIndex - 1] || 'image';
 
-        // Everything after /upload/ (skipping version if present)
+        // Extract everything after /upload/
         let filePathParts = urlParts.slice(uploadIndex + 1);
+
+        // Skip version (v1234567)
         if (filePathParts[0].startsWith('v') && !isNaN(filePathParts[0].substring(1))) {
             filePathParts.shift();
         }
 
-        const fullIdWithExt = filePathParts.join('/');
+        const fullPath = filePathParts.join('/');
+        const lastDotIndex = fullPath.lastIndexOf('.');
+        const extension = lastDotIndex !== -1 ? fullPath.substring(lastDotIndex + 1) : null;
 
-        // For 'raw' files (PDF, Doc), public_id includes extension
-        // For 'image', public_id must NOT include extension in the url() helper
-        let publicId = fullIdWithExt;
-        if (resourceType === 'image' || resourceType === 'video') {
-            publicId = fullIdWithExt.split('.').slice(0, -1).join('.');
-        }
-
-        // Generate a signed URL that forces download with the original filename
-        const downloadUrl = cloudinary.url(publicId, {
+        let publicId = fullPath;
+        let options = {
             secure: true,
             sign_url: true,
             resource_type: resourceType,
             type: 'upload',
             flags: 'attachment',
-            attachment: document.document_name // Forces browser to download with this name
-        });
+            attachment: document.document_name
+        };
 
+        // Cloudinary logic:
+        // 1. For 'raw' files, publicId MUST include the extension.
+        // 2. For 'image'/'video', the helper prefers publicId WITHOUT extension, 
+        //    with the extension passed as 'format'.
+
+        if (resourceType === 'image' || resourceType === 'video') {
+            if (lastDotIndex !== -1) {
+                publicId = fullPath.substring(0, lastDotIndex);
+                options.format = extension;
+            }
+        }
+
+        const downloadUrl = cloudinary.url(publicId, options);
         res.status(200).json({ download_url: downloadUrl });
     } catch (error) {
         res.status(500).json({ error: 'Failed to generate download URL', details: error.message });

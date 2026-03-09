@@ -30,6 +30,7 @@ const EmployeeCreate = () => {
         last_name: '',
         phone: '',
         profile_picture: null,
+        password: '',
 
         // Professional
         department_id: '',
@@ -181,6 +182,16 @@ const EmployeeCreate = () => {
                                         label="Phone Number" name="phone" value={formData.phone}
                                         onChange={handleInputChange}
                                     />
+                                    <div className="space-y-1">
+                                        <Input
+                                            label="Temporary Password" name="password"
+                                            value={formData.password} onChange={handleInputChange}
+                                            placeholder="Defaults to Email if empty"
+                                        />
+                                        <p className="text-[10px] text-[var(--text-muted)] mt-1 px-1">
+                                            If left blank, the employee's email will be used as their temporary password.
+                                        </p>
+                                    </div>
                                     <div className="space-y-1">
                                         <label className="text-sm font-medium text-[var(--text-soft)]">Profile Picture</label>
                                         <input

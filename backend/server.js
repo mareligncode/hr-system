@@ -64,7 +64,7 @@ app.use(cors({
 }));
 
 // Apply global rate limiting
-app.use('/api', apiLimiter);
+// app.use('/api', apiLimiter);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
