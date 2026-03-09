@@ -110,7 +110,7 @@ const ResetPasswordPage = () => {
                             id="password"
                             label={t('newPassword')}
                             type="password"
-                            placeholder="Min. 8 characters"
+                            placeholder={t('passwordPlaceholder')}
                             value={form.password}
                             onChange={(e) => setForm({ ...form, password: e.target.value })}
                             required
@@ -147,7 +147,7 @@ const ResetPasswordPage = () => {
                             id="confirm"
                             label={t('confirmPassword')}
                             type="password"
-                            placeholder="Repeat new password"
+                            placeholder={t('confirmPasswordPlaceholder')}
                             value={form.confirm}
                             onChange={(e) => setForm({ ...form, confirm: e.target.value })}
                             required

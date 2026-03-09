@@ -9,11 +9,11 @@ import {
     changePassword,
     verifyEmail,
 } from '../controllers/authController.js';
-import { protect } from '../middlewares/authMiddleware.js';
+import { protect, authorize } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.post('/register', register);
+router.post('/register', protect, authorize('admin'), register);
 router.post('/login', login);
 router.post('/logout', protect, logout);
 router.post('/refresh', protect, refresh);

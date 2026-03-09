@@ -37,7 +37,7 @@ const VerifyEmailPage = () => {
                         <div>
                             <h3 className="text-primary font-bold text-xl">{t('emailVerified')}</h3>
                             <p className="text-muted text-sm mt-2">{successMessage}</p>
-                            <p className="text-secondary text-sm mt-1">{t('Your account is now active. You can sign in.')}</p>
+                            <p className="text-secondary text-sm mt-1">{t('accountActiveSignIn')}</p>
                         </div>
                         <Link
                             to="/login"
@@ -58,19 +58,19 @@ const VerifyEmailPage = () => {
                         <div>
                             <h3 className="text-primary font-bold text-xl">{t('verificationFailed')}</h3>
                             <p className="text-muted text-sm mt-2">{error}</p>
-                            <p className="text-secondary text-sm mt-1">{t('Your link may have expired.')}</p>
+                            <p className="text-secondary text-sm mt-1">{t('linkExpired')}</p>
                         </div>
                         <Link
                             to="/forgot-password"
                             className="inline-flex items-center gap-2 px-6 py-3 bg-input border border-binput hover:bg-bdr text-primary rounded-lg text-sm font-medium transition-colors"
                         >
-                            {t('Request New Link')}
+                            {t('requestNewLink')}
                         </Link>
                     </>
                 )}
 
                 {!loading && !successMessage && !error && !token && (
-                    <div className="text-muted text-sm">{t('Invalid verification link.')}</div>
+                    <div className="text-muted text-sm">{t('invalidVerificationLink')}</div>
                 )}
             </div>
         </AuthLayout>

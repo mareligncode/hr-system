@@ -68,9 +68,9 @@ const RegisterPage = () => {
                         </svg>
                     </div>
                     <div>
-                        <h3 className="text-secondary font-semibold text-lg">Registration Successful!</h3>
+                        <h3 className="text-secondary font-semibold text-lg">{t('registrationSuccessful')}</h3>
                         <p className="text-muted text-sm mt-1">{successMessage}</p>
-                        <p className="text-muted text-xs mt-3">Redirecting to login in 3 seconds…</p>
+                        <p className="text-muted text-xs mt-3">{t('redirectingToLoginIn3Seconds')}</p>
                     </div>
                     <Link to="/login" className="text-axent hover:text-axenthv text-sm">
                         {t('signIn')} →
@@ -117,7 +117,7 @@ const RegisterPage = () => {
                         id="password"
                         label={t('password')}
                         type="password"
-                        placeholder="Min. 8 characters"
+                        placeholder={t('passwordPlaceholder')}
                         value={form.password}
                         onChange={handleChange}
                         required
@@ -127,7 +127,7 @@ const RegisterPage = () => {
                         id="confirm_password"
                         label={t('confirmPassword')}
                         type="password"
-                        placeholder="Repeat password"
+                        placeholder={t('confirmPasswordPlaceholder')}
                         value={form.confirm_password}
                         onChange={handleChange}
                         required

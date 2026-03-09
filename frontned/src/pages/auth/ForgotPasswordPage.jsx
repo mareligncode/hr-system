@@ -41,7 +41,7 @@ const ForgotPasswordPage = () => {
                     <div>
                         <h3 className="text-[var(--text-main)] font-semibold text-lg">{t('checkEmail')}</h3>
                         <p className="text-[var(--text-soft)] text-sm mt-1">{successMessage}</p>
-                        <p className="text-[var(--text-muted)] text-xs mt-3">{t('codeInstructions') || 'Once you have the code, proceed to reset your password.'}</p>
+                        <p className="text-[var(--text-muted)] text-xs mt-3">{t('codeInstructions') || t('enterCode')}</p>
                     </div>
                     <div className="flex flex-col gap-3">
                         <Link to="/reset-password" name="reset-link" className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[var(--accent)] hover:bg-[var(--accent-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
@@ -60,7 +60,7 @@ const ForgotPasswordPage = () => {
                         id="email"
                         label={t('email')}
                         type="email"
-                        placeholder="you@hotel.com"
+                        placeholder={t('emailPlaceholder')}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required

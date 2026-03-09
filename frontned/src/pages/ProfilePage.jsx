@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react';
+import {
+    ChevronLeft, Edit, Upload, Camera
+} from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProfile, updateProfile, changePassword, clearErrors, clearSuccess } from '../store/authSlice.js';
 import Navbar from '../components/layout/Navbar.jsx';
@@ -6,10 +9,12 @@ import Input from '../components/ui/Input.jsx';
 import Button from '../components/ui/Button.jsx';
 import Alert from '../components/ui/Alert.jsx';
 import { useSettings } from '../context/SettingsContext.jsx';
+import usePermission from '../hooks/usePermission';
 
 const ProfilePage = () => {
     const dispatch = useDispatch();
-    const { user, loading, error, successMessage } = useSelector((state) => state.auth);
+    const { loading, error, successMessage } = useSelector((state) => state.auth);
+    const { user, role, hasPermission, isAdmin } = usePermission();
     const { t } = useSettings();
 
     const [activeTab, setActiveTab] = useState('profile');
@@ -51,7 +56,21 @@ const ProfilePage = () => {
     const handleProfileSave = (e) => {
         e.preventDefault();
         dispatch(clearErrors());
-        dispatch(updateProfile(profileForm));
+
+        const formData = new FormData();
+        Object.keys(profileForm).forEach(key => {
+            formData.append(key, profileForm[key]);
+        });
+
+        dispatch(updateProfile(formData));
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setProfileForm(prev => ({ ...prev, profile_picture: file }));
+            // Optional: Show immediate preview or just wait for save
+        }
     };
 
     const handlePasswordChange = (e) => {
@@ -88,8 +107,27 @@ const ProfilePage = () => {
                 {/* Profile header */}
                 <div className="mb-8 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start gap-6 shadow-sm">
                     {/* Avatar */}
-                    <div className="w-20 h-20 bg-[var(--accent)] rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-blue-900/40 shrink-0">
-                        {user ? `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`.toUpperCase() : '?'}
+                    <div className="relative group mr-2">
+                        <div className="w-24 h-24 bg-[var(--accent)] rounded-3xl flex items-center justify-center text-3xl font-bold text-white shadow-xl shadow-blue-900/40 shrink-0 overflow-hidden border-4 border-[var(--bg-surface)]">
+                            {user?.profile_picture ? (
+                                <img
+                                    src={user.profile_picture.replace('http://', 'https://')}
+                                    className="w-full h-full object-cover"
+                                    alt="Avatar"
+                                />
+                            ) : (
+                                `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`.toUpperCase()
+                            )}
+                        </div>
+                        <label className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-3xl">
+                            <Camera className="w-8 h-8 text-white" />
+                            <input
+                                type="file"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                            />
+                        </label>
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -114,6 +152,55 @@ const ProfilePage = () => {
                     </div>
                 </div>
 
+                {/* Role-Based Dashboard Widgets */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    {isAdmin && (
+                        <>
+                            <div className="bg-blue-600 p-6 rounded-2xl text-white shadow-lg shadow-blue-900/20">
+                                <p className="text-xs font-bold uppercase tracking-widest opacity-80 mb-1">{t('systemHealth')}</p>
+                                <p className="text-2xl font-bold">{t('allSystemsNominal')}</p>
+                                <div className="mt-4 flex gap-2">
+                                    <span className="px-2 py-1 bg-white/20 rounded text-[10px] font-bold">{t('auditLogsActive')}</span>
+                                </div>
+                            </div>
+                            <div className="bg-[var(--bg-surface)] p-6 rounded-2xl border border-[var(--border-main)]">
+                                <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1">{t('securityAlert')}</p>
+                                <p className="text-2xl font-bold text-rose-500">0 {t('criticalIssues')}</p>
+                            </div>
+                        </>
+                    )}
+                    {hasPermission('manage_employees') && (
+                        <div className="bg-indigo-600 p-6 rounded-2xl text-white shadow-lg shadow-indigo-900/20">
+                            <p className="text-xs font-bold uppercase tracking-widest opacity-80 mb-1">{t('hrPulse')}</p>
+                            <p className="text-2xl font-bold">12 {t('activeCandidates')}</p>
+                            <div className="mt-4 flex gap-2">
+                                <span className="px-2 py-1 bg-white/20 rounded text-[10px] font-bold">3 {t('interviewsToday')}</span>
+                            </div>
+                        </div>
+                    )}
+                    {role === 'finance' && (
+                        <div className="bg-emerald-600 p-6 rounded-2xl text-white shadow-lg shadow-emerald-900/20">
+                            <p className="text-xs font-bold uppercase tracking-widest opacity-80 mb-1">{t('financeHub')}</p>
+                            <p className="text-2xl font-bold">{t('payrollBatch')} #42</p>
+                            <div className="mt-4 flex gap-2">
+                                <span className="px-2 py-1 bg-white/20 rounded text-[10px] font-bold">{t('processing')}...</span>
+                            </div>
+                        </div>
+                    )}
+                    {role === 'employee' && (
+                        <div className="bg-[var(--bg-surface)] p-6 rounded-2xl border border-[var(--border-main)]">
+                            <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1">{t('mySchedule')}</p>
+                            <p className="text-2xl font-bold text-blue-500">{t('morningShift')}</p>
+                            <p className="text-xs text-[var(--text-soft)] mt-1">{t('startsAt')} 8:00 AM</p>
+                        </div>
+                    )}
+                    <div className="bg-[var(--bg-surface)] p-6 rounded-2xl border border-[var(--border-main)]">
+                        <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-1">{t('announcements')}</p>
+                        <p className="text-lg font-bold">{t('staffMeetingTomorrow')}</p>
+                        <p className="text-xs text-[var(--text-soft)] mt-1">10:00 AM {t('inConferenceRoom')}</p>
+                    </div>
+                </div>
+
                 {/* Tab navigation */}
                 <div className="flex gap-1 mb-6 bg-[var(--bg-surface)] p-1 rounded-xl border border-[var(--border-main)] w-fit">
                     {['profile', 'security'].map((tab) => (
@@ -121,8 +208,8 @@ const ProfilePage = () => {
                             key={tab}
                             onClick={() => { setActiveTab(tab); dispatch(clearErrors()); dispatch(clearSuccess()); }}
                             className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === tab
-                                    ? 'bg-[var(--accent)] text-white shadow-lg shadow-blue-900/30'
-                                    : 'text-[var(--text-soft)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-soft)]'
+                                ? 'bg-[var(--accent)] text-white shadow-lg shadow-blue-900/30'
+                                : 'text-[var(--text-soft)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-soft)]'
                                 }`}
                         >
                             {t(`${tab}Nav`)}

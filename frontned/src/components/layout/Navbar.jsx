@@ -88,27 +88,34 @@ const Navbar = () => {
 
                         {/* User info + avatar */}
                         <div className="flex items-center gap-2 ml-1">
-                            <div className="text-right hidden sm:block">
-                                <p className="text-sm font-medium text-[var(--text-main)]">
+                            <div className="text-right hidden lg:block">
+                                <p className="text-sm font-bold text-[var(--text-main)] truncate max-w-[120px]">
                                     {user?.first_name} {user?.last_name}
                                 </p>
-                                <p className="text-xs text-[var(--text-muted)]">{user?.email}</p>
+                                <div className="flex justify-end gap-2 items-center">
+                                    <span className="text-[10px] font-bold text-blue-500 bg-blue-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                        {t(user?.role)}
+                                    </span>
+                                    <p className="text-[10px] text-[var(--text-muted)] truncate max-w-[80px]">{user?.email}</p>
+                                </div>
                             </div>
-                            <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                                {initials}
+                            <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-black shadow-lg shadow-blue-500/30 border-2 border-white/10 overflow-hidden">
+                                {user?.profile_picture ? (
+                                    <img src={user.profile_picture} alt="Avatar" className="w-full h-full object-cover" />
+                                ) : initials}
                             </div>
                         </div>
 
                         {/* Logout */}
                         <button
                             onClick={handleLogout}
-                            className="flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition-colors text-[var(--text-soft)] hover:text-red-500 hover:bg-red-500/10"
+                            className="flex items-center justify-center w-9 h-9 rounded-lg transition-colors text-[var(--text-soft)] hover:text-red-500 hover:bg-red-500/10 lg:w-auto lg:px-3 lg:gap-1.5"
                             title={t('logout')}
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                             </svg>
-                            <span className="hidden sm:block">{t('logout')}</span>
+                            <span className="hidden lg:block text-sm font-medium">{t('logout')}</span>
                         </button>
                     </div>
                 </div>
