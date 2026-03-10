@@ -205,6 +205,16 @@ const ConfirmStep = ({ type, selfie, coords, address, gpsStatus, onConfirm, onCa
 
                 <div className="space-y-2">
                     <GpsBadge status={gpsStatus} coords={coords} address={address} />
+                    {!window.isSecureContext && window.location.hostname !== 'localhost' && (
+                        <p className="text-[10px] text-rose-500 font-bold px-1 bg-rose-500/10 py-1 rounded-lg">
+                            ⚠️ Insecure context detected (HTTP). Geolocation requires HTTPS or localhost.
+                        </p>
+                    )}
+                    {gpsStatus === 'unavailable' && (
+                        <p className="text-[10px] text-rose-400 font-bold px-1 animate-pulse">
+                            ⚠️ GPS error or permission denied. Please allow location access.
+                        </p>
+                    )}
                     {address && <p className="text-[10px] text-[var(--text-soft)] px-1 leading-relaxed italic">Environment: {address}</p>}
                 </div>
 
@@ -293,27 +303,38 @@ const AttendanceDashboard = () => {
 
         let geocodingTriggered = false;
 
+        const onGpsError = (err) => {
+            console.error('GPS Error:', err);
+            // If high accuracy failed or timed out, try again with low accuracy
+            if (err.code === 3 || err.code === 1) {
+                setGpsStatus('unavailable');
+            } else {
+                setGpsStatus('unavailable');
+            }
+        };
+
+        const options = {
+            enableHighAccuracy: true, // Try high accuracy first
+            timeout: 10000,
+            maximumAge: 60000
+        };
+
         const id = navigator.geolocation.watchPosition(
             (pos) => {
                 const newCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                // Filter out obviously wrong data (like 0,0)
+                if (newCoords.lat === 0 && newCoords.lng === 0) return;
+
                 setGpsStatus('acquired');
                 setCoords(newCoords);
 
-                // Only trigger geocoding once per session or if moved significantly
                 if (!geocodingTriggered) {
                     fetchAddress(newCoords.lat, newCoords.lng);
                     geocodingTriggered = true;
                 }
             },
-            (err) => {
-                console.error('GPS Error:', err);
-                setGpsStatus('unavailable');
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 15000,
-                maximumAge: 10000
-            }
+            onGpsError,
+            options
         );
         return () => navigator.geolocation.clearWatch(id);
     }, []);
@@ -363,8 +384,8 @@ const AttendanceDashboard = () => {
         setActionLoading(true);
         try {
             const location = {
-                lat: coords?.lat || 0,
-                lng: coords?.lng || 0,
+                lat: coords?.lat || null,
+                lng: coords?.lng || null,
                 address: address || ''
             };
             const timestamp = new Date().toISOString();
@@ -392,7 +413,7 @@ const AttendanceDashboard = () => {
             const url = window.URL.createObjectURL(new Blob([blob]));
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', `my_attendance_${new Date().toISOString().split('T')[0]}.csv`);
+            link.setAttribute('download', `my_attendance_${new Date().toISOString().split('T')[0]}.xlsx`);
             document.body.appendChild(link);
             link.click();
             link.remove();

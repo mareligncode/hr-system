@@ -147,6 +147,14 @@ export const getEmployeeDashboard = async (req, res) => {
         });
 
         if (!employee) {
+            // If user is Admin/HR, they might not have an employee profile, return empty stats instead of 404
+            if (['admin', 'hr'].includes(req.user.role)) {
+                return res.status(200).json({
+                    profile: { employee_number: '-', status: 'N/A' },
+                    organization: { department: null, position: null, manager: null },
+                    stats: { totalDocuments: 0, verifiedDocuments: 0, expiringDocuments: 0, totalCertifications: 0, verifiedCertifications: 0, expiringCertifications: 0 }
+                });
+            }
             return res.status(404).json({ error: 'Employee profile not found' });
         }
 

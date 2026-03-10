@@ -101,7 +101,16 @@ const Navbar = () => {
                             </div>
                             <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-black shadow-lg shadow-blue-500/30 border-2 border-white/10 overflow-hidden">
                                 {user?.profile_picture ? (
-                                    <img src={user.profile_picture} alt="Avatar" className="w-full h-full object-cover" />
+                                    <img
+                                        src={user.profile_picture.startsWith('http') ? user.profile_picture.replace('http://', 'https://') : user.profile_picture}
+                                        alt="Avatar"
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.style.display = 'none';
+                                            e.target.parentNode.innerText = initials;
+                                        }}
+                                    />
                                 ) : initials}
                             </div>
                         </div>

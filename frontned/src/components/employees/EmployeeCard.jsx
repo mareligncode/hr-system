@@ -33,7 +33,7 @@ const EmployeeCard = ({ employee }) => {
                         <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center border border-blue-500/10 overflow-hidden">
                             {employee.User?.profile_picture && !imgError ? (
                                 <img
-                                    src={employee.User.profile_picture.replace('http://', 'https://')}
+                                    src={employee.User.profile_picture.startsWith('http') ? employee.User.profile_picture.replace('http://', 'https://') : employee.User.profile_picture}
                                     alt=""
                                     className="w-full h-full object-cover"
                                     onError={() => setImgError(true)}

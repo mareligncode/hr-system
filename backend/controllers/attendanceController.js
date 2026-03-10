@@ -2,6 +2,40 @@ import { Attendance, AttendanceCorrection, User, Employee, Department } from '..
 import { Op } from 'sequelize';
 import sequelize from '../config/database.js';
 import { logActivity } from '../services/auditService.js';
+import ExcelJS from 'exceljs';
+import https from 'https';
+import http from 'http';
+
+const getImageBuffer = (url) => {
+    if (!url) return null;
+    const fetchUrl = url.startsWith('http') ? url : `https:${url}`;
+    const protocol = fetchUrl.startsWith('https') ? https : http;
+
+    return new Promise((resolve) => {
+        const request = protocol.get(fetchUrl, (res) => {
+            if (res.statusCode === 301 || res.statusCode === 302) {
+                // Handle redirect
+                return resolve(getImageBuffer(res.headers.location));
+            }
+            if (res.statusCode !== 200) {
+                console.error(`Image Fetch Error: Status ${res.statusCode} for ${fetchUrl}`);
+                resolve(null);
+                return;
+            }
+            const data = [];
+            res.on('data', (chunk) => data.push(chunk));
+            res.on('end', () => resolve(Buffer.concat(data)));
+        });
+        request.on('error', (err) => {
+            console.error('Image Fetch Error:', err.message);
+            resolve(null);
+        });
+        request.setTimeout(10000, () => {
+            request.destroy();
+            resolve(null);
+        });
+    });
+};
 
 const calculateHours = (start, end) => {
     if (!start || !end) return 0;
@@ -451,61 +485,174 @@ export const exportAttendance = async (req, res) => {
 
         const attendance = await Attendance.findAll(queryOptions);
 
-        const escapeCSV = (val) => {
-            if (val === null || val === undefined) return '';
-            const str = String(val);
-            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-                return `"${str.replace(/"/g, '""')}"`;
-            }
-            return str;
-        };
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Attendance Report');
 
-        const headers = [
-            'Employee ID', 'Name', 'Department', 'Email',
-            'Date', 'Clock In', 'Clock Out',
-            'Work Hours', 'Overtime', 'Status',
-            'GPS In (Lat)', 'GPS In (Lng)',
-            'GPS Out (Lat)', 'GPS Out (Lng)',
-            'Selfie (Clock In)', 'Selfie (Clock Out)'
+        // Define columns
+        worksheet.columns = [
+            { header: 'Employee ID', key: 'eid', width: 15 },
+            { header: 'Name', key: 'name', width: 25 },
+            { header: 'Department', key: 'dept', width: 25 },
+            { header: 'Date', key: 'date', width: 15 },
+            { header: 'Clock In', key: 'in', width: 12 },
+            { header: 'Clock Out', key: 'out', width: 12 },
+            { header: 'Work Hours', key: 'hours', width: 12 },
+            { header: 'Status', key: 'status', width: 12 },
+            { header: 'Selfie In', key: 'selfie_in', width: 25 },
+            { header: 'Selfie Out', key: 'selfie_out', width: 25 },
+            { header: 'GPS In', key: 'gps_in', width: 25 },
+            { header: 'GPS Out', key: 'gps_out', width: 25 }
         ];
 
-        let csv = headers.join(',') + '\n';
+        // Explicitly set headers to prevent any shifting issues
+        worksheet.getRow(1).values = [
+            'Employee ID', 'Name', 'Department', 'Date',
+            'Clock In', 'Clock Out', 'Work Hours', 'Status',
+            'Selfie In', 'Selfie Out', 'GPS In', 'GPS Out'
+        ];
 
-        attendance.forEach(a => {
+        // Style header row
+        const headerRow = worksheet.getRow(1);
+        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        headerRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF0D9488' } // Teal-600
+        };
+        headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+        headerRow.height = 30;
+
+        // Add data and handle images
+        for (let i = 0; i < attendance.length; i++) {
+            const a = attendance[i];
             const user = a.User;
-            if (!user) return;
-            const emp = user.Employee;
-            const dateStr = a.clock_in ? new Date(a.clock_in).toISOString().split('T')[0] : '';
-            const inTime = a.clock_in ? new Date(a.clock_in).toTimeString().slice(0, 5) : '';
-            const outTime = a.clock_out ? new Date(a.clock_out).toTimeString().slice(0, 5) : '';
-            const locIn = a.location_in || {};
-            const locOut = a.location_out || {};
+            const emp = user?.Employee;
+            const rowNumber = i + 2;
+            const row = worksheet.getRow(rowNumber);
 
-            const row = [
-                escapeCSV(emp?.employee_number),
-                escapeCSV(`${user.first_name || ''} ${user.last_name || ''}`.trim()),
-                escapeCSV(emp?.Department?.name || 'MANAGEMENT'),
-                escapeCSV(user.email),
-                escapeCSV(dateStr),
-                escapeCSV(inTime),
-                escapeCSV(outTime),
-                escapeCSV(a.work_hours || 0),
-                escapeCSV(a.overtime_hours || 0),
-                escapeCSV(a.status),
-                escapeCSV(locIn.lat ?? ''),
-                escapeCSV(locIn.lng ?? ''),
-                escapeCSV(locOut.lat ?? ''),
-                escapeCSV(locOut.lng ?? ''),
-                escapeCSV(a.selfie_in || ''),
-                escapeCSV(a.selfie_out || ''),
-            ];
+            const clockInDate = new Date(a.clock_in);
+            const dateStr = a.clock_in ? clockInDate.toISOString().split('T')[0] : '';
+            const inTime = a.clock_in ? clockInDate.toTimeString().slice(0, 5) : '-';
+            const outTime = a.clock_out ? new Date(a.clock_out).toTimeString().slice(0, 5) : '-';
 
-            csv += row.join(',') + '\n';
-        });
+            // Base data
+            try {
+                row.values = {
+                    eid: emp?.employee_number || '-',
+                    name: user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'Unknown',
+                    dept: emp?.Department?.name || 'MANAGEMENT',
+                    date: dateStr,
+                    in: inTime,
+                    out: outTime,
+                    hours: a.work_hours || 0,
+                    status: (a.status || 'pending').toUpperCase(),
+                    selfie_in: '', // Placeholder for images
+                    selfie_out: '',
+                    gps_in: 'No GPS',
+                    gps_out: 'No GPS'
+                };
 
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', 'attachment; filename=attendance_report.csv');
-        res.status(200).send(csv);
+                // Embedded Images (Now in Cols 9 & 10)
+                row.height = 85;
+
+                if (a.selfie_in) {
+                    try {
+                        const bufferIn = await getImageBuffer(a.selfie_in);
+                        if (bufferIn && bufferIn.length > 0) {
+                            let ext = a.selfie_in.split('.').pop().split('?')[0].toLowerCase();
+                            // ExcelJS only supports 'jpeg', 'png', 'gif'
+                            if (ext === 'jpg') ext = 'jpeg';
+                            if (!['jpeg', 'png', 'gif'].includes(ext)) ext = 'jpeg';
+
+                            const imageId = workbook.addImage({
+                                buffer: bufferIn,
+                                extension: ext,
+                            });
+                            worksheet.addImage(imageId, {
+                                tl: { col: 8, row: rowNumber - 1 },
+                                ext: { width: 80, height: 80 },
+                                editAs: 'oneCell'
+                            });
+                            row.getCell('selfie_in').value = '';
+                        } else {
+                            row.getCell('selfie_in').value = 'No Image';
+                        }
+                    } catch (imgErr) {
+                        console.error('Error adding selfie_in to excel:', imgErr.message);
+                        row.getCell('selfie_in').value = 'Format Error';
+                    }
+                }
+
+                if (a.selfie_out) {
+                    try {
+                        const bufferOut = await getImageBuffer(a.selfie_out);
+                        if (bufferOut && bufferOut.length > 0) {
+                            let ext = a.selfie_out.split('.').pop().split('?')[0].toLowerCase();
+                            if (ext === 'jpg') ext = 'jpeg';
+                            if (!['jpeg', 'png', 'gif'].includes(ext)) ext = 'jpeg';
+
+                            const imageId = workbook.addImage({
+                                buffer: bufferOut,
+                                extension: ext,
+                            });
+                            worksheet.addImage(imageId, {
+                                tl: { col: 9, row: rowNumber - 1 },
+                                ext: { width: 80, height: 80 },
+                                editAs: 'oneCell'
+                            });
+                            row.getCell('selfie_out').value = '';
+                        } else {
+                            row.getCell('selfie_out').value = 'No Image';
+                        }
+                    } catch (imgErr) {
+                        console.error('Error adding selfie_out to excel:', imgErr.message);
+                        row.getCell('selfie_out').value = 'Format Error';
+                    }
+                }
+
+                // GPS Links (Now in Cols 11 & 12)
+                if (a.location_in && typeof a.location_in === 'object') {
+                    const { lat, lng } = a.location_in;
+                    if (lat && lng && lat !== 0 && lng !== 0) {
+                        row.getCell('gps_in').value = {
+                            text: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+                            hyperlink: `https://www.google.com/maps?q=${lat},${lng}`
+                        };
+                        row.getCell('gps_in').font = { color: { argb: 'FF3B82F6' }, underline: true };
+                    } else {
+                        row.getCell('gps_in').value = 'Location Error (0,0)';
+                    }
+                }
+
+                if (a.location_out && typeof a.location_out === 'object') {
+                    const { lat, lng } = a.location_out;
+                    if (lat && lng && lat !== 0 && lng !== 0) {
+                        row.getCell('gps_out').value = {
+                            text: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+                            hyperlink: `https://www.google.com/maps?q=${lat},${lng}`
+                        };
+                        row.getCell('gps_out').font = { color: { argb: 'FF3B82F6' }, underline: true };
+                    } else {
+                        row.getCell('gps_out').value = 'Location Error (0,0)';
+                    }
+                }
+            } catch (rowErr) {
+                console.error(`Error processing attendance row ${i}:`, rowErr.message);
+            }
+
+            // Center all cells in row
+            row.alignment = { vertical: 'middle', horizontal: 'center' };
+        }
+
+        // Set response headers
+        const fileName = `attendance_report_${new Date().toISOString().split('T')[0]}.xlsx`;
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+        await logActivity(req.user.id, 'EXPORT', 'Attendance', null, null, { recordCount: attendance.length }, req);
+
+        await workbook.xlsx.write(res);
+        res.status(200).end();
     } catch (error) {
         console.error('Export Error:', error);
         res.status(500).json({ error: 'Failed to export attendance data' });
