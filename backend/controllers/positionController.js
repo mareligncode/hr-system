@@ -8,8 +8,8 @@ export const getAllPositions = async (req, res) => {
         const whereClause = {};
 
         if (department_id) whereClause.department_id = department_id;
-        if (is_management !== undefined) whereClause.is_management = is_management === 'true';
-        if (is_active !== undefined) whereClause.is_active = is_active === 'true';
+        if (is_management && is_management !== '') whereClause.is_management = is_management === 'true';
+        if (is_active && is_active !== '') whereClause.is_active = is_active === 'true';
         if (grade) whereClause.grade = grade;
 
         const positions = await Position.findAll({
@@ -18,11 +18,18 @@ export const getAllPositions = async (req, res) => {
                 model: Department,
                 attributes: ['id', 'name', 'code', 'location']
             },
-            order: [['grade', 'ASC'], ['title', 'ASC']]
+            order: [
+                ['grade', 'ASC'],
+                ['title', 'ASC']
+            ]
         });
         res.status(200).json(positions);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch positions', details: error.message });
+        console.error('Error fetching positions:', error);
+        res.status(500).json({
+            error: 'Failed to fetch positions',
+            details: error.message
+        });
     }
 };
 

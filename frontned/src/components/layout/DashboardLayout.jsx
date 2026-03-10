@@ -14,6 +14,11 @@ const DashboardLayout = () => {
     const menuItems = [
         { path: '/dashboard', label: t('dashboard'), icon: '📊' },
         { path: '/profile', label: t('profile'), icon: '👤' },
+        { path: '/attendance', label: t('attendance'), icon: '🕒' },
+        { path: '/attendance/calendar', label: t('attendanceCalendar') || 'Calendar', icon: '📅' },
+        { path: '/attendance/team', label: t('todayAttendance'), icon: '📋', roles: ['admin', 'hr', 'manager'] },
+        { path: '/attendance/approvals', label: t('pendingApprovals'), icon: '✔️', roles: ['admin', 'hr', 'manager'] },
+        { path: '/attendance/reports', label: t('attendanceReports') || 'Reports', icon: '📊', roles: ['admin', 'hr', 'manager', 'finance'] },
         { path: '/employees', label: t('employees'), icon: '👥', permission: 'view_employees' },
         { path: '/departments', label: t('departments'), icon: '🏢' },
         { path: '/positions', label: t('positions'), icon: '👔' },
@@ -24,6 +29,7 @@ const DashboardLayout = () => {
 
     const filteredMenuItems = menuItems.filter(item => {
         if (item.role && role !== item.role) return false;
+        if (item.roles && !item.roles.includes(role)) return false;
         if (item.permission && !hasPermission(item.permission)) return false;
         return true;
     });

@@ -18,6 +18,7 @@ import certificationRoutes from './routes/certificationRoutes.js';
 import auditRoutes from './routes/auditRoutes.js';
 import roleRoutes from './routes/roleRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import attendanceRoutes from './routes/attendanceRoutes.js';
 
 dotenv.config();
 
@@ -80,6 +81,7 @@ app.use('/api/certifications', certificationRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 // Basic health check route
 app.get('/api/health', (req, res) => {

@@ -10,10 +10,20 @@ export const getAllDepartments = async (req, res) => {
 
         const departments = await Department.findAll({
             where: whereClause,
+            attributes: {
+                include: [
+                    [
+                        sequelize.fn('COUNT', sequelize.col('Employees.user_id')),
+                        'employee_count'
+                    ]
+                ]
+            },
             include: [
                 { model: Department, as: 'ParentDepartment', attributes: ['id', 'name', 'code'] },
-                { model: User, as: 'Manager', attributes: ['id', 'first_name', 'last_name', 'email'] }
+                { model: User, as: 'Manager', attributes: ['id', 'first_name', 'last_name', 'email'] },
+                { model: Employee, as: 'Employees', attributes: [] }
             ],
+            group: ['Department.id'],
             order: [['name', 'ASC']]
         });
         res.status(200).json(departments);

@@ -102,6 +102,10 @@ export const createEmployee = async (req, res) => {
             throw new Error('Email, first name, and last name are required');
         }
 
+        if (!department_id || !position_id) {
+            throw new Error('Department and Position are required to create an employee profile.');
+        }
+
         // Check if user with email already exists
         let user = await User.findOne({ where: { email } });
         let tempPassword = req.body.password || email; // Default to email if no password provided

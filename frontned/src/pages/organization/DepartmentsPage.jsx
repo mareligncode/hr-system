@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchDepartments, fetchDepartmentHierarchy, createDepartment, updateDepartment, deleteDepartment } from '../../store/organizationSlice';
+import { fetchEmployees } from '../../store/employeeSlice';
 import { useSettings } from '../../context/SettingsContext.jsx';
 import Button from '../../components/ui/Button';
 import usePermission from '../../hooks/usePermission';
@@ -10,6 +11,7 @@ const DepartmentsPage = () => {
     const dispatch = useDispatch();
     const { user } = useSelector((state) => state.auth);
     const { departments, hierarchy, loading } = useSelector((state) => state.organization);
+    const { employees } = useSelector((state) => state.employees);
     const { t } = useSettings();
     const { hasPermission } = usePermission();
 
@@ -23,34 +25,49 @@ const DepartmentsPage = () => {
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'tree'
     const [showAddModal, setShowAddModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [formData, setFormData] = useState({ id: null, name: '', code: '', parent_department_id: null });
+    const [formData, setFormData] = useState({ id: null, name: '', code: '', parent_department_id: null, manager_id: null });
 
     useEffect(() => {
         dispatch(fetchDepartments());
         dispatch(fetchDepartmentHierarchy());
+        dispatch(fetchEmployees());
     }, [dispatch]);
 
     const handleAddDepartment = async (e) => {
         e.preventDefault();
         if (isEditing) {
-            await dispatch(updateDepartment({ id: formData.id, data: { name: formData.name, code: formData.code, parent_department_id: formData.parent_department_id } }));
+            await dispatch(updateDepartment({
+                id: formData.id,
+                data: {
+                    name: formData.name,
+                    code: formData.code,
+                    parent_department_id: formData.parent_department_id,
+                    manager_id: formData.manager_id
+                }
+            }));
         } else {
             await dispatch(createDepartment(formData));
         }
         setShowAddModal(false);
-        setFormData({ id: null, name: '', code: '', parent_department_id: null });
+        setFormData({ id: null, name: '', code: '', parent_department_id: null, manager_id: null });
         setIsEditing(false);
         dispatch(fetchDepartmentHierarchy());
     };
 
     const openEditModal = (dept) => {
-        setFormData({ id: dept.id, name: dept.name, code: dept.code, parent_department_id: dept.parent_department_id || null });
+        setFormData({
+            id: dept.id,
+            name: dept.name,
+            code: dept.code,
+            parent_department_id: dept.parent_department_id || null,
+            manager_id: dept.manager_id || null
+        });
         setIsEditing(true);
         setShowAddModal(true);
     };
 
     const openCreateModal = () => {
-        setFormData({ id: null, name: '', code: '', parent_department_id: null });
+        setFormData({ id: null, name: '', code: '', parent_department_id: null, manager_id: null });
         setIsEditing(false);
         setShowAddModal(true);
     };
@@ -215,6 +232,23 @@ const DepartmentsPage = () => {
                                     {departments.map(d => (
                                         <option key={d.id} value={d.id}>{d.name}</option>
                                     ))}
+                                </select>
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] ml-1">{t('departmentManager')}</label>
+                                <select
+                                    value={formData.manager_id || ''}
+                                    onChange={(e) => setFormData({ ...formData, manager_id: e.target.value || null })}
+                                    className="w-full bg-[var(--bg-base)] border border-[var(--border-main)] rounded-xl px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all font-medium"
+                                >
+                                    <option value="">{t('noManagerAssigned')}</option>
+                                    {employees
+                                        .filter(emp => emp.User?.role === 'manager')
+                                        .map(emp => (
+                                            <option key={emp.user_id} value={emp.user_id}>
+                                                {emp.User?.first_name} {emp.User?.last_name} ({emp.employee_number})
+                                            </option>
+                                        ))}
                                 </select>
                             </div>
                         </div>

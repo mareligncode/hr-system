@@ -9,6 +9,8 @@ import Role from './Role.js';
 import Permission from './Permission.js';
 import UserRole from './UserRole.js';
 import RolePermission from './RolePermission.js';
+import Attendance from './Attendance.js';
+import AttendanceCorrection from './AttendanceCorrection.js';
 
 // User & Role (Many-to-Many)
 User.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id' });
@@ -64,6 +66,17 @@ EmployeeCertification.belongsTo(User, { as: 'Verifier', foreignKey: 'verified_by
 AuditLog.belongsTo(User, { foreignKey: 'user_id' });
 User.hasMany(AuditLog, { foreignKey: 'user_id' });
 
+// Attendance
+User.hasMany(Attendance, { foreignKey: 'user_id' });
+Attendance.belongsTo(User, { foreignKey: 'user_id' });
+Attendance.belongsTo(User, { as: 'Verifier', foreignKey: 'verified_by' });
+
+User.hasMany(AttendanceCorrection, { foreignKey: 'user_id' });
+AttendanceCorrection.belongsTo(User, { foreignKey: 'user_id' });
+AttendanceCorrection.belongsTo(Attendance, { foreignKey: 'attendance_id' });
+Attendance.hasMany(AttendanceCorrection, { foreignKey: 'attendance_id' });
+AttendanceCorrection.belongsTo(User, { as: 'Approver', foreignKey: 'approved_by' });
+
 export {
     User,
     Department,
@@ -75,5 +88,7 @@ export {
     Role,
     Permission,
     UserRole,
-    RolePermission
+    RolePermission,
+    Attendance,
+    AttendanceCorrection
 };
