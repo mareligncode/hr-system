@@ -74,10 +74,8 @@ export const getCertificationDownloadUrl = async (req, res) => {
 
         const resourceType = urlParts[uploadIndex - 1] || 'image';
 
-        // Extract everything after /upload/
         let filePathParts = urlParts.slice(uploadIndex + 1);
 
-        // Skip version (v1234567)
         if (filePathParts[0].startsWith('v') && !isNaN(filePathParts[0].substring(1))) {
             filePathParts.shift();
         }

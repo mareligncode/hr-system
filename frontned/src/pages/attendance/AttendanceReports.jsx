@@ -70,7 +70,7 @@ const AttendanceReports = () => {
             link.click();
             link.remove();
         } catch (error) {
-            toast.error(t('error'));
+            toast.error(t('exportError') || t('error'));
         }
     };
 

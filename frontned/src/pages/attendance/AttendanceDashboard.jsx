@@ -194,7 +194,7 @@ const ConfirmStep = ({ type, selfie, coords, address, gpsStatus, onConfirm, onCa
                         {type === 'in' ? <CheckCircle2 className="w-8 h-8" /> : <XCircle className="w-8 h-8" />}
                     </div>
                     <h3 className="font-black text-xl uppercase tracking-tight">{type === 'in' ? 'Confirm Clock In' : 'Confirm Clock Out'}</h3>
-                    <p className="text-xs text-[var(--text-muted)] mt-1">{format(new Date(), 'EEEE, MMMM do • HH:mm:ss')}</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-1">{format(new Date(), 'EEEE, MMMM do • hh:mm:ss a')}</p>
                 </div>
 
                 {selfie && (
@@ -367,11 +367,12 @@ const AttendanceDashboard = () => {
                 lng: coords?.lng || 0,
                 address: address || ''
             };
+            const timestamp = new Date().toISOString();
             if (pendingType === 'in') {
-                await attendanceService.clockIn({ location, selfie_url: capturedSelfie });
+                await attendanceService.clockIn({ location, selfie_url: capturedSelfie, timestamp });
                 setSuccess('✅ Clocked in successfully!');
             } else {
-                await attendanceService.clockOut({ location });
+                await attendanceService.clockOut({ location, timestamp });
                 setSuccess('✅ Clocked out successfully!');
             }
             setShowConfirm(false);
@@ -449,7 +450,7 @@ const AttendanceDashboard = () => {
                                 <div className="mb-6">
                                     <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)] mb-2">Current Time</p>
                                     <div className={`text-5xl font-black tabular-nums tracking-tight ${isClockedIn ? 'text-emerald-400' : 'text-[var(--text-primary)]'}`}>
-                                        {format(now, 'HH:mm:ss')}
+                                        {format(now, 'hh:mm:ss a')}
                                     </div>
                                 </div>
 
@@ -470,7 +471,7 @@ const AttendanceDashboard = () => {
                                             {formatElapsed(elapsedSec)}
                                         </p>
                                         <p className="text-[10px] text-emerald-500/60 mt-1">
-                                            Since {format(new Date(activeSession.clock_in), 'HH:mm')}
+                                            Since {format(new Date(activeSession.clock_in), 'hh:mm a')}
                                         </p>
                                     </div>
                                 )}
@@ -601,8 +602,8 @@ const AttendanceDashboard = () => {
                                                                 <span className="font-bold text-sm">{isActive ? 'In Progress' : t('clockedOut')}</span>
                                                             </div>
                                                             <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-3">
-                                                                <span>IN: {format(new Date(row.clock_in), 'HH:mm')}</span>
-                                                                {row.clock_out && <><span>→</span><span>OUT: {format(new Date(row.clock_out), 'HH:mm')}</span></>}
+                                                                <span>IN: {format(new Date(row.clock_in), 'hh:mm a')}</span>
+                                                                {row.clock_out && <><span>→</span><span>OUT: {format(new Date(row.clock_out), 'hh:mm a')}</span></>}
                                                             </div>
                                                         </div>
                                                     </div>

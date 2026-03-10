@@ -46,7 +46,7 @@ const TeamAttendance = () => {
 
     const handleExport = async () => {
         try {
-            const blob = await attendanceService.exportAttendance({ date: selectedDate });
+            const blob = await attendanceService.exportAttendance(null, null, selectedDate);
             const url = window.URL.createObjectURL(new Blob([blob]));
             const link = document.createElement('a');
             link.href = url;
@@ -153,14 +153,14 @@ const TeamAttendance = () => {
                                         <td className="p-6">
                                             <div className="flex items-center gap-2">
                                                 <Clock className="w-3.5 h-3.5 text-blue-500" />
-                                                <span className="text-sm font-bold">{format(new Date(row.clock_in), 'HH:mm')}</span>
+                                                <span className="text-sm font-bold">{format(new Date(row.clock_in), 'hh:mm a')}</span>
                                             </div>
                                         </td>
                                         <td className="p-6">
                                             {row.clock_out ? (
                                                 <div className="flex items-center gap-2">
                                                     <Clock className="w-3.5 h-3.5 text-emerald-500" />
-                                                    <span className="text-sm font-bold">{format(new Date(row.clock_out), 'HH:mm')}</span>
+                                                    <span className="text-sm font-bold">{format(new Date(row.clock_out), 'hh:mm a')}</span>
                                                 </div>
                                             ) : (
                                                 <span className="text-[10px] font-black uppercase tracking-widest text-blue-500 animate-pulse">{t('clockedIn')}</span>

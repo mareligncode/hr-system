@@ -10,7 +10,6 @@ const calculateHours = (start, end) => {
     return Math.max(0, parseFloat(diffHrs.toFixed(2)));
 };
 
-// ─── Clock In ─────────────────────────────────────────────────────────────────
 export const clockIn = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -29,12 +28,13 @@ export const clockIn = async (req, res) => {
             return res.status(400).json({ error: 'You are already clocked in.' });
         }
 
-        const { location, selfie_url } = req.body;
+        const { location, selfie_url, timestamp } = req.body;
         const ip_address = req.ip || req.headers['x-forwarded-for'];
+        const clockInTime = timestamp ? new Date(timestamp) : new Date();
 
         const attendance = await Attendance.create({
             user_id: userId,
-            clock_in: new Date(),
+            clock_in: clockInTime,
             location_in: location || null,
             selfie_in: selfie_url || null,
             ip_address: ip_address
@@ -49,7 +49,6 @@ export const clockIn = async (req, res) => {
     }
 };
 
-// ─── Clock Out ────────────────────────────────────────────────────────────────
 export const clockOut = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -63,8 +62,8 @@ export const clockOut = async (req, res) => {
             return res.status(400).json({ error: 'No active clock-in session found.' });
         }
 
-        const { location, selfie_url } = req.body;
-        const clockOutTime = new Date();
+        const { location, selfie_url, timestamp } = req.body;
+        const clockOutTime = timestamp ? new Date(timestamp) : new Date();
         const hours = calculateHours(attendance.clock_in, clockOutTime);
 
         const workHours = Math.min(hours, 8);
@@ -87,7 +86,6 @@ export const clockOut = async (req, res) => {
     }
 };
 
-// ─── My Attendance (employee personal history) ────────────────────────────────
 export const getMyAttendance = async (req, res) => {
     try {
         const { start_date, end_date } = req.query;
@@ -110,14 +108,12 @@ export const getMyAttendance = async (req, res) => {
     }
 };
 
-// ─── Today's Attendance (alias of team view with date=today) ─────────────────
 export const getTodayAttendance = async (req, res) => {
     const today = new Date();
     req.query.date = today.toISOString().split('T')[0];
     return getTeamAttendance(req, res);
 };
 
-// ─── Team Attendance (Manager / HR / Admin) ───────────────────────────────────
 export const getTeamAttendance = async (req, res) => {
     try {
         let deptWhere = {};
@@ -136,7 +132,6 @@ export const getTeamAttendance = async (req, res) => {
         const nextDay = new Date(targetDate);
         nextDay.setDate(nextDay.getDate() + 1);
 
-        // Admin/HR can filter by department_id
         if ((req.user.role === 'admin' || req.user.role === 'hr') && department_id) {
             deptWhere = { department_id };
         }
@@ -164,11 +159,9 @@ export const getTeamAttendance = async (req, res) => {
     }
 };
 
-// ─── Approve Attendance ───────────────────────────────────────────────────────
 export const approveAttendance = async (req, res) => {
     try {
         const { id } = req.params;
-        // Accept status from body OR from route-level preset (for /reject alias)
         const status = req.body.status || req.presetStatus;
         const { comment } = req.body;
 
@@ -181,7 +174,6 @@ export const approveAttendance = async (req, res) => {
 
         await attendance.update({ status, verified_by: req.user.id });
 
-        // If there's a pending correction for this record, close it with the comment
         if (comment) {
             await AttendanceCorrection.update(
                 { status, manager_comment: comment, approved_by: req.user.id },
@@ -259,7 +251,6 @@ export const approveCorrection = async (req, res) => {
     }
 };
 
-// ─── Weekly Summary ───────────────────────────────────────────────────────────
 export const getAttendanceSummary = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -286,14 +277,11 @@ export const getAttendanceSummary = async (req, res) => {
     }
 };
 
-// ─── Correction Requests (Manager queue) ──────────────────────────────────────
-// BUG FIX: null check added for manager profile
 export const getCorrectionRequests = async (req, res) => {
     try {
         let deptWhere = {};
         if (req.user.role === 'manager') {
             const manager = await Employee.findOne({ where: { user_id: req.user.id } });
-            // ✅ Fixed: null check prevents crash when manager has no Employee profile
             if (!manager) return res.status(404).json({ error: 'Manager profile not found' });
             deptWhere = { department_id: manager.department_id };
         }
@@ -320,7 +308,6 @@ export const getCorrectionRequests = async (req, res) => {
     }
 };
 
-// ─── Attendance Reports (aggregated stats) ────────────────────────────────────
 export const getAttendanceReports = async (req, res) => {
     try {
         const { start_date, end_date, department_id } = req.query;
@@ -357,7 +344,6 @@ export const getAttendanceReports = async (req, res) => {
             }]
         });
 
-        // Aggregate per employee
         const employeeMap = {};
         records.forEach(a => {
             const user = a.User;
@@ -411,8 +397,6 @@ export const getAttendanceReports = async (req, res) => {
     }
 };
 
-// ─── Export to CSV ────────────────────────────────────────────────────────────
-// BUG FIX: Employee role now allowed — scoped to own data only
 export const exportAttendance = async (req, res) => {
     try {
         const { start_date, end_date, date } = req.query;
@@ -421,7 +405,6 @@ export const exportAttendance = async (req, res) => {
         let selfOnly = false;
 
         if (role === 'employee') {
-            // ✅ Fixed: employees can export their own attendance
             selfOnly = true;
         } else if (role === 'manager') {
             const manager = await Employee.findOne({ where: { user_id: req.user.id } });
@@ -448,13 +431,17 @@ export const exportAttendance = async (req, res) => {
                 include: [{
                     model: Employee,
                     attributes: ['employee_number'],
-                    required: false
+                    required: false,
+                    include: [{
+                        model: Department,
+                        attributes: ['name'],
+                        required: false
+                    }]
                 }]
             }],
             order: [['clock_in', 'DESC']]
         };
 
-        // Scope to self only for employees
         if (selfOnly) {
             queryOptions.where.user_id = req.user.id;
         } else if (Object.keys(deptWhere).length > 0) {
@@ -474,7 +461,7 @@ export const exportAttendance = async (req, res) => {
         };
 
         const headers = [
-            'Employee ID', 'Name', 'Email',
+            'Employee ID', 'Name', 'Department', 'Email',
             'Date', 'Clock In', 'Clock Out',
             'Work Hours', 'Overtime', 'Status',
             'GPS In (Lat)', 'GPS In (Lng)',
@@ -497,6 +484,7 @@ export const exportAttendance = async (req, res) => {
             const row = [
                 escapeCSV(emp?.employee_number),
                 escapeCSV(`${user.first_name || ''} ${user.last_name || ''}`.trim()),
+                escapeCSV(emp?.Department?.name || 'MANAGEMENT'),
                 escapeCSV(user.email),
                 escapeCSV(dateStr),
                 escapeCSV(inTime),
