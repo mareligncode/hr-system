@@ -1,4 +1,5 @@
 import { AuditLog, User } from '../models/index.js';
+import ExcelJS from 'exceljs';
 
 export const logActivity = async (userId, action, model, modelId, oldValues = null, newValues = null, req = null) => {
     try {
@@ -33,7 +34,7 @@ export const getAuditLogs = async (req, res) => {
             limit: parseInt(limit),
             offset: parseInt(offset)
         });
-        
+
         res.status(200).json({
             logs: rows,
             total: count,
@@ -52,17 +53,64 @@ export const exportAuditLogs = async (req, res) => {
             order: [['created_at', 'DESC']]
         });
 
-        // Simple CSV generation
-        const header = 'ID,User,Action,Model,ModelID,IP,Date\n';
-        const rows = logs.map(log => {
-            const userName = log.User ? `${log.User.first_name} ${log.User.last_name}` : 'System';
-            return `${log.id},"${userName}",${log.action},${log.model},${log.model_id},${log.ip_address},${log.created_at}`;
-        }).join('\n');
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Audit Logs');
 
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', 'attachment; filename=audit_logs.csv');
-        res.status(200).send(header + rows);
+        // Define columns
+        worksheet.columns = [
+            { header: 'ID', key: 'id', width: 10 },
+            { header: 'User', key: 'user', width: 25 },
+            { header: 'Action', key: 'action', width: 20 },
+            { header: 'Model', key: 'model', width: 15 },
+            { header: 'Model ID', key: 'model_id', width: 10 },
+            { header: 'IP Address', key: 'ip_address', width: 20 },
+            { header: 'Date & Time', key: 'created_at', width: 25 }
+        ];
+
+        // Style header row
+        const headerRow = worksheet.getRow(1);
+        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        headerRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF4F46E5' } // Indigo-600
+        };
+        headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+
+        // Add data
+        logs.forEach(log => {
+            worksheet.addRow({
+                id: log.id,
+                user: log.User ? `${log.User.first_name} ${log.User.last_name}` : 'System',
+                action: log.action,
+                model: log.model,
+                model_id: log.model_id,
+                ip_address: log.ip_address || 'N/A',
+                created_at: new Date(log.created_at).toLocaleString()
+            });
+        });
+
+        // Alternating row colors
+        worksheet.eachRow((row, rowNumber) => {
+            if (rowNumber > 1 && rowNumber % 2 === 0) {
+                row.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFF9FAFB' } // Gray-50
+                };
+            }
+            row.alignment = { vertical: 'middle' };
+        });
+
+        // Set response headers
+        const fileName = `audit_logs_${new Date().toISOString().split('T')[0]}.xlsx`;
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+        await workbook.xlsx.write(res);
+        res.status(200).end();
     } catch (error) {
+        console.error('Audit Export Error:', error);
         res.status(500).json({ error: 'Failed to export logs' });
     }
 };

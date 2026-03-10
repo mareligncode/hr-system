@@ -300,11 +300,12 @@ const EmployeeProfile = () => {
                         <div className="flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">
                             <div className="w-32 h-32 rounded-3xl bg-[var(--bg-surface)] p-1 border-4 border-[var(--bg-surface)] shadow-2xl relative">
                                 <div className="w-full h-full rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 flex items-center justify-center overflow-hidden">
-                                    {emp.User?.profile_picture ? (
+                                    {(emp.User?.profile_picture && !imgError) ? (
                                         <img
-                                            src={emp.User.profile_picture.replace('http://', 'https://')}
+                                            src={emp.User.profile_picture.startsWith('http') ? emp.User.profile_picture.replace('http://', 'https://') : emp.User.profile_picture}
                                             alt=""
                                             className="w-full h-full object-cover"
+                                            onError={() => setImgError(true)}
                                         />
                                     ) : (
                                         <User className="w-8 h-8 text-blue-500" />
