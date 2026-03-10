@@ -67,8 +67,20 @@ const EmployeeCreate = () => {
         }
     };
 
-    const nextStep = () => setStep(prev => Math.min(prev + 1, 3));
-    const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
+    const nextStep = () => {
+        if (step === 2) {
+            if (!formData.department_id || !formData.position_id) {
+                setError('Please select both a Department and a Position before proceeding.');
+                return;
+            }
+        }
+        setError(null);
+        setStep(prev => Math.min(prev + 1, 3));
+    };
+    const prevStep = () => {
+        setError(null);
+        setStep(prev => Math.max(prev - 1, 1));
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -240,8 +252,10 @@ const EmployeeCreate = () => {
                                             className="w-full bg-[var(--bg-input)] border border-[var(--border-input)] rounded-xl py-3 px-4 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                                         >
                                             <option value="">Select Position</option>
-                                            {positions.filter(p => p.department_id === parseInt(formData.department_id)).map(p => (
-                                                <option key={p.id} value={p.id}>{p.title}</option>
+                                            {positions.map(p => (
+                                                <option key={p.id} value={p.id}>
+                                                    {p.title} {p.Department?.name ? `(${p.Department.name})` : ''}
+                                                </option>
                                             ))}
                                         </select>
                                     </div>

@@ -146,7 +146,7 @@ const PositionsPage = () => {
                                     </span>
                                 </td>
                                 <td className="py-5 px-4 font-mono text-xs">
-                                    ${pos.min_salary?.toLocaleString()} - ${pos.max_salary?.toLocaleString()}
+                                    ${pos.salary_range_min?.toLocaleString() || '0'} - ${pos.salary_range_max?.toLocaleString() || '0'}
                                 </td>
                                 <td className="px-6 py-5 text-right w-[120px]">
                                     {canManage && (
@@ -223,8 +223,8 @@ const PositionsPage = () => {
                                         <input
                                             type="number"
                                             required
-                                            value={formData.min_salary}
-                                            onChange={(e) => setFormData({ ...formData, min_salary: e.target.value })}
+                                            value={formData.salary_range_min}
+                                            onChange={(e) => setFormData({ ...formData, salary_range_min: e.target.value })}
                                             className="w-full bg-[var(--bg-base)] border border-[var(--border-main)] rounded-xl px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all font-mono font-bold"
                                         />
                                     </div>
@@ -233,8 +233,8 @@ const PositionsPage = () => {
                                         <input
                                             type="number"
                                             required
-                                            value={formData.max_salary}
-                                            onChange={(e) => setFormData({ ...formData, max_salary: e.target.value })}
+                                            value={formData.salary_range_max}
+                                            onChange={(e) => setFormData({ ...formData, salary_range_max: e.target.value })}
                                             className="w-full bg-[var(--bg-base)] border border-[var(--border-main)] rounded-xl px-4 py-3 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all font-mono font-bold"
                                         />
                                     </div>

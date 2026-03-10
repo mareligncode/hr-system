@@ -1,93 +1,115 @@
-# 🏨 Hotel HR Management System - Phase 1-4 Operations Guide
+# Hotel HR Management System
 
-This document defines the roles, responsibilities, and expected workflows for all **6 System Actors** within the Hotel HR Management System, specifically covering the implementation completed in **Phases 1 through 4**.
+A comprehensive, multilingual (English & Amharic) HR and Attendance Management System built for the hospitality industry.
 
----
+## 🚀 Key Features
 
-## 🚀 Overview of Completed Phases
-- **Phase 1: Foundation & Authentication** – Secure multi-platform login, registration, and code-based password recovery.
-- **Phase 2: Organization Structure** – Management of hotels, departments, and positions.
-- **Phase 3: Employee Management** – Lifecycle management of staff, document tracking, and certifications.
-- **Phase 4: RBAC & Security** – Role-Based Access Control, scoped permissions, and immutable audit logging.
-
----
-
-## 👥 System Actors & Responsibilities
-
-### 👨‍💻 1. System Administrator (IT)
-*Accountable for system integrity, security configuration, and technical health.*
-
-- **Core Actions**:
-  - **Security Configuration**: Manage granular permissions for all roles via the **Admin Panel**.
-  - **User Lifecycle**: Monitor user accounts and verify email verification flows.
-  - **Audit Oversight**: Review the immutable **Audit Logs** to track every creation, update, and deletion in the system.
-  - **Environment Management**: Configure SMTP services, storage buckets (Cloudinary), and JWT security tokens.
-- **Expected Outcome**: A stable, secure, and fully audited environment where data privacy is enforced at the database level.
-
-### 🏢 2. HR Manager
-*Handles the complete employee lifecycle and ensures hotel-wide compliance.*
-
-- **Core Actions**:
-  - **Onboarding**: Use the **3-Step Employee Wizard** to register new staff.
-  - **Default Passwords**: Set explicit temporary passwords during onboarding or let them default to the employee's email.
-  - **Org Management**: Define the hotel's department hierarchy and assign managers to each unit.
-  - **Compliance Tracking**: Monitor expiring IDs, passports, and certifications through the **Dashboard Compliance Alerts**.
-  - **Document Verification**: Review and verify documents uploaded by employees.
-- **Expected Outcome**: An accurate, digital representation of the hotel workforce with up-to-date documentation.
-
-### 👨‍💼 3. Department Manager
-*Manages team visibility and operational workflow within their specific department scope.*
-
-- **Core Actions**:
-  - **Team Oversight**: Access a filtered **Employee Directory** showing only staff within their assigned department.
-  - **Profile Review**: View subordinate profiles to check hire dates, contact info, and role-specific certifications.
-  - **Self-Dashboard**: View personal department metrics and basic attendance/activity trends for their team.
-- **Expected Outcome**: Effective management of departmental staff without access to sensitive data from other departments.
-
-### 🤵 4. Staff Employee
-*Utilizes self-service features for personal data management.*
-
-- **Core Actions**:
-  - **Self-Service Access**: Log in using their email and the temporary password (defaulted to email) provided by HR.
-  - **Profile Management**: View their own hire date, employee number, and reporting manager.
-  - **Document Portfolio**: Upload certifications and training records directly to their profile for HR review.
-  - **Security**: Change passwords via the secure reset flow using a 6-digit email code.
-- **Expected Outcome**: Reduced administrative burden on HR through employee self-service and data transparency.
-
-### 💰 5. Finance / Payroll Officer
-*Audits payroll-related data and financial organization structures.*
-
-- **Core Actions**:
-  - **Salary Audit**: View position-specific salary ranges and historical employee data.
-  - **Data Export**: Export the employee directory to **CSV/Excel** for integration with external payroll systems.
-  - **Contract Monitoring**: Track permanent vs. temporary staff distributions to forecast monthly labor costs.
-- **Expected Outcome**: Accurate financial data extraction and audit-ready reporting.
-
-### 👑 6. General Manager / Hotel Owner
-*Strategic oversight of the hotel workforce and health analytics.*
-
-- **Core Actions**:
-  - **Executive Dashboard**: Get real-time counts for Total Workforce, Departmental Heatmaps, and Active Certifications.
-  - **Org Visualization**: Use the **Interactive Org Chart** to see the hotel chain of command at a glance.
-  - **Compliance Summary**: Identify critical documentation gaps across all departments to mitigate legal risks.
-- **Expected Outcome**: High-level visibility into the hotel's operational pulse and workforce readiness.
+- **Multilingual Support**: Fully localized in English and Amharic (አማርኛ).
+- **Attendance Tracking**: Real-time clock-in/out with GPS and photo verification.
+- **Organization Structure**: Dynamic org charts, department, and position management.
+- **Employee Management**: Profile tracking, document storage, and directory access.
+- **Role-Based Access Control (RBAC)**: Fine-grained permissions for 6 distinct actor roles.
 
 ---
 
-## 🛡️ Implementation Highlights (Phases 1-4)
+## 👥 Actor Roles & Responsibilities (Implementation through Phase 5)
 
-| Feature | Implementation Detail |
-| :--- | :--- |
-| **Authentication** | JWT-based with 6-digit code password reset. |
-| **Passwords** | Admins can set passwords during creation or default to the employee's email. |
-| **Access Control** | Roles are scoped to departments (e.g., a Manager only see their unit). |
-| **Audit Log** | Every "Write" action is recorded with User ID, Timestamp, Action Type, and ID. |
-| **Self-Service** | All roles can see their own Department/Position regardless of administrative privilege. |
+### 1. Administrator
+- **System Config**: Manage system-wide settings and role permissions.
+- **Audit Logs**: Access detailed logs of all system activities for security and compliance.
+- **User Management**: Direct control over user accounts and password resets.
+- **Global Visibility**: Unrestricted access to all modules including attendance and employee data.
+
+### 2. HR Manager
+- **Employee Lifecycle**: Handle onboarding, profile management, and document verification.
+- **Org Management**: Create and modify departments and positions.
+- **Global Attendance**: Monitor attendance logs across the entire hotel.
+- **Reporting**: Generate and export payroll and compliance reports.
+
+### 3. Department Manager
+- **Team Dashboard**: Scoped view focusing on their department's metrics and alerts.
+- **Attendance Approvals**: Review and approve "Pending" attendance logs for their team.
+- **Correction Queue**: Approve or reject employee requests for manual time fixes.
+- **Team Monitoring**: Real-time visibility into who is currently clocked in within their unit.
+
+### 4. Finance Officer
+- **Payroll Data**: Access to finalized attendance reports for salary processing.
+- **Workforce Analytics**: View distribution of staff by contract type and department.
+- **Exporting**: Download attendance logs in CSV format for third-party payroll integration.
+
+### 5. General Manager (GM)
+- **Executive Overview**: High-level dashboard showing hotel-wide workforce health.
+- **Strategic Data**: Access to the interactive Org Chart and global staff statistics.
+
+### 6. Staff Employee
+- **Personal Dashboard**: View daily tasks, weekly work hours, and overtime statistics.
+- **Time Tracking**: Use the one-tap widget to clock-in and clock-out (GPS verified).
+- **History & Fixes**: View personal attendance history and submit correction requests for missed clocks.
+- **Self-Service**: Manage personal documents and view their own profile details.
 
 ---
 
-## 🛠️ Verification Checklist
-- [x] All 6 roles defined in `User` model ENUM.
-- [x] Middlewares enforce "Authorize" and "HasPermission" checks.
-- [x] Dashboard adapts UI components based on the logged-in role.
-- [x] Audit logs record changes to Departments, Positions, and Employees.
+## 🔄 Application Workflow (Step-by-Step)
+
+### 🔑 Stage 1: Security & Identity (Phase 1)
+1.  **Staff Registration**: New employees register with their Employee ID.
+2.  **Verification**: Account activation via email link.
+3.  **Role Delegation**: Admins assign roles (HR, Manager, etc.) to define what the user can see.
+
+### 🏢 Stage 2: Organizational setup (Phase 2)
+1.  **Departments**: HR creates the hotel units (e.g., "Kitchen", "Front Office").
+2.  **Manager Assignment**: Each department is linked to a **Department Manager**.
+3.  **Positions**: Specific roles are created within departments with salary ranges.
+
+### 👤 Stage 3: Workforce Onboarding (Phase 3)
+1.  **Digital Profile**: HR completes detailed records for each hire.
+2.  **Cloud Storage**: IDs, contracts, and certifications are uploaded securely.
+3.  **Directory**: Staff can now browse the team across the hotel.
+
+### 📊 Stage 4: Scoped Operations (Phase 4)
+1.  **Personalized Dashboards**: The system automatically serves data based on the user's role.
+2.  **Admin Alerts**: Dashboard flags expiring staff documents automatically.
+
+### 🕒 Stage 5: Time & Attendance (Phase 5)
+1.  **Clocking**: Staff clock-in/out daily with GPS and photo proof.
+2.  **Management**: Managers monitor their live team status.
+3.  - **Corrections**: Staff request time fixes; Managers review and approve them.
+4.  **Finalization**: Finance exports the attendance CSV for payroll processing.
+
+---
+
+## 📈 Implementation Progress
+
+### Phase 1: Authentication & User Management
+- JWT-based secure authentication.
+- Multi-factor logic (6-digit code password reset).
+- Role assignment system.
+
+### Phase 2: Organization Structure
+- Department & Position CRUD operations.
+- Interactive Org Chart visualization.
+
+### Phase 3: Employee Management
+- Centralized employee directory.
+- Document management (PDF/Images) via Cloudinary.
+- Comprehensive profile tracking.
+
+### Phase 4: Scoped Dashboards
+- Role-specific UI components.
+- Automated data scoping (Managers see only their team).
+- Compliance alerts for document expiry.
+
+### Phase 5: Attendance Management
+- **Clocking System**: Backend logic for work/overtime calculation.
+- **Correction Workflow**: Formal request/approval system for time gaps.
+- **Export Engine**: CSV generation for attendance reports.
+- **Team View**: Real-time attendance monitoring for managers.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React, Redux Toolkit, Tailwind CSS, Framer Motion.
+- **Backend**: Node.js, Express, Sequelize (MySQL).
+- **Storage**: Cloudinary (Documents/Photos).
+- **Internationalization**: Custom i18n system for Amharic support.
