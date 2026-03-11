@@ -25,6 +25,10 @@ const DashboardLayout = () => {
         { path: '/org-chart', label: t('orgChart'), icon: '📊', permission: 'view_employees' },
         { path: '/admin/roles', label: t('rolesAndSecurity'), icon: '🛡️', role: 'admin' },
         { path: '/admin/audit', label: t('auditLogs'), icon: '📜', permission: 'view_audit_logs' },
+        { path: '/leave/request', label: t('requestLeave'), icon: '📝' },
+        { path: '/leave/history', label: t('myLeave'), icon: '📅' },
+        { path: '/leave/approvals', label: t('leaveApprovals'), icon: '⚖️', roles: ['admin', 'hr', 'manager'] },
+        { path: '/leave/types', label: t('leaveTypes'), icon: '⚙️', roles: ['admin', 'hr'] },
     ];
 
     const filteredMenuItems = menuItems.filter(item => {

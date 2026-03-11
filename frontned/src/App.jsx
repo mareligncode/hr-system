@@ -19,6 +19,13 @@ import AttendanceDashboard from './pages/attendance/AttendanceDashboard.jsx';
 import TeamAttendance from './pages/attendance/TeamAttendance.jsx';
 import AttendanceApprovals from './pages/attendance/AttendanceApprovals.jsx';
 import AttendanceReports from './pages/attendance/AttendanceReports.jsx';
+
+// Leave
+import LeaveRequestPage from './pages/leave/LeaveRequestPage.jsx';
+import LeaveBalancePage from './pages/leave/LeaveBalancePage.jsx';
+import LeaveApprovalsPage from './pages/leave/LeaveApprovalsPage.jsx';
+import LeaveTypePage from './pages/leave/LeaveTypePage.jsx';
+
 import AttendanceCalendar from './pages/attendance/AttendanceCalendar.jsx';
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
 import DashboardLayout from './components/layout/DashboardLayout.jsx';
@@ -103,6 +110,20 @@ function App() {
           <Route path="/admin/audit" element={
             <ProtectedRoute requiredPermission="view_audit_logs">
               <AuditLogList />
+            </ProtectedRoute>
+          } />
+
+          {/* Leave Management */}
+          <Route path="/leave/request" element={<LeaveRequestPage />} />
+          <Route path="/leave/history" element={<LeaveBalancePage />} />
+          <Route path="/leave/approvals" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+              <LeaveApprovalsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/leave/types" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr']}>
+              <LeaveTypePage />
             </ProtectedRoute>
           } />
         </Route>

@@ -6,9 +6,9 @@ const router = express.Router();
 
 router.use(protect); // All dashboard routes require authentication
 
-router.get('/stats', authorize('admin', 'hr', 'manager'), getDashboardStats);
+router.get('/stats', authorize('admin', 'hr', 'manager', 'finance'), getDashboardStats);
 router.get('/employee', getEmployeeDashboard);
-router.get('/expiring', authorize('admin', 'hr'), getExpiringAssets);
+router.get('/expiring', authorize('admin', 'hr', 'manager'), getExpiringAssets);
 router.get('/activity', authorize('admin', 'hr'), getRecentActivity);
 
 export default router;
