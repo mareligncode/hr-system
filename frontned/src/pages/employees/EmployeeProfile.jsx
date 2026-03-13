@@ -6,10 +6,11 @@ import {
     User, Users, Mail, Phone, MapPin, Briefcase, Calendar, Building2,
     FileText, Award, ShieldCheck, Clock, Download,
     Plus, Trash2, CheckCircle, AlertCircle, ExternalLink,
-    ChevronLeft, Edit, Upload, CheckCircle2
+    ChevronLeft, Edit, Upload, CheckCircle2, ArrowRightLeft, History
 } from 'lucide-react';
 import { fetchEmployeeById } from '../../store/employeeSlice';
 import employeeService from '../../services/employeeService';
+import shiftService from '../../services/shiftService';
 import Alert from '../../components/ui/Alert';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -30,8 +31,15 @@ const EmployeeProfile = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [documents, setDocuments] = useState([]);
     const [certifications, setCertifications] = useState([]);
+    const [shifts, setShifts] = useState([]);
+    const [swapRequests, setSwapRequests] = useState([]);
     const [docsLoading, setDocsLoading] = useState(false);
     const [imgError, setImgError] = useState(false);
+
+    // Swap Modal State
+    const [isSwapModalOpen, setIsSwapModalOpen] = useState(false);
+    const [selectedShift, setSelectedShift] = useState(null);
+    const [swapReason, setSwapReason] = useState('');
 
     // Document Upload Modal State
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -66,12 +74,19 @@ const EmployeeProfile = () => {
     const loadSubData = async () => {
         try {
             setDocsLoading(true);
-            const [docs, certs] = await Promise.all([
+            const [docs, certs, shiftRes] = await Promise.all([
                 employeeService.getDocuments(id),
-                employeeService.getCertifications(id)
+                employeeService.getCertifications(id),
+                shiftService.getShiftAssignments({ employee_id: id })
             ]);
             setDocuments(docs);
             setCertifications(certs);
+            setShifts(shiftRes.data);
+
+            if (isOwnProfile) {
+                const swapRes = await shiftService.getShiftSwaps({ status: 'pending' });
+                setSwapRequests(swapRes.data);
+            }
         } catch (err) {
             console.error('Failed to load sub data', err);
         } finally {
@@ -232,8 +247,26 @@ const EmployeeProfile = () => {
         }
     };
 
+    const handleRequestSwap = async (e) => {
+        e.preventDefault();
+        try {
+            await shiftService.createShiftSwap({
+                shift_assignment_id: selectedShift.id,
+                target_employee_id: null, // Peer-to-peer is open
+                reason: swapReason
+            });
+            alert('Swap request submitted successfully');
+            setIsSwapModalOpen(false);
+            setSwapReason('');
+            loadSubData();
+        } catch (err) {
+            alert('Failed to submit swap request');
+        }
+    };
+
     const tabs = [
         { id: 'overview', label: t('overview'), icon: User },
+        { id: 'shifts', label: t('shifts') || 'Shifts', icon: Clock },
         { id: 'documents', label: t('documents'), icon: FileText },
         { id: 'certifications', label: t('certifications'), icon: Award },
     ];
@@ -471,6 +504,61 @@ const EmployeeProfile = () => {
                             </motion.div>
                         )}
 
+                        {activeTab === 'shifts' && (
+                            <motion.div
+                                key="shifts"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-6"
+                            >
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-bold">{t('shiftSchedule') || 'Shift Schedule'}</h3>
+                                    {isOwnProfile && (
+                                        <div className="flex items-center gap-2 text-xs font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
+                                            <History className="w-3 h-3" />
+                                            {swapRequests.length} Pending Swaps
+                                        </div>
+                                    )}
+                                </div>
+
+                                {shifts.length === 0 ? (
+                                    <div className="p-16 text-center border-2 border-dashed border-[var(--border-main)] rounded-3xl">
+                                        <Clock className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" />
+                                        <p className="text-[var(--text-soft)]">No shifts assigned for this period.</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {shifts.map((shift) => (
+                                            <div key={shift.id} className="bg-[var(--bg-surface-soft)] p-5 rounded-2xl border border-[var(--border-main)] hover:border-blue-500/30 transition-all flex justify-between items-center">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex flex-col items-center justify-center text-blue-600">
+                                                        <span className="text-[10px] font-black uppercase tracking-tighter">{new Date(shift.assignment_date).toLocaleDateString('en', { weekday: 'short' })}</span>
+                                                        <span className="text-lg font-bold leading-none">{new Date(shift.assignment_date).getDate()}</span>
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-[var(--text-main)]">{shift.ShiftType?.name || 'Shift'}</h4>
+                                                        <div className="flex items-center gap-2 text-xs text-[var(--text-soft)] mt-0.5">
+                                                            <Clock className="w-3 h-3" />
+                                                            {shift.ShiftType?.start_time.substring(0, 5)} - {shift.ShiftType?.end_time.substring(0, 5)}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {isOwnProfile && new Date(shift.assignment_date) >= new Date() && (
+                                                    <button
+                                                        onClick={() => { setSelectedShift(shift); setIsSwapModalOpen(true); }}
+                                                        className="p-3 bg-white border border-gray-100 rounded-xl text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                                        title="Request Swap"
+                                                    >
+                                                        <ArrowRightLeft className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+
                         {activeTab === 'documents' && (
                             <motion.div
                                 key="documents"
@@ -641,6 +729,58 @@ const EmployeeProfile = () => {
                                     >
                                         {t('uploadFile')}
                                     </Button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+            {/* Shift Swap Modal */}
+            <AnimatePresence>
+                {isSwapModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden p-8"
+                        >
+                            <div className="text-center mb-8">
+                                <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center mx-auto mb-4 text-blue-600">
+                                    <ArrowRightLeft className="w-10 h-10" />
+                                </div>
+                                <h3 className="text-2xl font-black text-gray-900">Request Shift Swap</h3>
+                                <p className="text-gray-500 mt-2">
+                                    You are requesting to swap your <span className="font-bold text-blue-600">{selectedShift?.ShiftType?.name}</span> shift on <span className="font-bold">{new Date(selectedShift?.assignment_date).toLocaleDateString()}</span>.
+                                </p>
+                            </div>
+
+                            <form onSubmit={handleRequestSwap} className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Reason for request</label>
+                                    <textarea
+                                        required
+                                        value={swapReason}
+                                        onChange={(e) => setSwapReason(e.target.value)}
+                                        className="w-full bg-gray-50 border-none rounded-3xl py-4 px-6 focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-gray-300 min-h-[120px]"
+                                        placeholder="Briefly explain why you need to swap this shift..."
+                                    />
+                                </div>
+
+                                <div className="flex gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsSwapModalOpen(false)}
+                                        className="flex-1 py-4 font-bold text-gray-500 hover:bg-gray-100 rounded-3xl transition"
+                                    >
+                                        {t('cancel')}
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 py-4 bg-blue-600 text-white font-bold rounded-3xl shadow-xl shadow-blue-200 hover:shadow-blue-300 hover:-translate-y-1 transition-all"
+                                    >
+                                        Submit Request
+                                    </button>
                                 </div>
                             </form>
                         </motion.div>

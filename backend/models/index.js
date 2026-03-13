@@ -13,6 +13,11 @@ import Attendance from './Attendance.js';
 import AttendanceCorrection from './AttendanceCorrection.js';
 import LeaveType from './LeaveType.js';
 import LeaveRequest from './LeaveRequest.js';
+import ShiftType from './ShiftType.js';
+import ShiftAssignment from './ShiftAssignment.js';
+import ShiftSwapRequest from './ShiftSwapRequest.js';
+import ShiftTemplate from './ShiftTemplate.js';
+import ShiftRotation from './ShiftRotation.js';
 
 // User & Role (Many-to-Many)
 User.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id' });
@@ -91,6 +96,31 @@ LeaveRequest.belongsTo(LeaveType, { foreignKey: 'leave_type_id' });
 
 LeaveRequest.belongsTo(User, { as: 'Approver', foreignKey: 'approved_by' });
 
+// Shift Management
+Department.hasMany(ShiftType, { foreignKey: 'department_id' });
+ShiftType.belongsTo(Department, { foreignKey: 'department_id' });
+
+Employee.hasMany(ShiftAssignment, { foreignKey: 'employee_id' });
+ShiftAssignment.belongsTo(Employee, { foreignKey: 'employee_id' });
+
+ShiftType.hasMany(ShiftAssignment, { foreignKey: 'shift_type_id' });
+ShiftAssignment.belongsTo(ShiftType, { foreignKey: 'shift_type_id' });
+
+Employee.hasMany(ShiftSwapRequest, { as: 'RequestedSwaps', foreignKey: 'requesting_employee_id' });
+ShiftSwapRequest.belongsTo(Employee, { as: 'Requester', foreignKey: 'requesting_employee_id' });
+
+Employee.hasMany(ShiftSwapRequest, { as: 'TargetSwaps', foreignKey: 'target_employee_id' });
+ShiftSwapRequest.belongsTo(Employee, { as: 'TargetEmployee', foreignKey: 'target_employee_id' });
+
+ShiftAssignment.hasMany(ShiftSwapRequest, { foreignKey: 'shift_assignment_id', onDelete: 'CASCADE' });
+ShiftSwapRequest.belongsTo(ShiftAssignment, { foreignKey: 'shift_assignment_id' });
+
+Department.hasMany(ShiftTemplate, { foreignKey: 'department_id' });
+ShiftTemplate.belongsTo(Department, { foreignKey: 'department_id' });
+
+Department.hasMany(ShiftRotation, { foreignKey: 'department_id' });
+ShiftRotation.belongsTo(Department, { foreignKey: 'department_id' });
+
 export {
     User,
     Department,
@@ -106,5 +136,10 @@ export {
     Attendance,
     AttendanceCorrection,
     LeaveType,
-    LeaveRequest
+    LeaveRequest,
+    ShiftType,
+    ShiftAssignment,
+    ShiftSwapRequest,
+    ShiftTemplate,
+    ShiftRotation
 };

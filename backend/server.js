@@ -19,6 +19,7 @@ import roleRoutes from './routes/roleRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import attendanceRoutes from './routes/attendanceRoutes.js';
 import leaveRoutes from './routes/leaveRoutes.js';
+import shiftRoutes from './routes/shiftRoutes.js';
 
 dotenv.config();
 
@@ -77,6 +78,7 @@ app.use('/api/roles', roleRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/leave', leaveRoutes);
+app.use('/api/shifts', shiftRoutes);
 
 app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok', message: 'Server is running' });

@@ -26,6 +26,15 @@ import LeaveBalancePage from './pages/leave/LeaveBalancePage.jsx';
 import LeaveApprovalsPage from './pages/leave/LeaveApprovalsPage.jsx';
 import LeaveTypePage from './pages/leave/LeaveTypePage.jsx';
 
+// Shifts
+import ShiftTypesPage from './pages/shifts/ShiftTypesPage.jsx';
+import ShiftCalendarPage from './pages/shifts/ShiftCalendarPage.jsx';
+import ShiftTemplatesPage from './pages/shifts/ShiftTemplatesPage.jsx';
+import MyShiftsPage from './pages/shifts/MyShiftsPage.jsx';
+import ShiftSwapPage from './pages/shifts/ShiftSwapPage.jsx';
+import ShiftReportsPage from './pages/shifts/ShiftReportsPage.jsx';
+import ShiftRotationsPage from './pages/shifts/ShiftRotationsPage.jsx';
+
 import AttendanceCalendar from './pages/attendance/AttendanceCalendar.jsx';
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
 import DashboardLayout from './components/layout/DashboardLayout.jsx';
@@ -124,6 +133,34 @@ function App() {
           <Route path="/leave/types" element={
             <ProtectedRoute requiredRoles={['admin', 'hr']}>
               <LeaveTypePage />
+            </ProtectedRoute>
+          } />
+          {/* Shift Management */}
+          <Route path="/shifts/my" element={<MyShiftsPage />} />
+          <Route path="/shifts/calendar" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+              <ShiftCalendarPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/shifts/types" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr']}>
+              <ShiftTypesPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/shifts/templates" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+              <ShiftTemplatesPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/shifts/swaps" element={<ShiftSwapPage />} />
+          <Route path="/shifts/reports" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager', 'finance']}>
+              <ShiftReportsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/shifts/rotations" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+              <ShiftRotationsPage />
             </ProtectedRoute>
           } />
         </Route>

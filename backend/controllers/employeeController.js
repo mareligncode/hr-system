@@ -18,7 +18,15 @@ export const getAllEmployees = async (req, res) => {
         const whereClause = {};
         const userWhere = {};
 
-        if (department_id) whereClause.department_id = department_id;
+        if (department_id) {
+            whereClause.department_id = department_id;
+        } else if (req.user.role === 'manager' || req.user.role === 'employee') {
+            const employeeRecord = await Employee.findOne({ where: { user_id: req.user.id } });
+            if (employeeRecord) {
+                whereClause.department_id = employeeRecord.department_id;
+            }
+        }
+
         if (position_id) whereClause.position_id = position_id;
         if (status) whereClause.employment_status = status;
 
@@ -50,6 +58,7 @@ export const getAllEmployees = async (req, res) => {
                 { model: Position, attributes: ['id', 'title', 'code', 'grade'] },
                 { model: User, as: 'Manager', attributes: ['id', 'first_name', 'last_name'] }
             ],
+            group: ['Employee.user_id'], // Ensure each employee appears only once
             order: [[User, 'first_name', 'ASC']]
         });
 

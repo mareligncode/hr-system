@@ -29,6 +29,14 @@ const DashboardLayout = () => {
         { path: '/leave/history', label: t('myLeave'), icon: '📅' },
         { path: '/leave/approvals', label: t('leaveApprovals'), icon: '⚖️', roles: ['admin', 'hr', 'manager'] },
         { path: '/leave/types', label: t('leaveTypes'), icon: '⚙️', roles: ['admin', 'hr'] },
+
+        { path: '/shifts/my', label: t('myShifts') || 'My Shifts', icon: '⏰' },
+        { path: '/shifts/calendar', label: t('shiftScheduler') || 'Scheduler', icon: '📅', roles: ['admin', 'hr', 'manager'] },
+        { path: '/shifts/swaps', label: t('shiftSwaps') || 'Swaps', icon: '🔄' },
+        { path: '/shifts/templates', label: t('shiftTemplates') || 'Templates', icon: '📋', roles: ['admin', 'hr', 'manager'] },
+        { path: '/shifts/types', label: t('shiftTypes') || 'Shift Types', icon: '⚙️', roles: ['admin', 'hr'] },
+        { path: '/shifts/rotations', label: t('shiftRotations') || 'Rotations', icon: '🔄', roles: ['admin', 'hr', 'manager'] },
+        { path: '/shifts/reports', label: t('shiftReports') || 'Shift Reports', icon: '📈', roles: ['admin', 'hr', 'manager', 'finance'] },
     ];
 
     const filteredMenuItems = menuItems.filter(item => {
