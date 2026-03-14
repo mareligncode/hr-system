@@ -168,3 +168,25 @@ export const getApplicationTimeline = async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+export const getPipelineAnalytics = async (req, res) => {
+    try {
+        const { job_posting_id } = req.query;
+        const where = {};
+        if (job_posting_id) where.job_posting_id = job_posting_id;
+
+        const analytics = await JobApplication.findAll({
+            where,
+            attributes: [
+                'status',
+                [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+            ],
+            group: ['status']
+        });
+
+        res.json(analytics);
+    } catch (error) {
+        console.error('Error fetching pipeline analytics:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};

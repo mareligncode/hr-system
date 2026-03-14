@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import recruitmentService from '../../services/recruitmentService';
 import { Briefcase, MapPin, Clock, Search, ChevronRight } from 'lucide-react';
+import { useSettings } from '../../context/SettingsContext.jsx';
 
 const PublicCareersPage = () => {
+    const { t } = useSettings();
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -41,10 +43,9 @@ const PublicCareersPage = () => {
             {/* Hero Section */}
             <div className="bg-indigo-700 text-white py-20 px-4">
                 <div className="max-w-5xl mx-auto text-center">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-6">Join Our Hospitality Team</h1>
+                    <h1 className="text-4xl md:text-5xl font-bold mb-6">{t('joinOurHospitalityTeam')}</h1>
                     <p className="text-xl text-indigo-100 max-w-2xl mx-auto mb-10">
-                        Discover exciting career opportunities and help us redefine luxury service.
-                        Your journey at the heart of hospitality starts here.
+                        {t('discoverExcitingCareer')}
                     </p>
 
                     <div className="max-w-xl mx-auto relative">
@@ -53,7 +54,7 @@ const PublicCareersPage = () => {
                         </div>
                         <input
                             type="text"
-                            placeholder="Search by role or department..."
+                            placeholder={t('searchByRoleOrDept')}
                             className="block w-full pl-10 pr-3 py-4 border border-transparent rounded-xl leading-5 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:border-white sm:text-lg shadow-lg"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -65,14 +66,16 @@ const PublicCareersPage = () => {
             {/* Job List section */}
             <div className="max-w-5xl mx-auto py-16 px-4">
                 <div className="flex justify-between items-center mb-10">
-                    <h2 className="text-2xl font-bold text-gray-900">Current Openings ({filteredJobs.length})</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                        {t('currentOpenings', { count: filteredJobs.length })}
+                    </h2>
                 </div>
 
                 {filteredJobs.length === 0 ? (
                     <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
                         <Briefcase className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900">No positions found</h3>
-                        <p className="text-gray-500">Try adjusting your search or check back later.</p>
+                        <h3 className="text-lg font-medium text-gray-900">{t('noPositionsFound')}</h3>
+                        <p className="text-gray-500">{t('tryAdjustingSearch')}</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -99,7 +102,7 @@ const PublicCareersPage = () => {
                                         <div className="mt-2 flex items-center text-sm text-gray-500 gap-4">
                                             <div className="flex items-center">
                                                 <MapPin className="w-4 h-4 mr-1 text-gray-400" />
-                                                {job.location || 'On-site'}
+                                                {job.location || t('onSite')}
                                             </div>
                                             {job.experience_level && (
                                                 <div className="flex items-center capitalize">
@@ -111,11 +114,11 @@ const PublicCareersPage = () => {
                                     </div>
                                     <div className="flex items-center">
                                         <div className="hidden md:flex items-center text-indigo-600 font-semibold group-hover:translate-x-1 transition-transform">
-                                            View Details
+                                            {t('viewDetails')}
                                             <ChevronRight className="w-5 h-5 ml-1" />
                                         </div>
                                         <button className="md:hidden w-full bg-indigo-600 text-white rounded-xl py-3 px-6 font-semibold">
-                                            Apply Now
+                                            {t('applyNow')}
                                         </button>
                                     </div>
                                 </div>
@@ -129,8 +132,7 @@ const PublicCareersPage = () => {
             <div className="bg-white border-t border-gray-200 py-12 mt-10">
                 <div className="max-w-5xl mx-auto px-4 text-center">
                     <p className="text-gray-500 text-sm">
-                        &copy; 2026 Hotel HR Management System. All rights reserved.
-                        We are an equal opportunity employer.
+                        {t('allRightsReservedRecruitment')}
                     </p>
                 </div>
             </div>

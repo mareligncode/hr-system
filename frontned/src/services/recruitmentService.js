@@ -93,6 +93,68 @@ const recruitmentService = {
     updateApplicant: async (id, data) => {
         const response = await api.put(`/applicants/${id}`, data);
         return response.data;
+    },
+
+    // Phase 9: Interviews
+    getPipelineAnalytics: async (params) => {
+        const response = await api.get('/job-applications/analytics/pipeline', { params });
+        return response.data;
+    },
+
+    getInterviews: async (params) => {
+        const response = await api.get('/interviews', { params });
+        return response.data;
+    },
+
+    getInterviewById: async (id) => {
+        const response = await api.get(`/interviews/${id}`);
+        return response.data;
+    },
+
+    scheduleInterview: async (data) => {
+        const response = await api.post('/interviews', data);
+        return response.data;
+    },
+
+    updateInterview: async (id, data) => {
+        const response = await api.put(`/interviews/${id}`, data);
+        return response.data;
+    },
+
+    submitInterviewFeedback: async (data) => {
+        const response = await api.post(`/interviews/${data.interview_id}/feedback`, data);
+        return response.data;
+    },
+
+    // Phase 9: Offers
+    getOffers: async (params) => {
+        const response = await api.get('/offers', { params });
+        return response.data;
+    },
+
+    getOfferById: async (id) => {
+        const response = await api.get(`/offers/${id}`);
+        return response.data;
+    },
+
+    createOffer: async (data) => {
+        const response = await api.post('/offers', data);
+        return response.data;
+    },
+
+    updateOffer: async (id, data) => {
+        const response = await api.put(`/offers/${id}`, data);
+        return response.data;
+    },
+
+    acceptOffer: async (id) => {
+        const response = await api.post(`/offers/${id}/accept`);
+        return response.data;
+    },
+
+    rejectOffer: async (id, data) => {
+        const response = await api.post(`/offers/${id}/reject`, data);
+        return response.data;
     }
 };
 

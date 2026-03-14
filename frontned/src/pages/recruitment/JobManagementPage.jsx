@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import recruitmentService from '../../services/recruitmentService';
+import { useSettings } from '../../context/SettingsContext.jsx';
 import {
     Plus,
     Search,
@@ -18,6 +19,7 @@ import {
 } from 'lucide-react';
 
 const JobManagementPage = () => {
+    const { t } = useSettings();
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState('');
@@ -40,12 +42,12 @@ const JobManagementPage = () => {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this job posting? It will be soft-deleted.')) {
+        if (window.confirm(t('confirmDeleteJob'))) {
             try {
                 await recruitmentService.deleteJobPosting(id);
                 fetchJobs();
             } catch (error) {
-                alert('Failed to delete job');
+                alert(t('failedToDeleteJob'));
             }
         }
     };
@@ -53,10 +55,10 @@ const JobManagementPage = () => {
     const handlePublish = async (id) => {
         try {
             await recruitmentService.publishJobPosting(id);
-            alert('Job published successfully');
+            alert(t('jobPublishedSuccess'));
             fetchJobs();
         } catch (error) {
-            alert('Failed to publish job');
+            alert(t('failedToPublishJob'));
         }
     };
 
@@ -69,19 +71,28 @@ const JobManagementPage = () => {
         }
     };
 
+    const getStatusLabel = (status) => {
+        switch (status) {
+            case 'published': return t('published');
+            case 'draft': return t('draft');
+            case 'closed': return t('closed');
+            default: return status;
+        }
+    };
+
     return (
         <div className="p-6 max-w-[1600px] mx-auto">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Recruitment - Job Postings</h1>
-                    <p className="text-gray-500">Manage your hotel's career opportunities and advertisements.</p>
+                    <h1 className="text-2xl font-bold text-gray-900">{t('recruitmentJobPostings')}</h1>
+                    <p className="text-gray-500">{t('manageHotelCareers')}</p>
                 </div>
                 <Link
                     to="/recruitment/jobs/create"
                     className="inline-flex items-center px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold shadow-sm hover:bg-indigo-700 transition-all gap-2"
                 >
                     <Plus className="w-5 h-5" />
-                    New Job Posting
+                    {t('newJobPosting')}
                 </Link>
             </div>
 
@@ -91,7 +102,7 @@ const JobManagementPage = () => {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
                         type="text"
-                        placeholder="Search jobs by title or reference..."
+                        placeholder={t('searchJobsPlaceholder')}
                         className="w-full pl-10 pr-4 py-2 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-indigo-500"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -102,10 +113,10 @@ const JobManagementPage = () => {
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
                 >
-                    <option value="">All Statuses</option>
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                    <option value="closed">Closed</option>
+                    <option value="">{t('allStatuses')}</option>
+                    <option value="draft">{t('draft')}</option>
+                    <option value="published">{t('published')}</option>
+                    <option value="closed">{t('closed')}</option>
                 </select>
                 <button
                     onClick={fetchJobs}
@@ -123,8 +134,8 @@ const JobManagementPage = () => {
             ) : jobs.length === 0 ? (
                 <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
                     <Briefcase className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-bold text-gray-900">No job postings found</h3>
-                    <p className="text-gray-500">Get started by creating your first job advertisement.</p>
+                    <h3 className="text-lg font-bold text-gray-900">{t('noJobPostingsFound')}</h3>
+                    <p className="text-gray-500">{t('getStartedCreatingJob')}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -134,7 +145,7 @@ const JobManagementPage = () => {
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-2">
                                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border uppercase tracking-wider ${getStatusColor(job.status)}`}>
-                                            {job.status}
+                                            {getStatusLabel(job.status)}
                                         </span>
                                         <span className="text-xs text-gray-400 font-medium">#{job.reference_code}</span>
                                     </div>
@@ -150,21 +161,21 @@ const JobManagementPage = () => {
                                         to={`/careers/${job.id}`}
                                         target="_blank"
                                         className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
-                                        title="View Public Page"
+                                        title={t('viewPublicPage')}
                                     >
                                         <ExternalLink className="w-5 h-5" />
                                     </Link>
                                     <Link
                                         to={`/recruitment/jobs/edit/${job.id}`}
                                         className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
-                                        title="Edit Posting"
+                                        title={t('editPosting')}
                                     >
                                         <Edit className="w-5 h-5" />
                                     </Link>
                                     <button
                                         onClick={() => handleDelete(job.id)}
                                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                        title="Delete Posting"
+                                        title={t('deletePosting')}
                                     >
                                         <Trash2 className="w-5 h-5" />
                                     </button>
@@ -175,18 +186,18 @@ const JobManagementPage = () => {
 
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="text-center p-3 bg-gray-50 rounded-2xl">
-                                    <p className="text-xs text-gray-500 mb-1">Applications</p>
+                                    <p className="text-xs text-gray-500 mb-1">{t('applications')}</p>
                                     <p className="text-lg font-bold text-gray-900 flex items-center justify-center gap-2">
                                         <Users className="w-4 h-4 text-indigo-600" />
                                         {job.applications_received}
                                     </p>
                                 </div>
                                 <div className="text-center p-3 bg-gray-50 rounded-2xl">
-                                    <p className="text-xs text-gray-500 mb-1">Vacancies</p>
+                                    <p className="text-xs text-gray-500 mb-1">{t('vacancies')}</p>
                                     <p className="text-lg font-bold text-gray-900">{job.vacancies_count}</p>
                                 </div>
                                 <div className="text-center p-3 bg-gray-50 rounded-2xl">
-                                    <p className="text-xs text-gray-500 mb-1">Type</p>
+                                    <p className="text-xs text-gray-500 mb-1">{t('employmentType')}</p>
                                     <p className="text-sm font-bold text-gray-900 capitalize">{job.employment_type?.replace('_', ' ')}</p>
                                 </div>
                             </div>
@@ -194,7 +205,7 @@ const JobManagementPage = () => {
                             <div className="mt-5 flex items-center justify-between">
                                 <div className="flex items-center text-xs text-gray-500">
                                     <Clock className="w-3.5 h-3.5 mr-1" />
-                                    Posted: {new Date(job.created_at).toLocaleDateString()}
+                                    {t('posted')}: {new Date(job.created_at).toLocaleDateString()}
                                 </div>
                                 <div className="flex gap-2">
                                     {job.status === 'draft' && (
@@ -203,7 +214,7 @@ const JobManagementPage = () => {
                                             className="px-4 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-1.5"
                                         >
                                             <CheckCircle className="w-3.5 h-3.5" />
-                                            Publish
+                                            {t('publish')}
                                         </button>
                                     )}
                                     <Link
@@ -211,7 +222,7 @@ const JobManagementPage = () => {
                                         className="px-4 py-1.5 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-lg hover:bg-indigo-100 transition-colors flex items-center gap-1.5"
                                     >
                                         <Eye className="w-3.5 h-3.5" />
-                                        Review Applicants
+                                        {t('reviewApplicants')}
                                     </Link>
                                 </div>
                             </div>

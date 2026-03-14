@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import recruitmentService from '../../services/recruitmentService';
+import { useSettings } from '../../context/SettingsContext.jsx';
 import {
     ArrowLeft,
     Upload,
@@ -13,6 +14,7 @@ import {
 const ApplyJobPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { t } = useSettings();
     const [job, setJob] = useState(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -58,7 +60,7 @@ const ApplyJobPage = () => {
         setError('');
 
         if (!formData.resume) {
-            setError('Please upload your resume');
+            setError(t('pleaseUploadResume'));
             setSubmitting(false);
             return;
         }
@@ -78,7 +80,7 @@ const ApplyJobPage = () => {
             window.scrollTo(0, 0);
         } catch (error) {
             console.error('Submission error:', error);
-            setError(error.response?.data?.error || 'Failed to submit application. Please try again.');
+            setError(error.response?.data?.error || t('failedToSubmitApplication'));
         } finally {
             setSubmitting(false);
         }
@@ -99,16 +101,15 @@ const ApplyJobPage = () => {
                     <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
                         <CheckCircle2 className="w-10 h-10" />
                     </div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4">Application Sent!</h2>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('applicationSent')}</h2>
                     <p className="text-gray-600 mb-8 leading-relaxed">
-                        Thank you for your interest in the <strong>{job.title}</strong> role.
-                        We've received your application and will email you a confirmation shortly.
+                        {t('thankYouInterest', { title: job.title })}
                     </p>
                     <Link
                         to="/careers"
                         className="block w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-100"
                     >
-                        Back to Careers
+                        {t('backToCareers')}
                     </Link>
                 </div>
             </div>
@@ -121,7 +122,7 @@ const ApplyJobPage = () => {
                 <div className="max-w-3xl mx-auto px-4 py-4">
                     <Link to={`/careers/${id}`} className="flex items-center text-gray-600 hover:text-indigo-600 transition-colors font-medium">
                         <ArrowLeft className="w-5 h-5 mr-2" />
-                        Back to job details
+                        {t('backToJobDetails')}
                     </Link>
                 </div>
             </div>
@@ -129,8 +130,8 @@ const ApplyJobPage = () => {
             <div className="max-w-3xl mx-auto px-4 mt-12">
                 <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
                     <div className="bg-indigo-600 px-8 py-10 text-white">
-                        <h1 className="text-3xl font-bold mb-2">Apply for {job.title}</h1>
-                        <p className="text-indigo-100">Send us your details and resume to get started.</p>
+                        <h1 className="text-3xl font-bold mb-2">{t('applyFor', { title: job.title })}</h1>
+                        <p className="text-indigo-100">{t('sendUsDetails')}</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-8">
@@ -143,7 +144,7 @@ const ApplyJobPage = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-700 ml-1">First Name</label>
+                                <label className="text-sm font-bold text-gray-700 ml-1">{t('firstName')}</label>
                                 <input
                                     required
                                     type="text"
@@ -155,7 +156,7 @@ const ApplyJobPage = () => {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-700 ml-1">Last Name</label>
+                                <label className="text-sm font-bold text-gray-700 ml-1">{t('lastName')}</label>
                                 <input
                                     required
                                     type="text"
@@ -170,7 +171,7 @@ const ApplyJobPage = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-700 ml-1">Email Address</label>
+                                <label className="text-sm font-bold text-gray-700 ml-1">{t('emailAddress')}</label>
                                 <input
                                     required
                                     type="email"
@@ -182,7 +183,7 @@ const ApplyJobPage = () => {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-700 ml-1">Phone Number</label>
+                                <label className="text-sm font-bold text-gray-700 ml-1">{t('phone')}</label>
                                 <input
                                     required
                                     type="tel"
@@ -196,7 +197,7 @@ const ApplyJobPage = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700 ml-1">Resume / CV (PDF or Word)</label>
+                            <label className="text-sm font-bold text-gray-700 ml-1">{t('resumeCvLabel')}</label>
                             <label className={`
                                 border-2 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all gap-2
                                 ${formData.resume ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-200 hover:border-indigo-300 hover:bg-indigo-50'}
@@ -211,25 +212,25 @@ const ApplyJobPage = () => {
                                     <>
                                         <FileText className="w-10 h-10 text-emerald-500" />
                                         <span className="font-bold text-emerald-700">{formData.resume.name}</span>
-                                        <span className="text-xs text-emerald-600">Click to change file</span>
+                                        <span className="text-xs text-emerald-600">{t('clickToChangeFile')}</span>
                                     </>
                                 ) : (
                                     <>
                                         <Upload className="w-10 h-10 text-gray-400 group-hover:text-indigo-400" />
-                                        <span className="font-bold text-gray-600">Choose file or drag here</span>
-                                        <span className="text-xs text-gray-500">Maximum size 5MB</span>
+                                        <span className="font-bold text-gray-600">{t('chooseFileOrDrag')}</span>
+                                        <span className="text-xs text-gray-500">{t('maximumSize5MB')}</span>
                                     </>
                                 )}
                             </label>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700 ml-1">Cover Letter (Optional)</label>
+                            <label className="text-sm font-bold text-gray-700 ml-1">{t('coverLetterOptional')}</label>
                             <textarea
                                 name="cover_letter"
                                 rows="5"
                                 className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 focus:ring-2 focus:ring-indigo-500 transition-all"
-                                placeholder="Tell us why you're a great fit for this role..."
+                                placeholder={t('fitForRolePlaceholder')}
                                 value={formData.cover_letter}
                                 onChange={handleInputChange}
                             ></textarea>
@@ -243,18 +244,17 @@ const ApplyJobPage = () => {
                             {submitting ? (
                                 <>
                                     <Loader2 className="w-6 h-6 animate-spin" />
-                                    Submitting Application...
+                                    {t('submittingApplication')}
                                 </>
                             ) : (
-                                'Submit Application'
+                                t('submitApplication')
                             )}
                         </button>
                     </form>
                 </div>
 
                 <p className="mt-8 text-center text-sm text-gray-500">
-                    By submitting your application, you agree to our recruitment terms and privacy policy.
-                    We protect your personal data according to global standards.
+                    {t('agreeRecruitmentTerms')}
                 </p>
             </div>
         </div>

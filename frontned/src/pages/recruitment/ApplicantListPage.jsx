@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import recruitmentService from '../../services/recruitmentService';
+import { useSettings } from '../../context/SettingsContext.jsx';
 import {
     Search,
     Filter,
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react';
 
 const ApplicantListPage = () => {
+    const { t } = useSettings();
     const [searchParams] = useSearchParams();
     const jobPostingId = searchParams.get('job_posting_id');
 
@@ -58,6 +60,18 @@ const ApplicantListPage = () => {
         }
     };
 
+    const getStatusLabel = (status) => {
+        switch (status) {
+            case 'applied': return t('newApplied');
+            case 'screening': return t('screening');
+            case 'interview': return t('interview');
+            case 'offer': return t('offer');
+            case 'hired': return t('hired');
+            case 'rejected': return t('rejected');
+            default: return status;
+        }
+    };
+
     const filteredApps = applications.filter(app =>
         `${app.Applicant?.first_name} ${app.Applicant?.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
         app.JobPosting?.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -67,14 +81,14 @@ const ApplicantListPage = () => {
         <div className="p-6 max-w-[1600px] mx-auto">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Applicant Tracking</h1>
-                    <p className="text-gray-500">Monitor and manage candidates through the recruitment pipeline.</p>
+                    <h1 className="text-2xl font-bold text-gray-900">{t('applicantTracking')}</h1>
+                    <p className="text-gray-500">{t('monitorManageCandidates')}</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
                         <Users className="w-5 h-5" />
                     </span>
-                    <span className="font-bold text-gray-700">{applications.length} Total Applicants</span>
+                    <span className="font-bold text-gray-700">{t('totalApplicants', { count: applications.length })}</span>
                 </div>
             </div>
 
@@ -84,7 +98,7 @@ const ApplicantListPage = () => {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
                         type="text"
-                        placeholder="Search by candidate name or job title..."
+                        placeholder={t('searchApplicantsPlaceholder')}
                         className="w-full pl-11 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -97,13 +111,13 @@ const ApplicantListPage = () => {
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
                     >
-                        <option value="">All Stages</option>
-                        <option value="applied">New / Applied</option>
-                        <option value="screening">Screening</option>
-                        <option value="interview">Interview</option>
-                        <option value="offer">Offer</option>
-                        <option value="hired">Hired</option>
-                        <option value="rejected">Rejected</option>
+                        <option value="">{t('allStages')}</option>
+                        <option value="applied">{t('newApplied')}</option>
+                        <option value="screening">{t('screening')}</option>
+                        <option value="interview">{t('interview')}</option>
+                        <option value="offer">{t('offer')}</option>
+                        <option value="hired">{t('hired')}</option>
+                        <option value="rejected">{t('rejected')}</option>
                     </select>
                 </div>
                 <button
@@ -122,8 +136,8 @@ const ApplicantListPage = () => {
             ) : filteredApps.length === 0 ? (
                 <div className="text-center py-24 bg-white rounded-3xl border-2 border-dashed border-gray-100">
                     <User className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-                    <h3 className="text-xl font-bold text-gray-900">No applicants found</h3>
-                    <p className="text-gray-500 max-w-sm mx-auto">Try adjusting your filters or search terms.</p>
+                    <h3 className="text-xl font-bold text-gray-900">{t('noApplicantsFound')}</h3>
+                    <p className="text-gray-500 max-w-sm mx-auto">{t('tryAdjustingSearch')}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 gap-4">
@@ -146,7 +160,7 @@ const ApplicantListPage = () => {
                                             {app.Applicant?.first_name} {app.Applicant?.last_name}
                                         </h3>
                                         <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusStyle(app.status)}`}>
-                                            {app.status}
+                                            {getStatusLabel(app.status)}
                                         </span>
                                     </div>
                                     <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-500">
@@ -169,7 +183,7 @@ const ApplicantListPage = () => {
                                 <div className="flex flex-col lg:items-end gap-3 flex-shrink-0">
                                     <div className="flex items-center text-xs text-gray-400 font-medium">
                                         <Calendar className="w-3.5 h-3.5 mr-1.5" />
-                                        Applied: {new Date(app.application_date).toLocaleDateString()}
+                                        {t('applied')}: {new Date(app.application_date).toLocaleDateString()}
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="px-3 py-1 bg-gray-50 text-gray-500 rounded-lg text-xs font-bold border border-gray-100">
