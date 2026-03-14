@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import recruitmentService from '../../services/recruitmentService';
+import { useSettings } from '../../context/SettingsContext.jsx';
 import {
     ArrowLeft,
     User,
@@ -23,6 +24,7 @@ import {
 const ApplicantDetailPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { t } = useSettings();
 
     const [application, setApplication] = useState(null);
     const [timeline, setTimeline] = useState([]);
@@ -58,7 +60,7 @@ const ApplicantDetailPage = () => {
             setStatusNote('');
             fetchDetails();
         } catch (error) {
-            alert('Failed to update status');
+            alert(t('failedToUpdateStatus'));
         } finally {
             setUpdating(false);
         }
@@ -75,13 +77,25 @@ const ApplicantDetailPage = () => {
     if (!application) return null;
 
     const stages = [
-        { key: 'applied', label: 'Applied' },
-        { key: 'screening', label: 'Screening' },
-        { key: 'interview', label: 'Interview' },
-        { key: 'offer', label: 'Offer' },
-        { key: 'hired', label: 'Hired' },
-        { key: 'rejected', label: 'Rejected' }
+        { key: 'applied', label: t('applied') },
+        { key: 'screening', label: t('screening') },
+        { key: 'interview', label: t('interview') },
+        { key: 'offer', label: t('offer') },
+        { key: 'hired', label: t('hired') },
+        { key: 'rejected', label: t('rejected') }
     ];
+
+    const getStatusLabel = (status) => {
+        switch (status) {
+            case 'applied': return t('newApplied');
+            case 'screening': return t('screening');
+            case 'interview': return t('interview');
+            case 'offer': return t('offer');
+            case 'hired': return t('hired');
+            case 'rejected': return t('rejected');
+            default: return status;
+        }
+    };
 
     const currentStageIdx = stages.findIndex(s => s.key === application.status);
 
@@ -99,12 +113,12 @@ const ApplicantDetailPage = () => {
                                 {application.Applicant?.first_name} {application.Applicant?.last_name}
                             </h1>
                             <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-black uppercase rounded-full border border-indigo-100">
-                                {application.status}
+                                {getStatusLabel(application.status)}
                             </span>
                         </div>
                         <p className="text-gray-500 flex items-center gap-2">
                             <Briefcase className="w-4 h-4" />
-                            Applying for <span className="font-semibold text-gray-700">{application.JobPosting?.title}</span>
+                            {t('applyingFor', { title: application.JobPosting?.title })}
                         </p>
                     </div>
                 </div>
@@ -115,7 +129,7 @@ const ApplicantDetailPage = () => {
                         disabled={updating}
                     >
                         <XCircle className="w-4 h-4" />
-                        Reject Application
+                        {t('rejectApplication')}
                     </button>
                     <button
                         onClick={() => handleStatusUpdate('hired')}
@@ -123,7 +137,7 @@ const ApplicantDetailPage = () => {
                         disabled={updating}
                     >
                         <CheckCircle2 className="w-4 h-4" />
-                        Hire Candidate
+                        {t('hireCandidate')}
                     </button>
                 </div>
             </div>
@@ -135,7 +149,7 @@ const ApplicantDetailPage = () => {
                     <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
                         <h2 className="text-lg font-bold text-gray-900 mb-8 flex items-center gap-2">
                             <History className="w-5 h-5 text-indigo-600" />
-                            Recruitment Pipeline
+                            {t('recruitmentPipeline')}
                         </h2>
                         <div className="relative">
                             <div className="absolute top-5 left-0 w-full h-0.5 bg-gray-100 -z-0"></div>
@@ -172,7 +186,7 @@ const ApplicantDetailPage = () => {
                         <div className="flex items-center justify-between mb-8">
                             <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                 <FileText className="w-5 h-5 text-indigo-600" />
-                                Documents
+                                {t('documents')}
                             </h2>
                         </div>
                         <div className="space-y-4">
@@ -189,13 +203,13 @@ const ApplicantDetailPage = () => {
                                         </div>
                                         <div>
                                             <p className="font-bold text-gray-900">RESUME_CANDIDATE_{application.Applicant?.last_name.toUpperCase()}.PDF</p>
-                                            <p className="text-xs text-gray-500 uppercase tracking-widest font-black">Main CV Document</p>
+                                            <p className="text-xs text-gray-500 uppercase tracking-widest font-black">{t('mainCVDocument')}</p>
                                         </div>
                                     </div>
                                     <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-indigo-600" />
                                 </a>
                             ) : (
-                                <div className="text-center py-8 text-gray-500">No resume uploaded</div>
+                                <div className="text-center py-8 text-gray-500">{t('noResumeUploaded')}</div>
                             )}
                         </div>
                     </div>
@@ -204,11 +218,11 @@ const ApplicantDetailPage = () => {
                     <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
                         <h2 className="text-lg font-bold text-gray-900 mb-8 flex items-center gap-2">
                             <MessageSquare className="w-5 h-5 text-indigo-600" />
-                            Activity Log
+                            {t('activityLog')}
                         </h2>
                         <div className="space-y-6">
                             {timeline.length === 0 ? (
-                                <p className="text-center text-gray-400 py-4">No activity recorded yet.</p>
+                                <p className="text-center text-gray-400 py-4">{t('noActivityRecorded')}</p>
                             ) : (
                                 timeline.map((entry, idx) => (
                                     <div key={idx} className="flex gap-4">
@@ -218,7 +232,9 @@ const ApplicantDetailPage = () => {
                                         </div>
                                         <div className="pb-6">
                                             <div className="flex items-center gap-2 mb-1">
-                                                <span className="text-sm font-bold text-gray-900 uppercase">Status changed to {entry.status}</span>
+                                                <span className="text-sm font-bold text-gray-900 uppercase">
+                                                    {t('statusChangedTo', { status: getStatusLabel(entry.status) })}
+                                                </span>
                                                 <span className="text-xs text-gray-400">• {new Date(entry.created_at).toLocaleString()}</span>
                                             </div>
                                             {entry.notes && (
@@ -238,14 +254,14 @@ const ApplicantDetailPage = () => {
                 <div className="space-y-6">
                     {/* Contact Info */}
                     <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-                        <h3 className="font-bold text-gray-900 mb-6 uppercase tracking-wider text-xs opacity-50">Contact Information</h3>
+                        <h3 className="font-bold text-gray-900 mb-6 uppercase tracking-wider text-xs opacity-50">{t('contactInformation')}</h3>
                         <div className="space-y-6">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
                                     <Mail className="w-5 h-5" />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-xs text-gray-400">Email Address</p>
+                                    <p className="text-xs text-gray-400">{t('emailAddress')}</p>
                                     <p className="text-sm font-bold text-gray-900 truncate">{application.Applicant?.email}</p>
                                 </div>
                             </div>
@@ -254,7 +270,7 @@ const ApplicantDetailPage = () => {
                                     <Phone className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-400">Phone Number</p>
+                                    <p className="text-xs text-gray-400">{t('phoneNumber')}</p>
                                     <p className="text-sm font-bold text-gray-900">{application.Applicant?.phone}</p>
                                 </div>
                             </div>
@@ -263,7 +279,7 @@ const ApplicantDetailPage = () => {
                                     <Calendar className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-400">Applied On</p>
+                                    <p className="text-xs text-gray-400">{t('appliedOn')}</p>
                                     <p className="text-sm font-bold text-gray-900">{new Date(application.application_date).toLocaleDateString()}</p>
                                 </div>
                             </div>
@@ -272,15 +288,15 @@ const ApplicantDetailPage = () => {
 
                     {/* Status Update Note */}
                     <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-                        <h3 className="font-bold text-gray-900 mb-4 uppercase tracking-wider text-xs opacity-50">Add Internal Note</h3>
+                        <h3 className="font-bold text-gray-900 mb-4 uppercase tracking-wider text-xs opacity-50">{t('addInternalNote')}</h3>
                         <textarea
                             rows="4"
                             className="w-full bg-gray-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-indigo-500 mb-4"
-                            placeholder="Add interview notes or feedback..."
+                            placeholder={t('internalNotePlaceholder')}
                             value={statusNote}
                             onChange={(e) => setStatusNote(e.target.value)}
                         ></textarea>
-                        <p className="text-[10px] text-gray-400 mb-4">Note will be saved with any status change above.</p>
+                        <p className="text-[10px] text-gray-400 mb-4">{t('noteSavedWithStatus')}</p>
                     </div>
                 </div>
             </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import recruitmentService from '../../services/recruitmentService';
 import organizationService from '../../services/organizationService';
+import { useSettings } from '../../context/SettingsContext.jsx';
 import {
     ArrowLeft,
     Save,
@@ -17,6 +18,7 @@ import {
 const JobCreatePage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { t } = useSettings();
     const isEdit = !!id;
 
     const [loading, setLoading] = useState(isEdit);
@@ -87,7 +89,7 @@ const JobCreatePage = () => {
             navigate('/recruitment/jobs');
         } catch (error) {
             console.error('Save error:', error);
-            alert('Failed to save job posting');
+            alert(t('failedToSaveJob'));
         } finally {
             setSubmitting(false);
         }
@@ -109,8 +111,10 @@ const JobCreatePage = () => {
                         <ArrowLeft className="w-6 h-6 text-gray-500" />
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-900">{isEdit ? 'Edit Job Posting' : 'Create New Job'}</h1>
-                        <p className="text-sm text-gray-500">Ref: {formData.reference_code}</p>
+                        <h1 className="text-2xl font-bold text-gray-900">
+                            {isEdit ? t('editJobPosting') : t('createNewJob')}
+                        </h1>
+                        <p className="text-sm text-gray-500">{t('ref')}: {formData.reference_code}</p>
                     </div>
                 </div>
             </div>
@@ -121,23 +125,23 @@ const JobCreatePage = () => {
                     <div className="px-8 py-5 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
                         <h2 className="font-bold text-gray-900 flex items-center gap-2">
                             <Info className="w-5 h-5 text-indigo-600" />
-                            General Information
+                            {t('generalInformation')}
                         </h2>
                     </div>
                     <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700 ml-1">Job Title</label>
+                            <label className="text-sm font-bold text-gray-700 ml-1">{t('jobTitle')}</label>
                             <input
                                 required
                                 name="title"
                                 value={formData.title}
                                 onChange={handleInputChange}
                                 className="w-full bg-gray-50 border-none rounded-2xl px-5 py-3.5 focus:ring-2 focus:ring-indigo-500"
-                                placeholder="e.g. Senior Receptionist"
+                                placeholder={t('jobTitlePlaceholder')}
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700 ml-1">Associated Position</label>
+                            <label className="text-sm font-bold text-gray-700 ml-1">{t('associatedPosition')}</label>
                             <select
                                 required
                                 name="position_id"
@@ -145,53 +149,53 @@ const JobCreatePage = () => {
                                 onChange={handleInputChange}
                                 className="w-full bg-gray-50 border-none rounded-2xl px-5 py-3.5 focus:ring-2 focus:ring-indigo-500"
                             >
-                                <option value="">Select a position...</option>
+                                <option value="">{t('selectPositionPlaceholder')}</option>
                                 {positions.map(p => (
                                     <option key={p.id} value={p.id}>{p.title} ({p.Department?.name})</option>
                                 ))}
                             </select>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700 ml-1">Employment Type</label>
+                            <label className="text-sm font-bold text-gray-700 ml-1">{t('employmentType')}</label>
                             <select
                                 name="employment_type"
                                 value={formData.employment_type}
                                 onChange={handleInputChange}
                                 className="w-full bg-gray-50 border-none rounded-2xl px-5 py-3.5 focus:ring-2 focus:ring-indigo-500"
                             >
-                                <option value="full_time">Full Time</option>
-                                <option value="part_time">Part Time</option>
-                                <option value="contract">Contract</option>
-                                <option value="intern">Intern</option>
-                                <option value="temporary">Temporary</option>
+                                <option value="full_time">{t('fullTime')}</option>
+                                <option value="part_time">{t('partTime')}</option>
+                                <option value="contract">{t('contract')}</option>
+                                <option value="intern">{t('intern')}</option>
+                                <option value="temporary">{t('temporary')}</option>
                             </select>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700 ml-1">Experience Level</label>
+                            <label className="text-sm font-bold text-gray-700 ml-1">{t('experienceLevel')}</label>
                             <select
                                 name="experience_level"
                                 value={formData.experience_level}
                                 onChange={handleInputChange}
                                 className="w-full bg-gray-50 border-none rounded-2xl px-5 py-3.5 focus:ring-2 focus:ring-indigo-500"
                             >
-                                <option value="entry_level">Entry Level</option>
-                                <option value="mid_level">Mid Level</option>
-                                <option value="senior_level">Senior Level</option>
-                                <option value="executive">Executive</option>
+                                <option value="entry_level">{t('entryLevel')}</option>
+                                <option value="mid_level">{t('midLevel')}</option>
+                                <option value="senior_level">{t('seniorLevel')}</option>
+                                <option value="executive">{t('executive')}</option>
                             </select>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700 ml-1">Work Location</label>
+                            <label className="text-sm font-bold text-gray-700 ml-1">{t('workLocation')}</label>
                             <input
                                 name="location"
                                 value={formData.location}
                                 onChange={handleInputChange}
                                 className="w-full bg-gray-50 border-none rounded-2xl px-5 py-3.5 focus:ring-2 focus:ring-indigo-500"
-                                placeholder="e.g. Main Lobby, Downtown Hotel"
+                                placeholder={t('workLocationPlaceholder')}
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700 ml-1">Number of Vacancies</label>
+                            <label className="text-sm font-bold text-gray-700 ml-1">{t('numberOfVacancies')}</label>
                             <input
                                 type="number"
                                 name="vacancies_count"
@@ -209,12 +213,12 @@ const JobCreatePage = () => {
                     <div className="px-8 py-5 bg-gray-50 border-b border-gray-100">
                         <h2 className="font-bold text-gray-900 flex items-center gap-2">
                             <FileText className="w-5 h-5 text-indigo-600" />
-                            Job Content
+                            {t('jobContent')}
                         </h2>
                     </div>
                     <div className="p-8 space-y-6">
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700 ml-1">Description</label>
+                            <label className="text-sm font-bold text-gray-700 ml-1">{t('jobDescription')}</label>
                             <textarea
                                 required
                                 name="description"
@@ -222,30 +226,30 @@ const JobCreatePage = () => {
                                 onChange={handleInputChange}
                                 rows="4"
                                 className="w-full bg-gray-50 border-none rounded-2xl px-5 py-3.5 focus:ring-2 focus:ring-indigo-500"
-                                placeholder="Describe the role and the ideal candidate..."
+                                placeholder={t('jobDescriptionPlaceholder')}
                             ></textarea>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-700 ml-1">Requirements</label>
+                                <label className="text-sm font-bold text-gray-700 ml-1">{t('requirements')}</label>
                                 <textarea
                                     name="requirements"
                                     value={formData.requirements}
                                     onChange={handleInputChange}
                                     rows="4"
                                     className="w-full bg-gray-50 border-none rounded-2xl px-5 py-3.5 focus:ring-2 focus:ring-indigo-500"
-                                    placeholder="List key skills and criteria..."
+                                    placeholder={t('requirementsPlaceholder')}
                                 ></textarea>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-700 ml-1">Responsibilities</label>
+                                <label className="text-sm font-bold text-gray-700 ml-1">{t('responsibilities')}</label>
                                 <textarea
                                     name="responsibilities"
                                     value={formData.responsibilities}
                                     onChange={handleInputChange}
                                     rows="4"
                                     className="w-full bg-gray-50 border-none rounded-2xl px-5 py-3.5 focus:ring-2 focus:ring-indigo-500"
-                                    placeholder="Daily tasks and goals..."
+                                    placeholder={t('responsibilitiesPlaceholder')}
                                 ></textarea>
                             </div>
                         </div>
@@ -257,13 +261,13 @@ const JobCreatePage = () => {
                     <div className="px-8 py-5 bg-gray-50 border-b border-gray-100">
                         <h2 className="font-bold text-gray-900 flex items-center gap-2">
                             <DollarSign className="w-5 h-5 text-indigo-600" />
-                            Compensation & Benefits
+                            {t('compensationBenefits')}
                         </h2>
                     </div>
                     <div className="p-8 space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-700 ml-1">Min Salary</label>
+                                <label className="text-sm font-bold text-gray-700 ml-1">{t('minSalary')}</label>
                                 <input
                                     type="number"
                                     name="min_salary"
@@ -273,7 +277,7 @@ const JobCreatePage = () => {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-700 ml-1">Max Salary</label>
+                                <label className="text-sm font-bold text-gray-700 ml-1">{t('maxSalary')}</label>
                                 <input
                                     type="number"
                                     name="max_salary"
@@ -284,14 +288,14 @@ const JobCreatePage = () => {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700 ml-1">Benefits</label>
+                            <label className="text-sm font-bold text-gray-700 ml-1">{t('benefits')}</label>
                             <textarea
                                 name="benefits"
                                 value={formData.benefits}
                                 onChange={handleInputChange}
                                 rows="3"
                                 className="w-full bg-gray-50 border-none rounded-2xl px-5 py-3.5 focus:ring-2 focus:ring-indigo-500"
-                                placeholder="Perks, insurance, meals, etc."
+                                placeholder={t('benefitsPlaceholder')}
                             ></textarea>
                         </div>
                     </div>
@@ -304,7 +308,7 @@ const JobCreatePage = () => {
                         onClick={() => navigate('/recruitment/jobs')}
                         className="px-6 py-3 text-gray-600 font-bold rounded-2xl hover:bg-gray-50 transition-colors"
                     >
-                        Discard
+                        {t('discard')}
                     </button>
                     <button
                         type="submit"
@@ -312,7 +316,7 @@ const JobCreatePage = () => {
                         className="px-10 py-3 bg-indigo-600 text-white font-bold rounded-2xl shadow-lg shadow-indigo-100 hover:bg-indigo-700 disabled:opacity-70 transition-all flex items-center gap-2"
                     >
                         {submitting ? <Loader2 className="animate-spin w-5 h-5" /> : <Save className="w-5 h-5" />}
-                        {isEdit ? 'Update Posting' : 'Create Posting'}
+                        {isEdit ? t('updatePosting') : t('createPosting')}
                     </button>
                 </div>
             </form>
