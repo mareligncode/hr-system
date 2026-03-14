@@ -12,8 +12,10 @@ import employeeService from '../../services/employeeService';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-hot-toast';
 import { format, startOfWeek, endOfWeek, isToday, isFuture, addDays, parseISO, startOfDay } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 const MyShiftsPage = () => {
+    const { t } = useTranslation();
     const [shifts, setShifts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isSwapModalOpen, setIsSwapModalOpen] = useState(false);
@@ -50,7 +52,7 @@ const MyShiftsPage = () => {
             const res = await shiftService.getMyShifts({ from, to });
             setShifts(res.data);
         } catch (error) {
-            toast.error('Failed to load your schedule');
+            toast.error(t('failedToLoadSchedule'));
         } finally {
             setLoading(false);
         }
@@ -64,16 +66,16 @@ const MyShiftsPage = () => {
                 target_employee_id: targetEmployeeId,
                 reason: swapReason
             });
-            toast.success('Swap request submitted');
+            toast.success(t('swapRequestSubmitted'));
             setIsSwapModalOpen(false);
             setSwapReason('');
             setTargetEmployeeId('');
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Failed to submit swap request');
+            toast.error(error.response?.data?.error || t('failedToSubmitSwapRequest'));
         }
     };
 
-    if (loading) return <div className="p-8 text-center animate-pulse">Loading your shifts...</div>;
+    if (loading) return <div className="p-8 text-center animate-pulse">{t('loadingYourShifts')}</div>;
 
     // Simplified filtering to avoid timezone edge cases with string dates
     const todayStr = format(new Date(), 'yyyy-MM-dd');
@@ -87,8 +89,8 @@ const MyShiftsPage = () => {
     return (
         <div className="p-4 md:p-6 lg:p-8 max-w-4xl mx-auto">
             <header className="mb-8">
-                <h1 className="text-2xl font-bold font-display text-gray-900">My Schedule</h1>
-                <p className="text-gray-500">View your assigned shifts and manage swaps ({shifts.length} total shifts found)</p>
+                <h1 className="text-2xl font-bold font-display text-gray-900">{t('myWorkSchedule')}</h1>
+                <p className="text-gray-500">{t('yourAssignedShiftsAndRotations')} ({shifts.length} {t('totalShiftsFound')})</p>
             </header>
 
             <div className="space-y-6">
@@ -100,7 +102,7 @@ const MyShiftsPage = () => {
                         >
                             {shift.assignment_date === todayStr && (
                                 <div className="absolute top-0 right-0 bg-blue-600 text-white px-3 py-1 rounded-bl-xl text-[10px] font-bold uppercase tracking-wider">
-                                    Today
+                                    {t('today')}
                                 </div>
                             )}
 
@@ -125,7 +127,7 @@ const MyShiftsPage = () => {
                                         className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 transition font-semibold"
                                     >
                                         <ArrowRightLeft size={18} />
-                                        Request Swap
+                                        {t('requestSwap')}
                                     </button>
                                     <button className="p-2 text-gray-400 hover:text-gray-600">
                                         <ChevronRight size={24} />
@@ -136,11 +138,11 @@ const MyShiftsPage = () => {
                             <div className="mt-4 pt-4 border-t border-gray-50 flex items-center gap-6">
                                 <div className="flex items-center gap-2 text-xs text-gray-400">
                                     <MapPin size={14} />
-                                    <span>Main Hall • Level 2</span>
+                                    <span>{t('mainHallLevel2')}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-gray-400">
                                     <AlertCircle size={14} />
-                                    <span>{shift.ShiftType.break_duration_minutes}m Break</span>
+                                    <span>{t('minutesBreak', { minutes: shift.ShiftType.break_duration_minutes })}</span>
                                 </div>
                             </div>
                         </div>
@@ -148,8 +150,8 @@ const MyShiftsPage = () => {
                 ) : (
                     <div className="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
                         <Calendar size={48} className="mx-auto text-gray-300 mb-4" />
-                        <h3 className="text-lg font-bold text-gray-900">No shifts assigned</h3>
-                        <p className="text-gray-500 mt-1">You're all clear for the next few days!</p>
+                        <h3 className="text-lg font-bold text-gray-900">{t('noUpcomingShifts')}</h3>
+                        <p className="text-gray-500 mt-1">{t('checkBackLater')}</p>
                     </div>
                 )}
             </div>
@@ -159,19 +161,19 @@ const MyShiftsPage = () => {
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500">
                         <div className="p-8 pb-4">
-                            <h2 className="text-2xl font-black text-gray-900">Swap Shift</h2>
-                            <p className="text-gray-500 mt-2">Request to swap your <span className="text-blue-600 font-bold">{selectedShift?.ShiftType.name}</span> shift on {format(new Date(selectedShift?.assignment_date), 'MMMM d')}.</p>
+                            <h2 className="text-2xl font-black text-gray-900">{t('swapShift')}</h2>
+                            <p className="text-gray-500 mt-2">{t('requestToSwapYour')} <span className="text-blue-600 font-bold">{selectedShift?.ShiftType.name}</span> {t('shiftOn')} {format(new Date(selectedShift?.assignment_date), 'MMMM d')}.</p>
                         </div>
                         <form onSubmit={handleRequestSwap} className="p-8 pt-4 space-y-6">
                             <div>
-                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Request Swap With</label>
+                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">{t('requestSwapWith')}</label>
                                 <select
                                     required
                                     className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                     value={targetEmployeeId}
                                     onChange={(e) => setTargetEmployeeId(e.target.value)}
                                 >
-                                    <option value="">Select a colleague...</option>
+                                    <option value="">{t('selectEmployee')}</option>
                                     {colleagues.map(c => (
                                         <option key={c.user_id} value={c.user_id}>
                                             {c.User?.first_name} {c.User?.last_name}
@@ -180,14 +182,14 @@ const MyShiftsPage = () => {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Reason for Swap</label>
+                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">{t('swapReason')}</label>
                                 <textarea
                                     required
                                     className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-gray-300"
                                     rows="4"
                                     value={swapReason}
                                     onChange={(e) => setSwapReason(e.target.value)}
-                                    placeholder="Explain why you need to swap..."
+                                    placeholder={t('swapReasonPlaceholder')}
                                 ></textarea>
                             </div>
                             <div className="flex gap-4">
@@ -196,13 +198,13 @@ const MyShiftsPage = () => {
                                     onClick={() => setIsSwapModalOpen(false)}
                                     className="flex-1 py-4 text-gray-600 font-bold hover:bg-gray-50 rounded-2xl transition"
                                 >
-                                    Cancel
+                                    {t('cancel')}
                                 </button>
                                 <button
                                     type="submit"
                                     className="flex-1 py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-100 hover:shadow-blue-200 hover:-translate-y-1 transition-all"
                                 >
-                                    Send Request
+                                    {t('sendRequest')}
                                 </button>
                             </div>
                         </form>

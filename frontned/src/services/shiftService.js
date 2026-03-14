@@ -34,6 +34,8 @@ const shiftService = {
     getShiftRotations: (params) => api.get('/shifts/rotations', { params }),
     createShiftRotation: (data) => api.post('/shifts/rotations', data),
     applyShiftRotation: (id, data) => api.post(`/shifts/rotations/${id}/apply`, data),
+    deleteShiftRotation: (id) => api.delete(`/shifts/rotations/${id}`),
+    reactivateShiftRotation: (id) => api.post(`/shifts/rotations/${id}/reactivate`),
 
     // --- Shift Reports ---
     getShiftReports: (params) => api.get('/shifts/reports', { params }),

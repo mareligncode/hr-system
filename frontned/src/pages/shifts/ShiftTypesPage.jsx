@@ -15,6 +15,7 @@ import shiftService from '../../services/shiftService';
 import organizationService from '../../services/organizationService';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 const INITIAL_FORM = {
     name: '',
@@ -30,6 +31,7 @@ const INITIAL_FORM = {
 };
 
 const ShiftTypesPage = () => {
+    const { t } = useTranslation();
     const [shiftTypes, setShiftTypes] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -42,22 +44,29 @@ const ShiftTypesPage = () => {
     const isAdminOrHR = ['admin', 'hr'].includes(user?.role);
 
     useEffect(() => {
-        fetchData();
+        const loadAllData = async () => {
+            setLoading(true);
+            await Promise.all([fetchShiftTypes(), fetchDepartments()]);
+            setLoading(false);
+        };
+        loadAllData();
     }, []);
 
-    const fetchData = async () => {
+    const fetchShiftTypes = async () => {
         try {
-            setLoading(true);
-            const [typesRes, deptsRes] = await Promise.all([
-                shiftService.getShiftTypes(),
-                organizationService.getDepartments()
-            ]);
-            setShiftTypes(typesRes.data);
-            setDepartments(deptsRes);
+            const res = await shiftService.getShiftTypes();
+            setShiftTypes(res.data);
         } catch (error) {
-            toast.error('Failed to load data');
-        } finally {
-            setLoading(false);
+            toast.error(t('failedToLoadShiftTypes'));
+        }
+    };
+
+    const fetchDepartments = async () => {
+        try {
+            const data = await organizationService.getDepartments();
+            setDepartments(data);
+        } catch (error) {
+            toast.error(t('failedToLoadDepartments'));
         }
     };
 
@@ -93,28 +102,28 @@ const ShiftTypesPage = () => {
         try {
             if (editingType) {
                 await shiftService.updateShiftType(editingType.id, formData);
-                toast.success('Shift type updated');
+                toast.success(t('shiftTypeUpdated'));
             } else {
                 await shiftService.createShiftType(formData);
-                toast.success('Shift type created');
+                toast.success(t('shiftTypeCreated'));
             }
             setIsModalOpen(false);
-            fetchData();
+            fetchShiftTypes();
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Operation failed');
+            toast.error(error.response?.data?.error || t('failedToSaveShiftType'));
         } finally {
             setSubmitting(false);
         }
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to deactivate this shift type?')) {
+        if (window.confirm(t('areYouSureDeactivateShiftType'))) {
             try {
                 await shiftService.deleteShiftType(id);
-                toast.success('Shift type deactivated');
-                fetchData();
+                toast.success(t('shiftTypeDeactivated'));
+                fetchShiftTypes();
             } catch (error) {
-                toast.error(error.response?.data?.error || 'Failed to deactivate');
+                toast.error(t('failedToDeactivateShiftType'));
             }
         }
     };
@@ -128,7 +137,7 @@ const ShiftTypesPage = () => {
         const netMin = totalMin - (breakMin || 0);
         const hrs = Math.floor(netMin / 60);
         const min = netMin % 60;
-        return min > 0 ? `${hrs}h ${min}m` : `${hrs}h`;
+        return min > 0 ? `${hrs}h ${min}m ${t('net')}` : `${hrs}h ${t('net')}`;
     };
 
     if (loading) {
@@ -144,34 +153,34 @@ const ShiftTypesPage = () => {
             {/* Header */}
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Shift Types</h1>
-                    <p className="text-gray-500">Define and manage shift schedules across departments</p>
+                    <h1 className="text-2xl font-bold text-gray-900">{t('shiftTypes')}</h1>
+                    <p className="text-gray-500">{t('defineAndManageShiftSchedules')}</p>
                 </div>
                 <button
                     onClick={() => handleOpenModal()}
                     className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl transition-colors shadow-md shadow-blue-100 font-medium"
                 >
                     <Plus size={20} />
-                    Add Shift Type
+                    {t('addShiftType')}
                 </button>
             </div>
 
             {/* Stats row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Types</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('totalTypes')}</p>
                     <p className="text-2xl font-bold text-gray-900 mt-1">{shiftTypes.length}</p>
                 </div>
                 <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Night Shifts</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('nightShifts')}</p>
                     <p className="text-2xl font-bold text-purple-600 mt-1">{shiftTypes.filter(t => t.is_overnight).length}</p>
                 </div>
                 <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Day Shifts</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('dayShifts')}</p>
                     <p className="text-2xl font-bold text-amber-600 mt-1">{shiftTypes.filter(t => !t.is_overnight).length}</p>
                 </div>
                 <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Departments</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('departments')}</p>
                     <p className="text-2xl font-bold text-green-600 mt-1">{new Set(shiftTypes.map(t => t.department_id)).size}</p>
                 </div>
             </div>
@@ -180,8 +189,8 @@ const ShiftTypesPage = () => {
             {shiftTypes.length === 0 ? (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
                     <Clock size={48} className="mx-auto text-gray-300 mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-700">No Shift Types Yet</h3>
-                    <p className="text-gray-500 mt-1">Create your first shift type to start scheduling</p>
+                    <h3 className="text-lg font-semibold text-gray-700">{t('noShiftTypesYet')}</h3>
+                    <p className="text-gray-500 mt-1">{t('createFirstShiftType')}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -215,32 +224,25 @@ const ShiftTypesPage = () => {
                                     </div>
                                     <div className="flex items-center gap-3 text-sm text-gray-600">
                                         <Calendar size={15} className="text-gray-400 flex-shrink-0" />
-                                        <span>{type.Department?.name || 'All Departments'}</span>
+                                        <span>{type.Department?.name || t('allDepartments')}</span>
                                     </div>
                                     <div className="flex items-center gap-3 text-sm text-gray-600">
                                         <Timer size={15} className="text-gray-400 flex-shrink-0" />
-                                        <span>{type.break_duration_minutes}m break</span>
+                                        <span>{type.break_duration_minutes}m {t('break')}</span>
                                         <span className="text-gray-300">|</span>
-                                        <span>{type.grace_period_minutes}m grace</span>
+                                        <span>{type.grace_period_minutes}m {t('grace')}</span>
                                     </div>
                                     <div className="flex items-center gap-3 text-sm text-gray-600">
                                         <Zap size={15} className="text-gray-400 flex-shrink-0" />
-                                        <span>OT after {type.overtime_threshold_hours}h</span>
+                                        <span>{t('otAfter')} {type.overtime_threshold_hours}h</span>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-2 mt-4 flex-wrap">
-                                    {type.is_overnight && (
-                                        <span className="bg-purple-50 text-purple-700 text-[10px] px-2.5 py-1 rounded-full font-semibold uppercase flex items-center gap-1">
-                                            <Moon size={10} /> Night
-                                        </span>
-                                    )}
-                                    <span className="bg-blue-50 text-blue-700 text-[10px] px-2.5 py-1 rounded-full font-semibold uppercase">
-                                        {type.break_duration_minutes}m Break
+                                <div className="flex items-center gap-2 mt-2">
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${type.is_overnight ? 'bg-purple-50 text-purple-700' : 'bg-blue-50 text-blue-700'}`}>
+                                        {type.is_overnight ? t('night') : t('day')}
                                     </span>
-                                    <span className="bg-amber-50 text-amber-700 text-[10px] px-2.5 py-1 rounded-full font-semibold uppercase">
-                                        {type.grace_period_minutes}m Grace
-                                    </span>
+                                    {type.is_overnight && <span className="text-[10px] text-gray-400 font-medium italic">{t('crossesMidnight')}</span>}
                                 </div>
                             </div>
                         </div>
@@ -253,7 +255,7 @@ const ShiftTypesPage = () => {
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setIsModalOpen(false)}>
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
-                            <h2 className="text-xl font-bold text-gray-900">{editingType ? 'Edit Shift Type' : 'New Shift Type'}</h2>
+                            <h2 className="text-xl font-bold text-gray-900">{editingType ? t('editShiftType') : t('newShiftType')}</h2>
                             <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1">
                                 <XCircle size={24} />
                             </button>
@@ -262,7 +264,7 @@ const ShiftTypesPage = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 {/* Name */}
                                 <div className="col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Shift Name *</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('shiftNameWithStar')}</label>
                                     <input
                                         type="text"
                                         required
@@ -274,7 +276,7 @@ const ShiftTypesPage = () => {
                                 </div>
                                 {/* Code */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Code *</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('codeWithStar')}</label>
                                     <input
                                         type="text"
                                         required
@@ -286,14 +288,14 @@ const ShiftTypesPage = () => {
                                 </div>
                                 {/* Department */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Department *</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('departmentWithStar')}</label>
                                     <select
                                         required
                                         className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                         value={formData.department_id}
                                         onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
                                     >
-                                        <option value="">Select Department</option>
+                                        <option value="">{t('selectDepartment')}</option>
                                         {departments?.map(d => (
                                             <option key={d.id} value={d.id}>{d.name}</option>
                                         ))}
@@ -301,7 +303,7 @@ const ShiftTypesPage = () => {
                                 </div>
                                 {/* Start Time */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Time *</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('startTimeWithStar')}</label>
                                     <input
                                         type="time"
                                         required
@@ -312,7 +314,7 @@ const ShiftTypesPage = () => {
                                 </div>
                                 {/* End Time */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">End Time *</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('endTimeWithStar')}</label>
                                     <input
                                         type="time"
                                         required
@@ -323,7 +325,7 @@ const ShiftTypesPage = () => {
                                 </div>
                                 {/* Break Duration */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Break (minutes)</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('breakMinutes')}</label>
                                     <input
                                         type="number"
                                         min="0"
@@ -335,7 +337,7 @@ const ShiftTypesPage = () => {
                                 </div>
                                 {/* Grace Period */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Grace Period (min)</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('gracePeriodMin')}</label>
                                     <input
                                         type="number"
                                         min="0"
@@ -347,7 +349,7 @@ const ShiftTypesPage = () => {
                                 </div>
                                 {/* Overtime Threshold */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">OT Threshold (hrs)</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('otThresholdHrs')}</label>
                                     <input
                                         type="number"
                                         min="1"
@@ -360,7 +362,7 @@ const ShiftTypesPage = () => {
                                 </div>
                                 {/* Color */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('color')}</label>
                                     <input
                                         type="color"
                                         className="w-full h-11 border border-gray-200 rounded-xl cursor-pointer p-1"
@@ -381,8 +383,8 @@ const ShiftTypesPage = () => {
                                 />
                                 <label htmlFor="is_overnight" className="text-sm text-gray-700 flex items-center gap-2">
                                     <Moon size={14} className="text-purple-500" />
-                                    <span>Night / Overnight Shift</span>
-                                    <span className="text-xs text-gray-400">(crosses midnight)</span>
+                                    <span>{t('nightOvernightShift')}</span>
+                                    <span className="text-xs text-gray-400">{t('crossesMidnight')}</span>
                                 </label>
                             </div>
 
@@ -393,14 +395,14 @@ const ShiftTypesPage = () => {
                                     onClick={() => setIsModalOpen(false)}
                                     className="flex-1 px-4 py-3 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium"
                                 >
-                                    Cancel
+                                    {t('cancel')}
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={submitting}
                                     className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-md shadow-blue-100 disabled:opacity-50"
                                 >
-                                    {submitting ? 'Saving...' : (editingType ? 'Save Changes' : 'Create Shift Type')}
+                                    {submitting ? t('saving') : (editingType ? t('saveChanges') : t('createShiftType'))}
                                 </button>
                             </div>
                         </form>

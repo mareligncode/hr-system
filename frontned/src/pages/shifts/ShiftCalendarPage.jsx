@@ -32,8 +32,10 @@ import organizationService from '../../services/organizationService';
 import employeeService from '../../services/employeeService';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 const ShiftCalendarPage = () => {
+    const { t } = useTranslation();
     const [view, setView] = useState('week'); // 'week' or 'month'
     const [currentDate, setCurrentDate] = useState(new Date());
     const [assignments, setAssignments] = useState([]);
@@ -104,7 +106,7 @@ const ShiftCalendarPage = () => {
             const res = await shiftService.getShiftAssignments(params);
             setAssignments(res.data);
         } catch (error) {
-            toast.error('Failed to load assignments');
+            toast.error(t('failedToLoadAssignments'));
         } finally {
             setLoading(false);
         }
@@ -157,25 +159,25 @@ const ShiftCalendarPage = () => {
                 target_employee_id: targetEmployeeId,
                 reason: swapReason
             });
-            toast.success('Swap request submitted');
+            toast.success(t('swapRequestSubmitted'));
             setIsSwapModalOpen(false);
             setSwapReason('');
             setTargetEmployeeId('');
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Failed to submit swap request');
+            toast.error(error.response?.data?.error || t('failedToSubmitSwapRequest'));
         }
     };
 
     const handleDeleteAssignment = async (e, id) => {
         e.stopPropagation();
-        if (!window.confirm('Are you sure you want to delete this shift assignment?')) return;
+        if (!window.confirm(t('confirmDeleteShift'))) return;
 
         try {
             await shiftService.deleteShiftAssignment(id);
-            toast.success('Shift assignment deleted');
+            toast.success(t('shiftDeleted'));
             fetchAssignments();
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Failed to delete assignment');
+            toast.error(error.response?.data?.error || t('failedToDeleteShift'));
         }
     };
 
@@ -184,10 +186,10 @@ const ShiftCalendarPage = () => {
         try {
             if (newAssignment.id) {
                 await shiftService.updateShiftAssignment(newAssignment.id, newAssignment);
-                toast.success('Shift updated successfully');
+                toast.success(t('shiftUpdated'));
             } else {
                 await shiftService.createShiftAssignment(newAssignment);
-                toast.success('Shift assigned successfully');
+                toast.success(t('shiftAssigned'));
             }
             setIsAddModalOpen(false);
             setNewAssignment({ id: null, employee_id: '', shift_type_id: '', assignment_date: format(new Date(), 'yyyy-MM-dd'), notes: '' });
@@ -195,19 +197,19 @@ const ShiftCalendarPage = () => {
         } catch (error) {
             if (error.response?.status === 409) {
                 const conflicts = error.response.data.conflicts || [];
-                const conflictMsg = error.response.data.message || 'Conflict detected';
+                const conflictMsg = error.response.data.message || t('conflictDetected');
 
                 // Detailed toast for conflicts
                 if (Array.isArray(conflicts)) {
                     const details = conflicts.map(c =>
-                        `${c.ShiftType?.name || 'Shift'} on ${c.assignment_date}`
+                        `${c.ShiftType?.name || t('shift')} ${t('on')} ${c.assignment_date}`
                     ).join(', ');
                     toast.error(`${conflictMsg}: ${details}`, { duration: 6000 });
                 } else {
                     toast.error(conflictMsg);
                 }
             } else {
-                toast.error(error.response?.data?.error || 'Failed to save shift');
+                toast.error(error.response?.data?.error || t('failedToSaveShift'));
             }
         }
     };
@@ -265,14 +267,14 @@ const ShiftCalendarPage = () => {
                                                     <button
                                                         onClick={(e) => handleEditClick(e, assign)}
                                                         className="text-blue-600 hover:text-blue-800 transition-colors"
-                                                        title="Edit"
+                                                        title={t('edit')}
                                                     >
                                                         <Edit2 size={12} />
                                                     </button>
                                                     <button
                                                         onClick={(e) => handleDeleteAssignment(e, assign.id)}
                                                         className="text-red-500 hover:text-red-700 transition-colors"
-                                                        title="Delete"
+                                                        title={t('delete')}
                                                     >
                                                         <Trash2 size={12} />
                                                     </button>
@@ -282,7 +284,7 @@ const ShiftCalendarPage = () => {
                                                 <button
                                                     onClick={(e) => handleSwapClick(e, assign)}
                                                     className="text-orange-500 hover:text-orange-700 transition-colors"
-                                                    title="Request Swap"
+                                                    title={t('requestSwap')}
                                                 >
                                                     <ArrowRightLeft size={12} />
                                                 </button>
@@ -301,7 +303,7 @@ const ShiftCalendarPage = () => {
                             ))}
                             {(user.role === 'admin' || user.role === 'hr' || user.role === 'manager') && (
                                 <button className="hidden group-hover:flex items-center justify-center py-2 text-blue-600 opacity-50 hover:opacity-100 text-xs gap-1 transition-all">
-                                    <Plus size={14} /> Assign
+                                    <Plus size={14} /> {t('assign')}
                                 </button>
                             )}
                         </div>
@@ -364,8 +366,8 @@ const ShiftCalendarPage = () => {
         <div className="p-6 max-w-full">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Shift Calendar</h1>
-                    <p className="text-gray-500">Manage team schedules and assignments</p>
+                    <h1 className="text-2xl font-bold text-gray-900">{t('shiftCalendar')}</h1>
+                    <p className="text-gray-500">{t('manageTeamSchedules')}</p>
                 </div>
 
                 <div className="flex items-center gap-4 bg-white p-1 rounded-xl shadow-sm border border-gray-200">
@@ -390,13 +392,13 @@ const ShiftCalendarPage = () => {
                             onClick={() => setView('week')}
                             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${view === 'week' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50'}`}
                         >
-                            Week
+                            {t('week')}
                         </button>
                         <button
                             onClick={() => setView('month')}
                             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${view === 'month' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50'}`}
                         >
-                            Month
+                            {t('month')}
                         </button>
                     </div>
 
@@ -407,7 +409,7 @@ const ShiftCalendarPage = () => {
                             value={selectedEmployeeId}
                             onChange={(e) => setSelectedEmployeeId(e.target.value)}
                         >
-                            <option value="">All Employees</option>
+                            <option value="">{t('allEmployees')}</option>
                             {employees.map(emp => (
                                 <option key={emp.user_id} value={emp.user_id}>
                                     {emp.User?.first_name} {emp.User?.last_name}
@@ -429,7 +431,7 @@ const ShiftCalendarPage = () => {
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                             <div>
-                                <h2 className="text-xl font-bold text-gray-900">{newAssignment.id ? 'Edit Shift' : 'Assign Shift'}</h2>
+                                <h2 className="text-xl font-bold text-gray-900">{newAssignment.id ? t('editShift') : t('assignShift')}</h2>
                                 <p className="text-xs text-gray-500 mt-1">{format(selectedDate, 'EEEE, MMMM d')}</p>
                             </div>
                             <button onClick={() => setIsAddModalOpen(false)} className="text-gray-400 hover:text-gray-600">
@@ -438,14 +440,14 @@ const ShiftCalendarPage = () => {
                         </div>
                         <form onSubmit={handleSaveAssignment} className="p-6 space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Employee</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">{t('employee')}</label>
                                 <select
                                     required
                                     className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                     value={newAssignment.employee_id}
                                     onChange={(e) => setNewAssignment({ ...newAssignment, employee_id: e.target.value })}
                                 >
-                                    <option value="">Select Employee</option>
+                                    <option value="">{t('selectEmployee')}</option>
                                     {employees.map(emp => (
                                         <option key={emp.user_id} value={emp.user_id}>
                                             {emp.User?.first_name} {emp.User?.last_name}
@@ -454,27 +456,27 @@ const ShiftCalendarPage = () => {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Shift Type</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">{t('shiftType')}</label>
                                 <select
                                     required
                                     className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                     value={newAssignment.shift_type_id}
                                     onChange={(e) => setNewAssignment({ ...newAssignment, shift_type_id: e.target.value })}
                                 >
-                                    <option value="">Select Shift</option>
+                                    <option value="">{t('selectShift')}</option>
                                     {shiftTypes.map(t => (
                                         <option key={t.id} value={t.id}>{t.name} ({t.start_time.substring(0, 5)} - {t.end_time.substring(0, 5)})</option>
                                     ))}
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">{t('notes')} {t('optional')}</label>
                                 <textarea
                                     className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                     rows="3"
                                     value={newAssignment.notes}
                                     onChange={(e) => setNewAssignment({ ...newAssignment, notes: e.target.value })}
-                                    placeholder="Add any specific instructions..."
+                                    placeholder={t('notesPlaceholder')}
                                 ></textarea>
                             </div>
                             <div className="pt-4 flex gap-3">
@@ -483,13 +485,13 @@ const ShiftCalendarPage = () => {
                                     onClick={() => setIsAddModalOpen(false)}
                                     className="flex-1 px-4 py-3 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-semibold"
                                 >
-                                    Cancel
+                                    {t('cancel')}
                                 </button>
                                 <button
                                     type="submit"
                                     className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-semibold shadow-md shadow-blue-100"
                                 >
-                                    {newAssignment.id ? 'Update Shift' : 'Assign Shift'}
+                                    {newAssignment.id ? t('updateShift') : t('assignShift')}
                                 </button>
                             </div>
                         </form>
@@ -502,19 +504,19 @@ const ShiftCalendarPage = () => {
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-500">
                         <div className="p-8 pb-4">
-                            <h2 className="text-2xl font-black text-gray-900">Swap Shift</h2>
-                            <p className="text-gray-500 mt-2">Request to swap your <span className="text-blue-600 font-bold">{selectedShift?.ShiftType.name}</span> shift on {selectedShift?.assignment_date}.</p>
+                            <h2 className="text-2xl font-black text-gray-900">{t('swapShift')}</h2>
+                            <p className="text-gray-500 mt-2">{t('requestToSwapYour')} <span className="text-blue-600 font-bold">{selectedShift?.ShiftType.name}</span> {t('shiftOn')} {selectedShift?.assignment_date}.</p>
                         </div>
                         <form onSubmit={handleRequestSwap} className="p-8 pt-4 space-y-6">
                             <div>
-                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Request Swap With</label>
+                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">{t('requestSwapWith')}</label>
                                 <select
                                     required
                                     className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                     value={targetEmployeeId}
                                     onChange={(e) => setTargetEmployeeId(e.target.value)}
                                 >
-                                    <option value="">Select a colleague...</option>
+                                    <option value="">{t('selectEmployee')}</option>
                                     {employees
                                         .filter(emp => emp.user_id !== user.id)
                                         .map(c => (
@@ -525,14 +527,14 @@ const ShiftCalendarPage = () => {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Reason for Swap</label>
+                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">{t('swapReason')}</label>
                                 <textarea
                                     required
                                     className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all placeholder:text-gray-300"
                                     rows="4"
                                     value={swapReason}
                                     onChange={(e) => setSwapReason(e.target.value)}
-                                    placeholder="Explain why you need to swap..."
+                                    placeholder={t('swapReasonPlaceholder')}
                                 ></textarea>
                             </div>
                             <div className="flex gap-4">
@@ -541,13 +543,13 @@ const ShiftCalendarPage = () => {
                                     onClick={() => setIsSwapModalOpen(false)}
                                     className="flex-1 py-4 text-gray-600 font-bold hover:bg-gray-50 rounded-2xl transition"
                                 >
-                                    Cancel
+                                    {t('cancel')}
                                 </button>
                                 <button
                                     type="submit"
                                     className="flex-1 py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-100 hover:shadow-blue-200 hover:-translate-y-1 transition-all"
                                 >
-                                    Send Request
+                                    {t('sendRequest')}
                                 </button>
                             </div>
                         </form>

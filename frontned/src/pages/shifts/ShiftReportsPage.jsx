@@ -9,6 +9,7 @@ import {
     Download,
     Filter
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import shiftService from '../../services/shiftService';
 import organizationService from '../../services/organizationService';
 import { useSelector } from 'react-redux';
@@ -16,6 +17,7 @@ import { toast } from 'react-hot-toast';
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 
 const ShiftReportsPage = () => {
+    const { t } = useTranslation();
     const [reportData, setReportData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [departments, setDepartments] = useState([]);
@@ -45,7 +47,7 @@ const ShiftReportsPage = () => {
             });
             setReportData(res.data);
         } catch (error) {
-            toast.error('Failed to load report');
+            toast.error(t('failedToLoadReport'));
         } finally {
             setLoading(false);
         }
@@ -74,9 +76,9 @@ const ShiftReportsPage = () => {
     };
 
     const tabs = [
-        { key: 'coverage', label: 'Coverage', icon: <Users size={16} /> },
-        { key: 'overtime', label: 'Overtime', icon: <Clock size={16} /> },
-        { key: 'summary', label: 'Shift Distribution', icon: <BarChart3 size={16} /> }
+        { key: 'coverage', label: t('coverage'), icon: <Users size={16} /> },
+        { key: 'overtime', label: t('overtime'), icon: <Clock size={16} /> },
+        { key: 'summary', label: t('shiftDistribution'), icon: <BarChart3 size={16} /> }
     ];
 
     const renderCoverageReport = () => {
@@ -92,19 +94,19 @@ const ShiftReportsPage = () => {
                 {/* Summary Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                        <p className="text-xs font-medium text-gray-500 uppercase">Total Employees</p>
+                        <p className="text-xs font-medium text-gray-500 uppercase">{t('totalEmployees')}</p>
                         <p className="text-2xl font-bold text-gray-900 mt-1">{total_employees}</p>
                     </div>
                     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                        <p className="text-xs font-medium text-gray-500 uppercase">Total Shifts</p>
+                        <p className="text-xs font-medium text-gray-500 uppercase">{t('totalShifts')}</p>
                         <p className="text-2xl font-bold text-blue-600 mt-1">{total_shifts}</p>
                     </div>
                     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                        <p className="text-xs font-medium text-gray-500 uppercase">Avg Coverage</p>
+                        <p className="text-xs font-medium text-gray-500 uppercase">{t('avgCoverage')}</p>
                         <p className="text-2xl font-bold text-green-600 mt-1">{avgCoverage}%</p>
                     </div>
                     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                        <p className="text-xs font-medium text-gray-500 uppercase">Days Covered</p>
+                        <p className="text-xs font-medium text-gray-500 uppercase">{t('daysCovered')}</p>
                         <p className="text-2xl font-bold text-amber-600 mt-1">{daily_coverage?.length || 0}</p>
                     </div>
                 </div>
@@ -112,16 +114,16 @@ const ShiftReportsPage = () => {
                 {/* Daily Coverage Table */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     <div className="p-4 border-b border-gray-100">
-                        <h3 className="font-semibold text-gray-900">Daily Coverage Details</h3>
+                        <h3 className="font-semibold text-gray-900">{t('dailyCoverageDetails')}</h3>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead className="bg-gray-50 text-gray-600">
                                 <tr>
-                                    <th className="text-left px-4 py-3 font-medium">Date</th>
-                                    <th className="text-center px-4 py-3 font-medium">Shifts Assigned</th>
-                                    <th className="text-center px-4 py-3 font-medium">Unique Employees</th>
-                                    <th className="text-center px-4 py-3 font-medium">Coverage</th>
+                                    <th className="text-left px-4 py-3 font-medium">{t('date')}</th>
+                                    <th className="text-center px-4 py-3 font-medium">{t('shiftsAssigned')}</th>
+                                    <th className="text-center px-4 py-3 font-medium">{t('uniqueEmployees')}</th>
+                                    <th className="text-center px-4 py-3 font-medium">{t('coverage')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -148,7 +150,7 @@ const ShiftReportsPage = () => {
                                     </tr>
                                 ))}
                                 {(!daily_coverage || daily_coverage.length === 0) && (
-                                    <tr><td colSpan="4" className="px-4 py-8 text-center text-gray-400">No data for the selected period</td></tr>
+                                    <tr><td colSpan="4" className="px-4 py-8 text-center text-gray-400">{t('noDataSelectedPeriod')}</td></tr>
                                 )}
                             </tbody>
                         </table>
@@ -168,15 +170,15 @@ const ShiftReportsPage = () => {
                 {/* Summary */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                        <p className="text-xs font-medium text-gray-500 uppercase">Employees</p>
+                        <p className="text-xs font-medium text-gray-500 uppercase">{t('employees')}</p>
                         <p className="text-2xl font-bold text-gray-900 mt-1">{reportData.length}</p>
                     </div>
                     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                        <p className="text-xs font-medium text-gray-500 uppercase">With Overtime</p>
+                        <p className="text-xs font-medium text-gray-500 uppercase">{t('withOvertime')}</p>
                         <p className="text-2xl font-bold text-red-600 mt-1">{reportData.filter(e => e.overtime_hours > 0).length}</p>
                     </div>
                     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                        <p className="text-xs font-medium text-gray-500 uppercase">Total OT Hours</p>
+                        <p className="text-xs font-medium text-gray-500 uppercase">{t('totalOtHours')}</p>
                         <p className="text-2xl font-bold text-amber-600 mt-1">{totalOT.toFixed(1)}</p>
                     </div>
                 </div>
@@ -184,17 +186,17 @@ const ShiftReportsPage = () => {
                 {/* OT Table */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                     <div className="p-4 border-b border-gray-100">
-                        <h3 className="font-semibold text-gray-900">Employee Overtime Details</h3>
+                        <h3 className="font-semibold text-gray-900">{t('employeeOvertimeDetails')}</h3>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                             <thead className="bg-gray-50 text-gray-600">
                                 <tr>
-                                    <th className="text-left px-4 py-3 font-medium">Employee</th>
-                                    <th className="text-left px-4 py-3 font-medium">Department</th>
-                                    <th className="text-center px-4 py-3 font-medium">Shifts</th>
-                                    <th className="text-center px-4 py-3 font-medium">Total Hours</th>
-                                    <th className="text-center px-4 py-3 font-medium">Overtime</th>
+                                    <th className="text-left px-4 py-3 font-medium">{t('employee')}</th>
+                                    <th className="text-left px-4 py-3 font-medium">{t('department')}</th>
+                                    <th className="text-center px-4 py-3 font-medium">{t('shifts')}</th>
+                                    <th className="text-center px-4 py-3 font-medium">{t('totalHours')}</th>
+                                    <th className="text-center px-4 py-3 font-medium">{t('overtime')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -217,7 +219,7 @@ const ShiftReportsPage = () => {
                                     </tr>
                                 ))}
                                 {reportData.length === 0 && (
-                                    <tr><td colSpan="5" className="px-4 py-8 text-center text-gray-400">No data for the selected period</td></tr>
+                                    <tr><td colSpan="5" className="px-4 py-8 text-center text-gray-400">{t('noDataSelectedPeriod')}</td></tr>
                                 )}
                             </tbody>
                         </table>
@@ -237,15 +239,15 @@ const ShiftReportsPage = () => {
                 {/* Summary Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                        <p className="text-xs font-medium text-gray-500 uppercase">Shift Types Used</p>
+                        <p className="text-xs font-medium text-gray-500 uppercase">{t('shiftTypesUsed')}</p>
                         <p className="text-2xl font-bold text-gray-900 mt-1">{reportData.length}</p>
                     </div>
                     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                        <p className="text-xs font-medium text-gray-500 uppercase">Total Assignments</p>
+                        <p className="text-xs font-medium text-gray-500 uppercase">{t('totalAssignments')}</p>
                         <p className="text-2xl font-bold text-blue-600 mt-1">{totalAssignments}</p>
                     </div>
                     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                        <p className="text-xs font-medium text-gray-500 uppercase">Night Shifts</p>
+                        <p className="text-xs font-medium text-gray-500 uppercase">{t('nightShifts')}</p>
                         <p className="text-2xl font-bold text-purple-600 mt-1">
                             {reportData.filter(s => s.is_overnight).reduce((sum, s) => sum + s.total_assignments, 0)}
                         </p>
@@ -269,15 +271,15 @@ const ShiftReportsPage = () => {
                                     </div>
                                     <div className="space-y-2 text-sm">
                                         <div className="flex justify-between text-gray-600">
-                                            <span>Assignments</span>
+                                            <span>{t('assignments')}</span>
                                             <span className="font-medium">{s.total_assignments}</span>
                                         </div>
                                         <div className="flex justify-between text-gray-600">
-                                            <span>Unique Employees</span>
+                                            <span>{t('uniqueEmployees')}</span>
                                             <span className="font-medium">{s.unique_employees}</span>
                                         </div>
                                         <div className="flex justify-between text-gray-600">
-                                            <span>Time</span>
+                                            <span>{t('timeRange')}</span>
                                             <span className="font-medium">{s.time_range}</span>
                                         </div>
                                     </div>
@@ -290,7 +292,7 @@ const ShiftReportsPage = () => {
                         );
                     })}
                     {reportData.length === 0 && (
-                        <div className="col-span-full text-center py-8 text-gray-400">No data for the selected period</div>
+                        <div className="col-span-full text-center py-8 text-gray-400">{t('noDataSelectedPeriod')}</div>
                     )}
                 </div>
             </div>
@@ -303,9 +305,9 @@ const ShiftReportsPage = () => {
             <div className="mb-8">
                 <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                     <TrendingUp size={28} className="text-blue-600" />
-                    Shift Reports
+                    {t('shiftReports')}
                 </h1>
-                <p className="text-gray-500 mt-1">Analyze shift coverage, overtime, and distribution</p>
+                <p className="text-gray-500 mt-1">{t('analyzeCoverageOvertime')}</p>
             </div>
 
             {/* Filters */}
@@ -313,13 +315,13 @@ const ShiftReportsPage = () => {
                 <div className="flex flex-wrap gap-4 items-end">
                     {['admin', 'hr'].includes(user?.role) && (
                         <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">Department</label>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">{t('department')}</label>
                             <select
                                 className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none min-w-[180px]"
                                 value={filters.department_id}
                                 onChange={(e) => setFilters(f => ({ ...f, department_id: e.target.value }))}
                             >
-                                <option value="">All Departments</option>
+                                <option value="">{t('allDepartments')}</option>
                                 {departments.map(d => (
                                     <option key={d.id} value={d.id}>{d.name}</option>
                                 ))}
@@ -327,7 +329,7 @@ const ShiftReportsPage = () => {
                         </div>
                     )}
                     <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">From</label>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">{t('from')}</label>
                         <input
                             type="date"
                             className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
@@ -336,7 +338,7 @@ const ShiftReportsPage = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">To</label>
+                        <label className="block text-xs font-medium text-gray-500 mb-1">{t('to')}</label>
                         <input
                             type="date"
                             className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
@@ -345,9 +347,9 @@ const ShiftReportsPage = () => {
                         />
                     </div>
                     <div className="flex gap-1">
-                        <button onClick={() => setDatePreset('thisMonth')} className="px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">This Month</button>
-                        <button onClick={() => setDatePreset('lastMonth')} className="px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Last Month</button>
-                        <button onClick={() => setDatePreset('last3Months')} className="px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Last 3 Mo</button>
+                        <button onClick={() => setDatePreset('thisMonth')} className="px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">{t('thisMonth')}</button>
+                        <button onClick={() => setDatePreset('lastMonth')} className="px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">{t('lastMonth')}</button>
+                        <button onClick={() => setDatePreset('last3Months')} className="px-3 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">{t('last3Mo')}</button>
                     </div>
                 </div>
             </div>
@@ -359,8 +361,8 @@ const ShiftReportsPage = () => {
                         key={tab.key}
                         onClick={() => setActiveTab(tab.key)}
                         className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === tab.key
-                                ? 'bg-white text-blue-600 shadow-sm'
-                                : 'text-gray-600 hover:text-gray-800'
+                            ? 'bg-white text-blue-600 shadow-sm'
+                            : 'text-gray-600 hover:text-gray-800'
                             }`}
                     >
                         {tab.icon}

@@ -5,19 +5,23 @@ import {
     Play,
     Calendar,
     Users,
-    XCircle,
     CheckCircle,
     Clock,
-    Layers
+    Layers,
+    Trash2,
+    XCircle
 } from 'lucide-react';
+
 import shiftService from '../../services/shiftService';
 import organizationService from '../../services/organizationService';
 import employeeService from '../../services/employeeService';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { format, addDays } from 'date-fns';
 
 const ShiftRotationsPage = () => {
+    const { t } = useTranslation();
     const [rotations, setRotations] = useState([]);
     const [shiftTypes, setShiftTypes] = useState([]);
     const [departments, setDepartments] = useState([]);
@@ -27,6 +31,7 @@ const ShiftRotationsPage = () => {
     const [isApplyOpen, setIsApplyOpen] = useState(false);
     const [applyingRotation, setApplyingRotation] = useState(null);
     const [submitting, setSubmitting] = useState(false);
+    const [showInactive, setShowInactive] = useState(false);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -52,7 +57,7 @@ const ShiftRotationsPage = () => {
         try {
             setLoading(true);
             const [rotRes, typesRes, deptsRes, empRes] = await Promise.all([
-                shiftService.getShiftRotations(),
+                shiftService.getShiftRotations({ include_inactive: true }),
                 shiftService.getShiftTypes(),
                 organizationService.getDepartments(),
                 employeeService.getEmployees()
@@ -62,27 +67,24 @@ const ShiftRotationsPage = () => {
             setDepartments(deptsRes);
             setEmployees(empRes);
         } catch (error) {
-            toast.error('Failed to load data');
+            toast.error(t('failedToLoadData'));
         } finally {
             setLoading(false);
         }
     };
 
-    /** Get shift type name by ID */
     const getShiftName = (id) => {
-        if (id === null) return 'Day Off';
+        if (id === null) return t('dayOff');
         const st = shiftTypes.find(t => t.id === id);
         return st ? st.name : `Shift #${id}`;
     };
 
-    /** Get shift type color by ID */
     const getShiftColor = (id) => {
         if (id === null) return '#9ca3af';
         const st = shiftTypes.find(t => t.id === id);
         return st?.color_code || '#3788d8';
     };
 
-    /** Add a step to the rotation pattern */
     const addPatternStep = (shiftTypeId) => {
         setFormData(f => ({
             ...f,
@@ -90,7 +92,6 @@ const ShiftRotationsPage = () => {
         }));
     };
 
-    /** Remove a step from the rotation pattern */
     const removePatternStep = (index) => {
         setFormData(f => ({
             ...f,
@@ -102,7 +103,7 @@ const ShiftRotationsPage = () => {
         e.preventDefault();
         if (submitting) return;
         if (formData.rotation_pattern.length === 0) {
-            toast.error('Add at least one step to the rotation pattern');
+            toast.error(t('rotationPatternRequired'));
             return;
         }
         setSubmitting(true);
@@ -111,12 +112,12 @@ const ShiftRotationsPage = () => {
                 ...formData,
                 cycle_days: formData.rotation_pattern.length
             });
-            toast.success('Rotation created successfully');
+            toast.success(t('rotationCreated'));
             setIsCreateOpen(false);
             setFormData({ name: '', description: '', department_id: '', rotation_pattern: [], cycle_days: 7 });
             fetchData();
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Failed to create rotation');
+            toast.error(error.response?.data?.error || t('failedToCreateRotation'));
         } finally {
             setSubmitting(false);
         }
@@ -126,20 +127,42 @@ const ShiftRotationsPage = () => {
         e.preventDefault();
         if (submitting) return;
         if (applyData.employee_ids.length === 0) {
-            toast.error('Select at least one employee');
+            toast.error(t('selectAtLeastOneEmployee'));
             return;
         }
         setSubmitting(true);
         try {
             const res = await shiftService.applyShiftRotation(applyingRotation.id, applyData);
             const data = res.data;
-            toast.success(`Rotation applied: ${data.created} shifts created${data.skipped_conflicts > 0 ? `, ${data.skipped_conflicts} conflicts skipped` : ''}`);
+            toast.success(t('rotationApplied', { created: data.created }) + (data.skipped_conflicts > 0 ? `, ${t('conflictsSkipped', { skipped: data.skipped_conflicts })}` : ''));
             setIsApplyOpen(false);
             setApplyData({ employee_ids: [], start_date: format(new Date(), 'yyyy-MM-dd'), end_date: format(addDays(new Date(), 27), 'yyyy-MM-dd') });
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Failed to apply rotation');
+            toast.error(error.response?.data?.error || t('failedToApplyRotation'));
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm(t('confirmDeleteRotation'))) return;
+        try {
+            await shiftService.deleteShiftRotation(id);
+            toast.success(t('rotationDeactivated'));
+            fetchData();
+        } catch (error) {
+            toast.error(error.response?.data?.error || t('failedToDeactivateRotation'));
+        }
+    };
+
+    const handleReactivate = async (id) => {
+        if (!window.confirm(t('confirmReactivate'))) return;
+        try {
+            await shiftService.reactivateShiftRotation(id);
+            toast.success(t('rotationReactivated'));
+            fetchData();
+        } catch (error) {
+            toast.error(error.response?.data?.error || t('failedToReactivateRotation'));
         }
     };
 
@@ -173,20 +196,36 @@ const ShiftRotationsPage = () => {
     return (
         <div className="p-6 max-w-7xl mx-auto">
             {/* Header */}
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex justify-between items-end mb-8">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         <RotateCcw size={28} className="text-blue-600" />
-                        Shift Rotations
+                        {t('shiftRotations')}
                     </h1>
-                    <p className="text-gray-500 mt-1">Create and apply rotating shift patterns for your teams</p>
+                    <p className="text-gray-500 mt-1">{t('createAndApplyRotatingPatterns')}</p>
+
+                    {/* Filter Tabs */}
+                    <div className="flex gap-1 bg-gray-100 p-1 rounded-lg mt-4 w-fit">
+                        <button
+                            onClick={() => setShowInactive(false)}
+                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${!showInactive ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            {t('active')}
+                        </button>
+                        <button
+                            onClick={() => setShowInactive(true)}
+                            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${showInactive ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            {t('inactive')}
+                        </button>
+                    </div>
                 </div>
                 <button
                     onClick={() => setIsCreateOpen(true)}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl transition-colors shadow-md shadow-blue-100 font-medium"
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl transition-colors shadow-md shadow-blue-100 font-medium h-fit"
                 >
                     <Plus size={20} />
-                    New Rotation
+                    {t('newRotation')}
                 </button>
             </div>
 
@@ -194,58 +233,83 @@ const ShiftRotationsPage = () => {
             {rotations.length === 0 ? (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
                     <RotateCcw size={48} className="mx-auto text-gray-300 mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-700">No Rotations Yet</h3>
-                    <p className="text-gray-500 mt-1">Create a rotation pattern to automatically cycle employees through different shifts</p>
+                    <h3 className="text-lg font-semibold text-gray-700">{t('noRotationsYet')}</h3>
+                    <p className="text-gray-500 mt-1">{t('createRotationPatternInfo')}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {rotations.map(rot => (
-                        <div key={rot.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-                            <div className="p-5">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                        <h3 className="font-bold text-lg text-gray-900">{rot.name}</h3>
-                                        {rot.description && <p className="text-sm text-gray-500 mt-1">{rot.description}</p>}
-                                    </div>
-                                    <button
-                                        onClick={() => openApplyModal(rot)}
-                                        className="flex items-center gap-1.5 bg-green-50 hover:bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-                                    >
-                                        <Play size={14} />
-                                        Apply
-                                    </button>
-                                </div>
-
-                                <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-                                    <Calendar size={14} className="text-gray-400" />
-                                    <span>{rot.Department?.name || 'All Depts'}</span>
-                                    <span className="text-gray-300">|</span>
-                                    <Layers size={14} className="text-gray-400" />
-                                    <span>{rot.cycle_days}-day cycle</span>
-                                </div>
-
-                                {/* Pattern visualization */}
-                                <div className="flex flex-wrap gap-2">
-                                    {rot.rotation_pattern?.map((stepId, i) => (
-                                        <div
-                                            key={i}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border"
-                                            style={{
-                                                backgroundColor: `${getShiftColor(stepId)}10`,
-                                                borderColor: `${getShiftColor(stepId)}30`,
-                                                color: getShiftColor(stepId)
-                                            }}
-                                        >
-                                            <span className="w-5 h-5 rounded-full bg-current/10 flex items-center justify-center text-[10px] font-bold" style={{ color: getShiftColor(stepId) }}>
-                                                {i + 1}
-                                            </span>
-                                            {getShiftName(stepId)}
+                    {rotations
+                        .filter(rot => rot.is_active === !showInactive)
+                        .map(rot => (
+                            <div key={rot.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+                                <div className="p-5">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div>
+                                            <h3 className="font-bold text-lg text-gray-900">{rot.name}</h3>
+                                            {rot.description && <p className="text-sm text-gray-500 mt-1">{rot.description}</p>}
                                         </div>
-                                    ))}
+                                        <div className="flex items-center gap-2">
+                                            {rot.is_active ? (
+                                                <>
+                                                    <button
+                                                        onClick={() => openApplyModal(rot)}
+                                                        className="flex items-center gap-1.5 bg-green-50 hover:bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                                                    >
+                                                        <Play size={14} />
+                                                        {t('apply')}
+                                                    </button>
+                                                    {(user.role === 'admin' || user.role === 'hr' || user.role === 'manager') && (
+                                                        <button
+                                                            onClick={() => handleDelete(rot.id)}
+                                                            className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"
+                                                            title={t('deactivate')}
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleReactivate(rot.id)}
+                                                    className="flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                                                >
+                                                    <RotateCcw size={14} />
+                                                    {t('reactivate')}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
+                                        <Calendar size={14} className="text-gray-400" />
+                                        <span>{rot.Department?.name || t('allDepts')}</span>
+                                        <span className="text-gray-300">|</span>
+                                        <Layers size={14} className="text-gray-400" />
+                                        <span>{t('dayCycle', { days: rot.cycle_days })}</span>
+                                    </div>
+
+                                    {/* Pattern visualization */}
+                                    <div className="flex flex-wrap gap-2">
+                                        {rot.rotation_pattern?.map((stepId, i) => (
+                                            <div
+                                                key={i}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border"
+                                                style={{
+                                                    backgroundColor: `${getShiftColor(stepId)}10`,
+                                                    borderColor: `${getShiftColor(stepId)}30`,
+                                                    color: getShiftColor(stepId)
+                                                }}
+                                            >
+                                                <span className="w-5 h-5 rounded-full bg-current/10 flex items-center justify-center text-[10px] font-bold" style={{ color: getShiftColor(stepId) }}>
+                                                    {i + 1}
+                                                </span>
+                                                {getShiftName(stepId)}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
                 </div>
             )}
 
@@ -254,12 +318,12 @@ const ShiftRotationsPage = () => {
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setIsCreateOpen(false)}>
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
-                            <h2 className="text-xl font-bold text-gray-900">New Shift Rotation</h2>
+                            <h2 className="text-xl font-bold text-gray-900">{t('newShiftRotation')}</h2>
                             <button onClick={() => setIsCreateOpen(false)} className="text-gray-400 hover:text-gray-600"><XCircle size={24} /></button>
                         </div>
                         <form onSubmit={handleCreate} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">{t('nameWithStar')}</label>
                                 <input
                                     type="text" required
                                     className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
@@ -269,7 +333,7 @@ const ShiftRotationsPage = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">{t('description')}</label>
                                 <textarea
                                     className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
                                     rows="2"
@@ -279,14 +343,14 @@ const ShiftRotationsPage = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Department *</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">{t('departmentWithStar')}</label>
                                 <select
                                     required
                                     className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
                                     value={formData.department_id}
                                     onChange={(e) => setFormData(f => ({ ...f, department_id: e.target.value }))}
                                 >
-                                    <option value="">Select Department</option>
+                                    <option value="">{t('selectDepartment')}</option>
                                     {departments.map(d => (
                                         <option key={d.id} value={d.id}>{d.name}</option>
                                     ))}
@@ -296,7 +360,7 @@ const ShiftRotationsPage = () => {
                             {/* Pattern Builder */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Rotation Pattern * <span className="text-gray-400 font-normal">({formData.rotation_pattern.length} days)</span>
+                                    {t('rotationPatternWithStar')} <span className="text-gray-400 font-normal">({formData.rotation_pattern.length} {t('days')})</span>
                                 </label>
 
                                 {/* Current pattern */}
@@ -340,15 +404,15 @@ const ShiftRotationsPage = () => {
                                         onClick={() => addPatternStep(null)}
                                         className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-50 transition-colors"
                                     >
-                                        + Day Off
+                                        + {t('dayOff')}
                                     </button>
                                 </div>
                             </div>
 
                             <div className="pt-4 flex gap-3">
-                                <button type="button" onClick={() => setIsCreateOpen(false)} className="flex-1 px-4 py-3 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium">Cancel</button>
+                                <button type="button" onClick={() => setIsCreateOpen(false)} className="flex-1 px-4 py-3 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-colors font-medium">{t('cancel')}</button>
                                 <button type="submit" disabled={submitting} className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium shadow-md disabled:opacity-50">
-                                    {submitting ? 'Creating...' : 'Create Rotation'}
+                                    {submitting ? t('creating') : t('createRotation')}
                                 </button>
                             </div>
                         </form>
@@ -363,8 +427,8 @@ const ShiftRotationsPage = () => {
                         <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-green-50 to-white">
                             <div className="flex justify-between items-center">
                                 <div>
-                                    <h2 className="text-xl font-bold text-gray-900">Apply: {applyingRotation.name}</h2>
-                                    <p className="text-sm text-gray-500 mt-1">{applyingRotation.cycle_days}-day rotation cycle</p>
+                                    <h2 className="text-xl font-bold text-gray-900">{t('apply')}: {applyingRotation.name}</h2>
+                                    <p className="text-sm text-gray-500 mt-1">{t('dayCycle', { days: applyingRotation.cycle_days })}</p>
                                 </div>
                                 <button onClick={() => setIsApplyOpen(false)} className="text-gray-400 hover:text-gray-600"><XCircle size={24} /></button>
                             </div>
@@ -372,7 +436,7 @@ const ShiftRotationsPage = () => {
                         <form onSubmit={handleApply} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('startDate')} *</label>
                                     <input
                                         type="date" required
                                         className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
@@ -381,7 +445,7 @@ const ShiftRotationsPage = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('endDate')} *</label>
                                     <input
                                         type="date" required
                                         className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
@@ -394,7 +458,7 @@ const ShiftRotationsPage = () => {
                             {/* Employee Selection */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Select Employees * <span className="text-gray-400 font-normal">({applyData.employee_ids.length} selected)</span>
+                                    {t('selectEmployees')} * <span className="text-gray-400 font-normal">({applyData.employee_ids.length} {t('selected')})</span>
                                 </label>
                                 <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-xl divide-y divide-gray-50">
                                     {filteredEmployees.map(emp => (

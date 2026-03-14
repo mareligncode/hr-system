@@ -964,7 +964,7 @@ export const applyShiftTemplate = async (req, res) => {
  */
 export const getShiftRotations = async (req, res) => {
     try {
-        let { department_id } = req.query;
+        let { department_id, include_inactive } = req.query;
 
         if (req.user.role === 'manager') {
             const mgrDeptId = await getManagerDepartmentId(req.user.id);
@@ -972,13 +972,16 @@ export const getShiftRotations = async (req, res) => {
             department_id = mgrDeptId;
         }
 
-        const where = { is_active: true };
+        const where = {};
+        if (include_inactive !== 'true') {
+            where.is_active = true;
+        }
         if (department_id) where.department_id = department_id;
 
         const rotations = await ShiftRotation.findAll({
             where,
             include: [{ model: Department, attributes: ['name'] }],
-            order: [['name', 'ASC']]
+            order: [['is_active', 'DESC'], ['name', 'ASC']]
         });
         res.status(200).json(rotations);
     } catch (error) {
@@ -1105,6 +1108,69 @@ export const applyShiftRotation = async (req, res) => {
         if (transaction) await transaction.rollback();
         console.error('applyShiftRotation error:', error);
         res.status(500).json({ error: 'Failed to apply shift rotation', details: error.message });
+    }
+};
+
+
+/**
+ * DELETE /shifts/rotations/:id
+ * Deactivate a shift rotation.
+ */
+export const deleteShiftRotation = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const rotation = await ShiftRotation.findByPk(id);
+
+        if (!rotation) {
+            return res.status(404).json({ error: 'Rotation not found' });
+        }
+
+        // Manager scoping
+        if (req.user.role === 'manager') {
+            const mgrDeptId = await getManagerDepartmentId(req.user.id);
+            if (!mgrDeptId || mgrDeptId !== rotation.department_id) {
+                return res.status(403).json({ error: 'You can only deactivate rotations for your department' });
+            }
+        }
+
+        await rotation.update({ is_active: false });
+        await logActivity(req.user.id, 'DELETE_SHIFT_ROTATION', 'ShiftRotation', id, null, { is_active: false }, req);
+
+        res.status(200).json({ message: 'Rotation deactivated successfully' });
+    } catch (error) {
+        console.error('deleteShiftRotation error:', error);
+        res.status(500).json({ error: 'Failed to deactivate shift rotation', details: error.message });
+    }
+};
+
+/**
+ * POST /shifts/rotations/:id/reactivate
+ * Reactivate a shift rotation.
+ */
+export const reactivateShiftRotation = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const rotation = await ShiftRotation.findByPk(id);
+
+        if (!rotation) {
+            return res.status(404).json({ error: 'Rotation not found' });
+        }
+
+        // Manager scoping
+        if (req.user.role === 'manager') {
+            const mgrDeptId = await getManagerDepartmentId(req.user.id);
+            if (!mgrDeptId || mgrDeptId !== rotation.department_id) {
+                return res.status(403).json({ error: 'You can only reactivate rotations for your department' });
+            }
+        }
+
+        await rotation.update({ is_active: true });
+        await logActivity(req.user.id, 'REACTIVATE_SHIFT_ROTATION', 'ShiftRotation', id, null, { is_active: true }, req);
+
+        res.status(200).json({ message: 'Rotation reactivated successfully' });
+    } catch (error) {
+        console.error('reactivateShiftRotation error:', error);
+        res.status(500).json({ error: 'Failed to reactivate shift rotation', details: error.message });
     }
 };
 

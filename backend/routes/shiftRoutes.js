@@ -44,6 +44,8 @@ import {
     getShiftRotations,
     createShiftRotation,
     applyShiftRotation,
+    deleteShiftRotation,
+    reactivateShiftRotation,
     // Reports
     getShiftReports
 } from '../controllers/shiftController.js';
@@ -88,6 +90,8 @@ router.post('/templates/:id/apply', authorize('admin', 'hr', 'manager'), applySh
 router.get('/rotations', authorize('admin', 'hr', 'manager'), getShiftRotations);
 router.post('/rotations', authorize('admin', 'hr', 'manager'), createShiftRotation);
 router.post('/rotations/:id/apply', authorize('admin', 'hr', 'manager'), applyShiftRotation);
+router.delete('/rotations/:id', authorize('admin', 'hr', 'manager'), deleteShiftRotation);
+router.post('/rotations/:id/reactivate', authorize('admin', 'hr', 'manager'), reactivateShiftRotation);
 
 // --- Shift Reports ---
 router.get('/reports', authorize('admin', 'hr', 'manager', 'finance'), getShiftReports);
