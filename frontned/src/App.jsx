@@ -43,6 +43,10 @@ import JobManagementPage from './pages/recruitment/JobManagementPage.jsx';
 import JobCreatePage from './pages/recruitment/JobCreatePage.jsx';
 import ApplicantListPage from './pages/recruitment/ApplicantListPage.jsx';
 import ApplicantDetailPage from './pages/recruitment/ApplicantDetailPage.jsx';
+import RecruitmentPipelinePage from './pages/recruitment/RecruitmentPipelinePage.jsx';
+import InterviewManagementPage from './pages/recruitment/InterviewManagementPage.jsx';
+import InterviewRoomPage from './pages/recruitment/InterviewRoomPage.jsx';
+import OfferManagementPage from './pages/recruitment/OfferManagementPage.jsx';
 
 import AttendanceCalendar from './pages/attendance/AttendanceCalendar.jsx';
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
@@ -202,6 +206,26 @@ function App() {
           <Route path="/recruitment/applicants/:id" element={
             <ProtectedRoute requiredRoles={['admin', 'hr']}>
               <ApplicantDetailPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/recruitment/pipeline" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr']}>
+              <RecruitmentPipelinePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/recruitment/interviews" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+              <InterviewManagementPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/recruitment/interviews/room/:id" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+              <InterviewRoomPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/recruitment/offers" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr']}>
+              <OfferManagementPage />
             </ProtectedRoute>
           } />
         </Route>

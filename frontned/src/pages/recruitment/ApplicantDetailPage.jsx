@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import recruitmentService from '../../services/recruitmentService';
 import { useSettings } from '../../context/SettingsContext.jsx';
+import { DollarSign } from 'lucide-react';
 import {
     ArrowLeft,
     User,
@@ -18,7 +19,14 @@ import {
     Loader2,
     MessageSquare,
     ChevronRight,
-    History
+    History,
+    Plus,
+    Video,
+    FileCheck,
+    Star,
+    AlertCircle,
+    BadgeCheck,
+    RotateCcw
 } from 'lucide-react';
 
 const ApplicantDetailPage = () => {
@@ -32,6 +40,37 @@ const ApplicantDetailPage = () => {
     const [updating, setUpdating] = useState(false);
     const [statusNote, setStatusNote] = useState('');
 
+    const [interviews, setInterviews] = useState([]);
+    const [offers, setOffers] = useState([]);
+    const [showInterviewModal, setShowInterviewModal] = useState(false);
+    const [showOfferModal, setShowOfferModal] = useState(false);
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [selectedInterview, setSelectedInterview] = useState(null);
+
+    // Form states
+    const [interviewForm, setInterviewForm] = useState({
+        scheduled_at: '',
+        duration_minutes: 30,
+        interview_type: 'online',
+        interview_round: 1,
+        notes: ''
+    });
+
+    const [offerForm, setOfferForm] = useState({
+        salary: 0,
+        joining_date: '',
+        expiry_date: '',
+        notes: ''
+    });
+
+    const [feedbackForm, setFeedbackForm] = useState({
+        technical_score: 5,
+        communication_score: 5,
+        cultural_fit_score: 5,
+        recommendation: 'neutral',
+        feedback_text: ''
+    });
+
     useEffect(() => {
         fetchDetails();
     }, [id]);
@@ -42,11 +81,68 @@ const ApplicantDetailPage = () => {
             setApplication(appData);
             const timelineData = await recruitmentService.getApplicationTimeline(id);
             setTimeline(timelineData);
+
+            // Phase 9 data
+            const interviewsData = await recruitmentService.getInterviews({ job_application_id: id });
+            setInterviews(interviewsData);
+            const offersData = await recruitmentService.getOffers({ job_application_id: id });
+            setOffers(offersData);
         } catch (error) {
             console.error('Error fetching applicant details:', error);
             navigate('/recruitment/applicants');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleScheduleInterview = async (e) => {
+        e.preventDefault();
+        setUpdating(true);
+        try {
+            await recruitmentService.scheduleInterview({
+                ...interviewForm,
+                job_application_id: id
+            });
+            setShowInterviewModal(false);
+            fetchDetails();
+        } catch (error) {
+            alert(t('failedToScheduleInterview') || 'Failed to schedule interview');
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    const handleCreateOffer = async (e) => {
+        e.preventDefault();
+        setUpdating(true);
+        try {
+            await recruitmentService.createOffer({
+                ...offerForm,
+                job_application_id: id
+            });
+            setShowOfferModal(false);
+            fetchDetails();
+        } catch (error) {
+            alert(t('failedToCreateOffer') || 'Failed to create offer');
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    const handleSubmitFeedback = async (e) => {
+        e.preventDefault();
+        setUpdating(true);
+        try {
+            await recruitmentService.submitInterviewFeedback({
+                ...feedbackForm,
+                interview_id: selectedInterview.id
+            });
+            setShowFeedbackModal(false);
+            fetchDetails();
+        } catch (error) {
+            alert(t('failedToSubmitFeedback') || 'Failed to submit feedback');
+        } finally {
+            setUpdating(false);
         }
     };
 
@@ -124,20 +220,29 @@ const ApplicantDetailPage = () => {
                 </div>
                 <div className="flex items-center gap-3">
                     <button
+                        onClick={() => setShowInterviewModal(true)}
+                        className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg shadow-indigo-500/20"
+                        disabled={updating}
+                    >
+                        <Calendar className="w-4 h-4" />
+                        {t('scheduleInterview')}
+                    </button>
+                    <button
+                        onClick={() => setShowOfferModal(true)}
+                        className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20"
+                        disabled={updating}
+                    >
+                        <FileCheck className="w-4 h-4" />
+                        {t('createOffer')}
+                    </button>
+                    <div className="w-px h-8 bg-gray-200 mx-2"></div>
+                    <button
                         onClick={() => handleStatusUpdate('rejected')}
                         className="px-5 py-2.5 bg-red-50 text-red-700 rounded-xl font-bold hover:bg-red-100 transition-colors flex items-center gap-2"
                         disabled={updating}
                     >
                         <XCircle className="w-4 h-4" />
                         {t('rejectApplication')}
-                    </button>
-                    <button
-                        onClick={() => handleStatusUpdate('hired')}
-                        className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-send flex items-center gap-2"
-                        disabled={updating}
-                    >
-                        <CheckCircle2 className="w-4 h-4" />
-                        {t('hireCandidate')}
                     </button>
                 </div>
             </div>
@@ -214,10 +319,171 @@ const ApplicantDetailPage = () => {
                         </div>
                     </div>
 
+                    {/* Interviews Section */}
+                    <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                        <div className="flex items-center justify-between mb-8">
+                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <Video className="w-5 h-5 text-indigo-600" />
+                                {t('interviews')}
+                            </h2>
+                            <button
+                                onClick={() => setShowInterviewModal(true)}
+                                className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all"
+                            >
+                                <Plus className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="space-y-4">
+                            {interviews.length === 0 ? (
+                                <div className="text-center py-10 text-gray-400">
+                                    <Calendar className="w-10 h-10 mx-auto mb-2 opacity-20" />
+                                    <p className="text-sm font-bold uppercase tracking-widest">{t('noInterviewsScheduled')}</p>
+                                </div>
+                            ) : (
+                                interviews.map((interview) => (
+                                    <div key={interview.id} className="p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-indigo-200 transition-all">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-white rounded-lg shadow-sm">
+                                                    <Video className="w-4 h-4 text-indigo-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-gray-900">{interview.interview_type} - Round {interview.interview_round}</p>
+                                                    <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">
+                                                        {new Date(interview.scheduled_at).toLocaleString()}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-white border border-gray-200`}>
+                                                {interview.status}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 mt-4">
+                                            {interview.interview_type === 'online' && interview.status === 'scheduled' && (
+                                                <Link
+                                                    to={`/recruitment/interviews/room/${interview.id}`}
+                                                    className="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-black text-center hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20"
+                                                >
+                                                    {t('joinMeeting')}
+                                                </Link>
+                                            )}
+                                            {interview.status === 'scheduled' && (
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedInterview(interview);
+                                                        setShowFeedbackModal(true);
+                                                    }}
+                                                    className="flex-1 py-2.5 bg-white text-indigo-600 border border-indigo-200 rounded-xl text-xs font-black hover:bg-indigo-50 transition-all text-center"
+                                                >
+                                                    {t('interviewFeedback')}
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {interview.Feedback && (
+                                            <div className="mt-4 p-4 bg-white rounded-xl border border-indigo-50">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <div className="flex items-center gap-1 text-indigo-600">
+                                                        <Star className="w-3.5 h-3.5 fill-current" />
+                                                        <span className="text-xs font-black">{interview.Feedback.overall_recommendation}</span>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <div className="px-2 py-1 bg-gray-50 rounded text-[8px] font-black uppercase">TECH: {interview.Feedback.technical_score}</div>
+                                                        <div className="px-2 py-1 bg-gray-50 rounded text-[8px] font-black uppercase">COMM: {interview.Feedback.communication_score}</div>
+                                                    </div>
+                                                </div>
+                                                <p className="text-xs text-gray-600 italic">"{interview.Feedback.comments}"</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Offers Section */}
+                    <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                        <div className="flex items-center justify-between mb-8">
+                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                <FileCheck className="w-5 h-5 text-emerald-600" />
+                                {t('offers')}
+                            </h2>
+                            <button
+                                onClick={() => setShowOfferModal(true)}
+                                className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all"
+                            >
+                                <Plus className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="space-y-4">
+                            {offers.length === 0 ? (
+                                <div className="text-center py-10 text-gray-400">
+                                    <DollarSign className="w-10 h-10 mx-auto mb-2 opacity-20" />
+                                    <p className="text-sm font-bold uppercase tracking-widest">{t('noOffersSent')}</p>
+                                </div>
+                            ) : (
+                                offers.map((offer) => (
+                                    <div key={offer.id} className="p-5 bg-gray-50 rounded-2xl border border-gray-100 hover:border-emerald-200 transition-all">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-white rounded-lg shadow-sm">
+                                                    <DollarSign className="w-4 h-4 text-emerald-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-black text-lg text-gray-900 tracking-tighter">{offer.salary.toLocaleString()}</p>
+                                                    <p className="text-[10px] text-gray-400 font-black uppercase leading-none">ANNUAL SALARY</p>
+                                                </div>
+                                            </div>
+                                            <span className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100`}>
+                                                {offer.status}
+                                            </span>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4 mt-4">
+                                            <div className="p-3 bg-white rounded-xl border border-gray-100">
+                                                <p className="text-[8px] font-black text-gray-400 uppercase mb-1">{t('joiningDate')}</p>
+                                                <p className="text-xs font-bold text-gray-700">{new Date(offer.joining_date).toLocaleDateString()}</p>
+                                            </div>
+                                            <div className="p-3 bg-white rounded-xl border border-gray-100">
+                                                <p className="text-[8px] font-black text-gray-400 uppercase mb-1">{t('expiryDate')}</p>
+                                                <p className="text-xs font-bold text-gray-700">{new Date(offer.expiry_date).toLocaleDateString()}</p>
+                                            </div>
+                                        </div>
+
+                                        {offer.status === 'sent' && (
+                                            <div className="flex gap-2 mt-4">
+                                                <button
+                                                    onClick={async () => {
+                                                        await recruitmentService.acceptOffer(offer.id);
+                                                        fetchDetails();
+                                                    }}
+                                                    className="flex-1 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20"
+                                                >
+                                                    {t('markAccepted') || "Mark Accepted"}
+                                                </button>
+                                                <button
+                                                    onClick={async () => {
+                                                        const reason = prompt("Reason for rejection?");
+                                                        await recruitmentService.rejectOffer(offer.id, { rejection_reason: reason });
+                                                        fetchDetails();
+                                                    }}
+                                                    className="flex-1 py-2 bg-white text-red-600 border border-red-100 rounded-xl text-[10px] font-black hover:bg-red-50 transition-all"
+                                                >
+                                                    {t('markRejected') || "Mark Rejected"}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
                     {/* Timeline History */}
                     <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
                         <h2 className="text-lg font-bold text-gray-900 mb-8 flex items-center gap-2">
-                            <MessageSquare className="w-5 h-5 text-indigo-600" />
+                            <History className="w-5 h-5 text-indigo-600" />
                             {t('activityLog')}
                         </h2>
                         <div className="space-y-6">
@@ -300,6 +566,194 @@ const ApplicantDetailPage = () => {
                     </div>
                 </div>
             </div>
+            {/* Modals */}
+            {/* Interview Modal */}
+            {showInterviewModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white rounded-[2rem] w-full max-w-lg p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
+                        <h2 className="text-2xl font-black text-gray-900 mb-6 flex items-center gap-3">
+                            <Calendar className="w-6 h-6 text-indigo-600" />
+                            {t('scheduleInterview')}
+                        </h2>
+                        <form onSubmit={handleScheduleInterview} className="space-y-6">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="col-span-2">
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{t('scheduledAt') || "Date & Time"}</label>
+                                    <input
+                                        type="datetime-local"
+                                        required
+                                        className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500 font-bold"
+                                        value={interviewForm.scheduled_at}
+                                        onChange={(e) => setInterviewForm({ ...interviewForm, scheduled_at: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{t('durationIdx') || "Duration (min)"}</label>
+                                    <input
+                                        type="number"
+                                        className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500 font-bold"
+                                        value={interviewForm.duration_minutes}
+                                        onChange={(e) => setInterviewForm({ ...interviewForm, duration_minutes: parseInt(e.target.value) })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{t('round')}</label>
+                                    <input
+                                        type="number"
+                                        className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500 font-bold"
+                                        value={interviewForm.interview_round}
+                                        onChange={(e) => setInterviewForm({ ...interviewForm, interview_round: parseInt(e.target.value) })}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{t('interviewType')}</label>
+                                <select
+                                    className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500 font-bold outline-none"
+                                    value={interviewForm.interview_type}
+                                    onChange={(e) => setInterviewForm({ ...interviewForm, interview_type: e.target.value })}
+                                >
+                                    <option value="online">Online (Jitsi)</option>
+                                    <option value="in_person">On-site</option>
+                                    <option value="phone">Phone</option>
+                                </select>
+                            </div>
+                            <div className="flex gap-4 pt-4">
+                                <button type="button" onClick={() => setShowInterviewModal(false)} className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black hover:bg-gray-200 transition-all">{t('cancel')}</button>
+                                <button type="submit" disabled={updating} className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20">
+                                    {updating ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t('scheduleInterview')}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Offer Modal */}
+            {showOfferModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white rounded-[2rem] w-full max-w-lg p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
+                        <h2 className="text-2xl font-black text-gray-900 mb-6 flex items-center gap-3">
+                            <DollarSign className="w-6 h-6 text-emerald-600" />
+                            {t('createOffer')}
+                        </h2>
+                        <form onSubmit={handleCreateOffer} className="space-y-6">
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{t('salary')}</label>
+                                <div className="relative">
+                                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500 w-5 h-5" />
+                                    <input
+                                        type="number"
+                                        required
+                                        placeholder="Annual salary..."
+                                        className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-emerald-500 font-black text-xl"
+                                        value={offerForm.salary}
+                                        onChange={(e) => setOfferForm({ ...offerForm, salary: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{t('joiningDate')}</label>
+                                    <input
+                                        type="date"
+                                        required
+                                        className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-emerald-500 font-bold"
+                                        value={offerForm.joining_date}
+                                        onChange={(e) => setOfferForm({ ...offerForm, joining_date: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{t('expiryDate')}</label>
+                                    <input
+                                        type="date"
+                                        required
+                                        className="w-full bg-gray-50 border-none rounded-2xl p-4 focus:ring-2 focus:ring-emerald-500 font-bold"
+                                        value={offerForm.expiry_date}
+                                        onChange={(e) => setOfferForm({ ...offerForm, expiry_date: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex gap-4 pt-4">
+                                <button type="button" onClick={() => setShowOfferModal(false)} className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black hover:bg-gray-200 transition-all">{t('cancel')}</button>
+                                <button type="submit" disabled={updating} className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-500/20">
+                                    {updating ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t('createOffer')}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Feedback Modal */}
+            {showFeedbackModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white rounded-[2rem] w-full max-w-xl p-8 shadow-2xl animate-in fade-in zoom-in duration-300 overflow-y-auto max-h-[90vh]">
+                        <h2 className="text-2xl font-black text-gray-900 mb-6">{t('interviewFeedback')}</h2>
+                        <form onSubmit={handleSubmitFeedback} className="space-y-8">
+                            {[
+                                { id: 'technical_score', label: 'technicalScore' },
+                                { id: 'communication_score', label: 'communicationScore' },
+                                { id: 'cultural_fit_score', label: 'culturalFit' }
+                            ].map(score => (
+                                <div key={score.id}>
+                                    <div className="flex justify-between items-center mb-3">
+                                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest">{t(score.label)}</label>
+                                        <span className="text-lg font-black text-indigo-600">{feedbackForm[score.id]}/10</span>
+                                    </div>
+                                    <input
+                                        type="range" min="1" max="10"
+                                        className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                        value={feedbackForm[score.id]}
+                                        onChange={(e) => setFeedbackForm({ ...feedbackForm, [score.id]: parseInt(e.target.value) })}
+                                    />
+                                </div>
+                            ))}
+
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">{t('overallRecommendation')}</label>
+                                <div className="grid grid-cols-3 gap-3">
+                                    {[
+                                        { label: 'Reject', value: 'not_hire' },
+                                        { label: 'Neutral', value: 'neutral' },
+                                        { label: 'Hire', value: 'hire' }
+                                    ].map(rec => (
+                                        <button
+                                            key={rec.value}
+                                            type="button"
+                                            onClick={() => setFeedbackForm({ ...feedbackForm, recommendation: rec.value })}
+                                            className={`py-3 rounded-2xl font-black text-xs transition-all ${feedbackForm.recommendation === rec.value
+                                                ? (rec.value === 'hire' ? 'bg-emerald-600 text-white' : rec.value === 'not_hire' ? 'bg-red-600 text-white' : 'bg-gray-800 text-white')
+                                                : 'bg-gray-50 text-gray-400 border border-gray-100'
+                                                }`}
+                                        >
+                                            {rec.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{t('comments')}</label>
+                                <textarea
+                                    rows="4"
+                                    className="w-full bg-gray-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="Final thoughts and comments..."
+                                    value={feedbackForm.feedback_text}
+                                    onChange={(e) => setFeedbackForm({ ...feedbackForm, feedback_text: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="flex gap-4 pt-4">
+                                <button type="button" onClick={() => setShowFeedbackModal(false)} className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-black hover:bg-gray-200 transition-all">{t('cancel')}</button>
+                                <button type="submit" disabled={updating} className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-500/20">
+                                    {updating ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t('submitFeedback') || "Submit Feedback"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -227,3 +227,69 @@ export const sendApplicationStatusUpdate = async (application, applicant, postin
         console.error(`[Notification] Failed to send status update (${status}) to ${applicant.email}:`, error);
     }
 };
+
+/**
+ * Sends a detailed interview invitation to the applicant.
+ */
+export const sendInterviewInvitation = async (interview, application, applicant, posting) => {
+    const scheduledDate = new Date(interview.scheduled_at);
+    const dateStr = scheduledDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const timeStr = scheduledDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+
+    const subject = `Interview Invitation: ${posting.title} - Round ${interview.interview_round}`;
+
+    let joinInstructions = '';
+    if (interview.interview_type === 'online') {
+        joinInstructions = `
+            <div style="background-color: #f0f7ff; border-left: 4px solid #2563eb; padding: 20px; margin: 20px 0; border-radius: 8px;">
+                <p style="margin: 0 0 10px 0; font-weight: bold; color: #1e40af;">Online Interview Link</p>
+                <p style="margin: 0 0 15px 0; font-size: 14px;">This interview will be held via Jitsi Video Conferencing. No installation is required; simply click the button below at the scheduled time.</p>
+                <a href="${interview.meeting_link}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: bold; display: inline-block;">Join Video Call</a>
+            </div>
+        `;
+    } else {
+        joinInstructions = `
+            <div style="background-color: #f9fafb; border-left: 4px solid #374151; padding: 20px; margin: 20px 0; border-radius: 8px;">
+                <p style="margin: 0 0 10px 0; font-weight: bold; color: #111827;">Location</p>
+                <p style="margin: 0; font-size: 14px;">${interview.location || 'At our main office location.'}</p>
+            </div>
+        `;
+    }
+
+    const html = `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; padding: 40px; border: 1px solid #e2e8f0; border-radius: 24px; background-color: #ffffff;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #2563eb; margin: 0; font-size: 24px;">Interview Invitation</h1>
+                <p style="color: #64748b; margin-top: 8px;">Round ${interview.interview_round} - ${posting.title}</p>
+            </div>
+            
+            <p style="color: #1e293b; font-size: 16px;">Hello <strong>${applicant.first_name}</strong>,</p>
+            <p style="color: #475569; font-size: 15px; line-height: 1.6;">We are pleased to invite you for an interview for the <strong>${posting.title}</strong> position. We look forward to discussing your background and how it aligns with our team.</p>
+            
+            <div style="background-color: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #f1f5f9; margin: 25px 0;">
+                <p style="margin: 0 0 10px 0; font-size: 14px;"><strong style="color: #64748b; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">Date:</strong><br/> ${dateStr}</p>
+                <p style="margin: 0 0 10px 0; font-size: 14px;"><strong style="color: #64748b; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">Time:</strong><br/> ${timeStr}</p>
+                <p style="margin: 0; font-size: 14px;"><strong style="color: #64748b; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">Duration:</strong><br/> ${interview.duration_minutes} minutes</p>
+            </div>
+
+            ${joinInstructions}
+
+            <p style="color: #475569; font-size: 15px; line-height: 1.6;">If you have any questions or need to reschedule, please contact our recruitment team.</p>
+            
+            <p style="color: #1e293b; font-size: 15px; margin-top: 30px;">Best regards,<br/><strong>Recruitment Team</strong></p>
+            
+            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 30px 0;" />
+            <p style="text-align: center; color: #94a3b8; font-size: 11px; margin: 0;">This is an automated notification from our HR Management System.</p>
+        </div>
+    `;
+
+    try {
+        await sendEmail({
+            to: applicant.email,
+            subject,
+            html
+        });
+    } catch (error) {
+        console.error(`[Notification] Failed to send interview invitation to ${applicant.email}:`, error);
+    }
+};

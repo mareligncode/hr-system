@@ -23,6 +23,8 @@ import shiftRoutes from './routes/shiftRoutes.js';
 import jobPostingRoutes from './routes/jobPostingRoutes.js';
 import jobApplicationRoutes from './routes/jobApplicationRoutes.js';
 import applicantRoutes from './routes/applicantRoutes.js';
+import interviewRoutes from './routes/interviewRoutes.js';
+import offerRoutes from './routes/offerRoutes.js';
 
 dotenv.config();
 
@@ -88,6 +90,8 @@ app.use('/api/shifts', shiftRoutes);
 app.use('/api/job-postings', jobPostingRoutes);
 app.use('/api/job-applications', jobApplicationRoutes);
 app.use('/api/applicants', applicantRoutes);
+app.use('/api/interviews', interviewRoutes);
+app.use('/api/offers', offerRoutes);
 
 app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok', message: 'Server is running' });

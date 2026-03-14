@@ -22,6 +22,9 @@ import JobPosting from './JobPosting.js';
 import Applicant from './Applicant.js';
 import JobApplication from './JobApplication.js';
 import ApplicantDocument from './ApplicantDocument.js';
+import Interview from './Interview.js';
+import InterviewFeedback from './InterviewFeedback.js';
+import Offer from './Offer.js';
 
 // User & Role (Many-to-Many)
 User.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id' });
@@ -141,6 +144,25 @@ ApplicantDocument.belongsTo(Applicant, { foreignKey: 'applicant_id' });
 
 Applicant.belongsTo(Employee, { as: 'Referrer', foreignKey: 'referral_employee_id' });
 
+// Interview & Feedback
+JobApplication.hasMany(Interview, { foreignKey: 'job_application_id' });
+Interview.belongsTo(JobApplication, { foreignKey: 'job_application_id' });
+
+Interview.belongsTo(User, { as: 'Interviewer', foreignKey: 'interviewer_id' });
+User.hasMany(Interview, { as: 'InterviewsDone', foreignKey: 'interviewer_id' });
+
+Interview.hasMany(InterviewFeedback, { foreignKey: 'interview_id' });
+InterviewFeedback.belongsTo(Interview, { foreignKey: 'interview_id' });
+
+InterviewFeedback.belongsTo(User, { as: 'Interviewer', foreignKey: 'interviewer_id' });
+User.hasMany(InterviewFeedback, { foreignKey: 'interviewer_id' });
+
+// Offer
+JobApplication.hasOne(Offer, { foreignKey: 'job_application_id' });
+Offer.belongsTo(JobApplication, { foreignKey: 'job_application_id' });
+
+Offer.belongsTo(User, { as: 'Creator', foreignKey: 'created_by' });
+
 export {
     User,
     Department,
@@ -165,5 +187,8 @@ export {
     JobPosting,
     Applicant,
     JobApplication,
-    ApplicantDocument
+    ApplicantDocument,
+    Interview,
+    InterviewFeedback,
+    Offer
 };

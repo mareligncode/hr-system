@@ -41,6 +41,9 @@ const DashboardLayout = () => {
         // Recruitment
         { path: '/recruitment/jobs', label: t('jobPostings'), icon: '📢', roles: ['admin', 'hr'] },
         { path: '/recruitment/applicants', label: t('applicants'), icon: '👤', roles: ['admin', 'hr'] },
+        { path: '/recruitment/pipeline', label: t('pipeline'), icon: '📋', roles: ['admin', 'hr'] },
+        { path: '/recruitment/interviews', label: t('interviews'), icon: '📅', roles: ['admin', 'hr', 'manager'] },
+        { path: '/recruitment/offers', label: t('offers'), icon: '💰', roles: ['admin', 'hr'] },
     ];
 
     const filteredMenuItems = menuItems.filter(item => {
