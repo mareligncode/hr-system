@@ -37,6 +37,10 @@ const DashboardLayout = () => {
         { path: '/shifts/types', label: t('shiftTypes') || 'Shift Types', icon: '⚙️', roles: ['admin', 'hr'] },
         { path: '/shifts/rotations', label: t('shiftRotations') || 'Rotations', icon: '🔄', roles: ['admin', 'hr', 'manager'] },
         { path: '/shifts/reports', label: t('shiftReports') || 'Shift Reports', icon: '📈', roles: ['admin', 'hr', 'manager', 'finance'] },
+
+        // Recruitment
+        { path: '/recruitment/jobs', label: 'Job Postings', icon: '📢', roles: ['admin', 'hr'] },
+        { path: '/recruitment/applicants', label: 'Applicants', icon: '👤', roles: ['admin', 'hr'] },
     ];
 
     const filteredMenuItems = menuItems.filter(item => {
