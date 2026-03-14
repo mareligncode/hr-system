@@ -18,6 +18,10 @@ import ShiftAssignment from './ShiftAssignment.js';
 import ShiftSwapRequest from './ShiftSwapRequest.js';
 import ShiftTemplate from './ShiftTemplate.js';
 import ShiftRotation from './ShiftRotation.js';
+import JobPosting from './JobPosting.js';
+import Applicant from './Applicant.js';
+import JobApplication from './JobApplication.js';
+import ApplicantDocument from './ApplicantDocument.js';
 
 // User & Role (Many-to-Many)
 User.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id' });
@@ -118,8 +122,24 @@ ShiftSwapRequest.belongsTo(ShiftAssignment, { foreignKey: 'shift_assignment_id' 
 Department.hasMany(ShiftTemplate, { foreignKey: 'department_id' });
 ShiftTemplate.belongsTo(Department, { foreignKey: 'department_id' });
 
-Department.hasMany(ShiftRotation, { foreignKey: 'department_id' });
 ShiftRotation.belongsTo(Department, { foreignKey: 'department_id' });
+
+// Recruitment Management
+JobPosting.belongsTo(Position, { foreignKey: 'position_id' });
+Position.hasMany(JobPosting, { foreignKey: 'position_id' });
+
+JobPosting.belongsTo(User, { as: 'Creator', foreignKey: 'created_by' });
+
+JobPosting.hasMany(JobApplication, { foreignKey: 'job_posting_id' });
+JobApplication.belongsTo(JobPosting, { foreignKey: 'job_posting_id' });
+
+Applicant.hasMany(JobApplication, { foreignKey: 'applicant_id' });
+JobApplication.belongsTo(Applicant, { foreignKey: 'applicant_id' });
+
+Applicant.hasMany(ApplicantDocument, { foreignKey: 'applicant_id' });
+ApplicantDocument.belongsTo(Applicant, { foreignKey: 'applicant_id' });
+
+Applicant.belongsTo(Employee, { as: 'Referrer', foreignKey: 'referral_employee_id' });
 
 export {
     User,
@@ -141,5 +161,9 @@ export {
     ShiftAssignment,
     ShiftSwapRequest,
     ShiftTemplate,
-    ShiftRotation
+    ShiftRotation,
+    JobPosting,
+    Applicant,
+    JobApplication,
+    ApplicantDocument
 };

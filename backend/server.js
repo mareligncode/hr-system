@@ -20,6 +20,9 @@ import dashboardRoutes from './routes/dashboardRoutes.js';
 import attendanceRoutes from './routes/attendanceRoutes.js';
 import leaveRoutes from './routes/leaveRoutes.js';
 import shiftRoutes from './routes/shiftRoutes.js';
+import jobPostingRoutes from './routes/jobPostingRoutes.js';
+import jobApplicationRoutes from './routes/jobApplicationRoutes.js';
+import applicantRoutes from './routes/applicantRoutes.js';
 
 dotenv.config();
 
@@ -61,6 +64,9 @@ app.use(cors({
     credentials: true,
 }));
 
+// Serve static files from uploads directory
+app.use('/uploads', express.static('uploads'));
+
 
 
 app.use(express.json());
@@ -79,6 +85,9 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/leave', leaveRoutes);
 app.use('/api/shifts', shiftRoutes);
+app.use('/api/job-postings', jobPostingRoutes);
+app.use('/api/job-applications', jobApplicationRoutes);
+app.use('/api/applicants', applicantRoutes);
 
 app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok', message: 'Server is running' });

@@ -35,6 +35,15 @@ import ShiftSwapPage from './pages/shifts/ShiftSwapPage.jsx';
 import ShiftReportsPage from './pages/shifts/ShiftReportsPage.jsx';
 import ShiftRotationsPage from './pages/shifts/ShiftRotationsPage.jsx';
 
+// Recruitment
+import PublicCareersPage from './pages/recruitment/PublicCareersPage.jsx';
+import JobDetailPage from './pages/recruitment/JobDetailPage.jsx';
+import ApplyJobPage from './pages/recruitment/ApplyJobPage.jsx';
+import JobManagementPage from './pages/recruitment/JobManagementPage.jsx';
+import JobCreatePage from './pages/recruitment/JobCreatePage.jsx';
+import ApplicantListPage from './pages/recruitment/ApplicantListPage.jsx';
+import ApplicantDetailPage from './pages/recruitment/ApplicantDetailPage.jsx';
+
 import AttendanceCalendar from './pages/attendance/AttendanceCalendar.jsx';
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
 import DashboardLayout from './components/layout/DashboardLayout.jsx';
@@ -57,6 +66,11 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+
+        {/* Public Recruitment routes */}
+        <Route path="/careers" element={<PublicCareersPage />} />
+        <Route path="/careers/:id" element={<JobDetailPage />} />
+        <Route path="/careers/apply/:id" element={<ApplyJobPage />} />
 
         {/* Protected routes */}
         <Route element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
@@ -161,6 +175,33 @@ function App() {
           <Route path="/shifts/rotations" element={
             <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
               <ShiftRotationsPage />
+            </ProtectedRoute>
+          } />
+
+          {/* Recruitment Management */}
+          <Route path="/recruitment/jobs" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr']}>
+              <JobManagementPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/recruitment/jobs/create" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr']}>
+              <JobCreatePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/recruitment/jobs/edit/:id" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr']}>
+              <JobCreatePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/recruitment/applicants" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr']}>
+              <ApplicantListPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/recruitment/applicants/:id" element={
+            <ProtectedRoute requiredRoles={['admin', 'hr']}>
+              <ApplicantDetailPage />
             </ProtectedRoute>
           } />
         </Route>

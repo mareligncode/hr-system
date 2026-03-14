@@ -1,42 +1,43 @@
 import multer from 'multer';
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
-import cloudinary from './cloudinaryService.js';
+import path from 'path';
+import fs from 'fs';
 
-// Configure Cloudinary storage for different types of files
-const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: async (req, file) => {
-        let folder = process.env.CLOUDINARY_FOLDER || 'hr-system';
+// Configuration for local storage
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        let folder = 'uploads';
 
-        // Extract and clean filename
-        const extension = file.originalname.split('.').pop();
-        const cleanName = file.originalname
-            .split('.')
-            .slice(0, -1)
-            .join('.')
-            .replace(/[^\x00-\x7F]/g, '') // Remove emojis/non-ascii
-            .replace(/\s+/g, '_') // Replace spaces with underscores
-            .substring(0, 50);
-
-        // Ensure supported formats or specific logic for documents
-        if (file.fieldname === 'document') {
-            folder += '/documents';
+        // Map fieldnames to subfolders
+        if (file.fieldname === 'resume' || file.fieldname === 'document') {
+            folder = 'uploads/resumes';
         } else if (file.fieldname === 'profile_picture') {
-            folder += '/profiles';
+            folder = 'uploads/profiles';
         }
 
-        return {
-            folder: folder,
-            resource_type: 'auto',
-            public_id: `${Date.now()}-${cleanName}.${extension}`,
-        };
+        // Ensure directory exists
+        if (!fs.existsSync(folder)) {
+            fs.mkdirSync(folder, { recursive: true });
+        }
+
+        cb(null, folder);
     },
+    filename: (req, file, cb) => {
+        // Create unique filename: timestamp-originalName (sanitized)
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        const cleanName = path.basename(file.originalname, ext)
+            .replace(/[^\x00-\x7F]/g, '') // Remove non-ascii
+            .replace(/\s+/g, '_')         // Replace spaces
+            .substring(0, 50);            // Limit length
+
+        cb(null, `${cleanName}-${uniqueSuffix}${ext}`);
+    }
 });
 
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB limit
+        fileSize: 10 * 1024 * 1024, // Increased to 10MB limit
     },
     fileFilter: (req, file, cb) => {
         const allowedTypes = [

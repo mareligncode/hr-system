@@ -92,6 +92,18 @@ const LoginPage = () => {
                 <Button type="submit" loading={loading}>
                     {loading ? t('signingIn') : t('signIn')}
                 </Button>
+
+                <div className="pt-4 border-t border-[var(--border-input)] text-center">
+                    <p className="text-sm text-[var(--text-soft)]">
+                        Looking for a career? {' '}
+                        <Link
+                            to="/careers"
+                            className="text-[var(--accent)] font-bold hover:underline"
+                        >
+                            View Open Positions
+                        </Link>
+                    </p>
+                </div>
             </form>
         </AuthLayout>
     );
