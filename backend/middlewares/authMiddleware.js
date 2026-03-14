@@ -29,7 +29,7 @@ export const protect = async (req, res, next) => {
 
             // Flatten permissions for easier checking
             const permissions = new Set();
-            
+
             // Get from Base string role
             const primaryRole = await Role.findOne({
                 where: { code: req.user.role },

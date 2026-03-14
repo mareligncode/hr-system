@@ -15,7 +15,7 @@ const router = express.Router();
 router.use(protect);
 
 router.get('/export', authorize('admin', 'hr', 'manager'), exportEmployees);
-router.get('/', authorize('admin', 'hr', 'manager'), getAllEmployees);
+router.get('/', authorize('admin', 'hr', 'manager', 'employee'), getAllEmployees);
 router.get('/:id', authorize('admin', 'hr', 'manager', 'employee'), getEmployeeById);
 router.post('/', authorize('admin', 'hr'), upload.single('profile_picture'), createEmployee);
 router.put('/:id', authorize('admin', 'hr', 'manager', 'employee'), upload.single('profile_picture'), updateEmployee);

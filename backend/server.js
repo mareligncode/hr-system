@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import helmet from 'helmet';
 import { connectDB } from './config/database.js';
 import { apiLimiter } from './middlewares/rateLimiter.js';
-// Centralized model registration (CRITICAL: Load before routes)
 import './models/index.js';
 
 import authRoutes from './routes/authRoutes.js';
@@ -19,12 +18,13 @@ import auditRoutes from './routes/auditRoutes.js';
 import roleRoutes from './routes/roleRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import attendanceRoutes from './routes/attendanceRoutes.js';
+import leaveRoutes from './routes/leaveRoutes.js';
+import shiftRoutes from './routes/shiftRoutes.js';
 
 dotenv.config();
 
 const app = express();
 
-// Security headers with configured CSP for Cloudinary
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -39,10 +39,8 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
 }));
 
-// Connect to the database
 connectDB();
 
-// Allowed origins for CORS
 const allowedOrigins = [
     process.env.FRONTEND_URL,
     'http://localhost:5173',
@@ -54,7 +52,6 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow requests with no origin (e.g. Postman, curl)
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
@@ -64,13 +61,11 @@ app.use(cors({
     credentials: true,
 }));
 
-// Apply global rate limiting
-// app.use('/api', apiLimiter);
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Setup routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/departments', departmentRoutes);
@@ -82,13 +77,13 @@ app.use('/api/audit', auditRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/leave', leaveRoutes);
+app.use('/api/shifts', shiftRoutes);
 
-// Basic health check route
 app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok', message: 'Server is running' });
 });
 
-// Basic error handler
 app.use((err, req, res, next) => {
     console.error('Global Error Handler:', err.stack);
     res.status(err.status || 500).json({
@@ -97,14 +92,12 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Schedule automated expiry checks (Every 24 hours)
 import { checkAndNotifyExpiries } from './services/notificationService.js';
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 setInterval(() => {
     checkAndNotifyExpiries().catch(err => console.error('Scheduled Expiry Check Failed:', err));
 }, TWENTY_FOUR_HOURS);
 
-// Initial check on server start (with a delay to ensure DB is ready)
 setTimeout(() => {
     checkAndNotifyExpiries().catch(err => console.error('Initial Expiry Check Failed:', err));
 }, 10000);
