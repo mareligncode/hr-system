@@ -25,6 +25,8 @@ import ApplicantDocument from './ApplicantDocument.js';
 import Interview from './Interview.js';
 import InterviewFeedback from './InterviewFeedback.js';
 import Offer from './Offer.js';
+import PayrollPeriod from './PayrollPeriod.js';
+import PayrollItem from './PayrollItem.js';
 
 // User & Role (Many-to-Many)
 User.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id' });
@@ -163,6 +165,16 @@ Offer.belongsTo(JobApplication, { foreignKey: 'job_application_id' });
 
 Offer.belongsTo(User, { as: 'Creator', foreignKey: 'created_by' });
 
+// Payroll Management
+User.hasMany(PayrollPeriod, { foreignKey: 'created_by' });
+PayrollPeriod.belongsTo(User, { as: 'Creator', foreignKey: 'created_by' });
+
+PayrollPeriod.hasMany(PayrollItem, { foreignKey: 'payroll_period_id' });
+PayrollItem.belongsTo(PayrollPeriod, { foreignKey: 'payroll_period_id' });
+
+User.hasMany(PayrollItem, { foreignKey: 'user_id' });
+PayrollItem.belongsTo(User, { foreignKey: 'user_id' });
+
 export {
     User,
     Department,
@@ -190,5 +202,7 @@ export {
     ApplicantDocument,
     Interview,
     InterviewFeedback,
-    Offer
+    Offer,
+    PayrollPeriod,
+    PayrollItem
 };

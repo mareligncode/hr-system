@@ -191,6 +191,16 @@ const Employee = sequelize.define('Employee', {
         type: DataTypes.STRING(100),
         allowNull: true
     },
+    base_salary: {
+        type: DataTypes.DECIMAL(12, 2),
+        allowNull: true,
+        defaultValue: 0
+    },
+    hourly_rate: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true,
+        defaultValue: 0
+    },
     created_by: {
         type: DataTypes.INTEGER,
         allowNull: true,

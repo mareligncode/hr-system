@@ -44,6 +44,10 @@ const DashboardLayout = () => {
         { path: '/recruitment/pipeline', label: t('pipeline'), icon: '📋', roles: ['admin', 'hr'] },
         { path: '/recruitment/interviews', label: t('interviews'), icon: '📅', roles: ['admin', 'hr', 'manager'] },
         { path: '/recruitment/offers', label: t('offers'), icon: '💰', roles: ['admin', 'hr'] },
+
+        // Payroll
+        { path: '/payroll/periods', label: t('payrollManagement') || 'Payroll Management', icon: '💰', roles: ['admin', 'hr', 'finance'] },
+        { path: '/payroll/payslips', label: t('myPayslips') || 'My Payslips', icon: '📄' },
     ];
 
     const filteredMenuItems = menuItems.filter(item => {

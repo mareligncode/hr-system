@@ -51,6 +51,12 @@ import InterviewManagementPage from './pages/recruitment/InterviewManagementPage
 import InterviewRoomPage from './pages/recruitment/InterviewRoomPage.jsx';
 import OfferManagementPage from './pages/recruitment/OfferManagementPage.jsx';
 
+// Payroll
+import PayrollPeriods from './pages/payroll/PayrollPeriods.jsx';
+import PayrollRun from './pages/payroll/PayrollRun.jsx';
+import PayrollReview from './pages/payroll/PayrollReview.jsx';
+import EmployeePayslips from './pages/payroll/EmployeePayslips.jsx';
+
 import AttendanceCalendar from './pages/attendance/AttendanceCalendar.jsx';
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
 import DashboardLayout from './components/layout/DashboardLayout.jsx';
@@ -266,6 +272,24 @@ function App() {
                 <OfferManagementPage />
               </ProtectedRoute>
             } />
+
+            {/* Payroll Management */}
+            <Route path="/payroll/periods" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'finance']}>
+                <PayrollPeriods />
+              </ProtectedRoute>
+            } />
+            <Route path="/payroll/run/:id" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'finance']}>
+                <PayrollRun />
+              </ProtectedRoute>
+            } />
+            <Route path="/payroll/review/:id" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'finance']}>
+                <PayrollReview />
+              </ProtectedRoute>
+            } />
+            <Route path="/payroll/payslips" element={<EmployeePayslips />} />
           </Route>
 
           {/* Default redirect */}
