@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logoutUser } from '../../store/authSlice.js';
 import { useSettings } from '../../context/SettingsContext.jsx';
+import NotificationDropdown from './NotificationDropdown.jsx';
 
 const Navbar = () => {
     const dispatch = useDispatch();
@@ -73,6 +74,8 @@ const Navbar = () => {
                         >
                             {language === 'en' ? 'አማ' : 'EN'}
                         </button>
+
+                        <NotificationDropdown />
 
                         {/* Settings */}
                         <button

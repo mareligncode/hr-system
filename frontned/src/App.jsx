@@ -57,6 +57,11 @@ import PayrollRun from './pages/payroll/PayrollRun.jsx';
 import PayrollReview from './pages/payroll/PayrollReview.jsx';
 import EmployeePayslips from './pages/payroll/EmployeePayslips.jsx';
 
+// Notifications
+import NotificationCenter from './pages/notifications/NotificationCenter.jsx';
+import NotificationPreferences from './pages/notifications/NotificationPreferences.jsx';
+import NotificationTemplates from './pages/admin/NotificationTemplates.jsx';
+
 import AttendanceCalendar from './pages/attendance/AttendanceCalendar.jsx';
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
 import DashboardLayout from './components/layout/DashboardLayout.jsx';
@@ -290,6 +295,15 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/payroll/payslips" element={<EmployeePayslips />} />
+
+            {/* Notification Management */}
+            <Route path="/notifications" element={<NotificationCenter />} />
+            <Route path="/settings/notifications" element={<NotificationPreferences />} />
+            <Route path="/admin/notifications/templates" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr']}>
+                <NotificationTemplates />
+              </ProtectedRoute>
+            } />
           </Route>
 
           {/* Default redirect */}

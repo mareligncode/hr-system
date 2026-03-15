@@ -27,6 +27,9 @@ import InterviewFeedback from './InterviewFeedback.js';
 import Offer from './Offer.js';
 import PayrollPeriod from './PayrollPeriod.js';
 import PayrollItem from './PayrollItem.js';
+import Notification from './Notification.js';
+import NotificationSetting from './NotificationSetting.js';
+import NotificationTemplate from './NotificationTemplate.js';
 
 // User & Role (Many-to-Many)
 User.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id' });
@@ -175,6 +178,13 @@ PayrollItem.belongsTo(PayrollPeriod, { foreignKey: 'payroll_period_id' });
 User.hasMany(PayrollItem, { foreignKey: 'user_id' });
 PayrollItem.belongsTo(User, { foreignKey: 'user_id' });
 
+// Notifications
+User.hasMany(Notification, { foreignKey: 'user_id' });
+Notification.belongsTo(User, { foreignKey: 'user_id' });
+
+User.hasOne(NotificationSetting, { foreignKey: 'user_id' });
+NotificationSetting.belongsTo(User, { foreignKey: 'user_id' });
+
 export {
     User,
     Department,
@@ -204,5 +214,8 @@ export {
     InterviewFeedback,
     Offer,
     PayrollPeriod,
-    PayrollItem
+    PayrollItem,
+    Notification,
+    NotificationSetting,
+    NotificationTemplate
 };
