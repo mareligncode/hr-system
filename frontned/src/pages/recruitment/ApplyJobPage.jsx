@@ -88,7 +88,7 @@ const ApplyJobPage = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-main)]">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
             </div>
         );
@@ -96,13 +96,13 @@ const ApplyJobPage = () => {
 
     if (success) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-                <div className="max-w-md w-full bg-white rounded-3xl p-10 shadow-xl text-center border border-gray-100">
-                    <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="min-h-screen bg-[var(--bg-main)] flex items-center justify-center px-4">
+                <div className="max-w-md w-full bg-[var(--bg-surface)] rounded-3xl p-10 shadow-xl text-center border border-[var(--border-main)]">
+                    <div className="w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
                         <CheckCircle2 className="w-10 h-10" />
                     </div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('applicationSent')}</h2>
-                    <p className="text-gray-600 mb-8 leading-relaxed">
+                    <h2 className="text-3xl font-bold text-[var(--text-main)] mb-4">{t('applicationSent')}</h2>
+                    <p className="text-[var(--text-soft)] mb-8 leading-relaxed">
                         {t('thankYouInterest', { title: job.title })}
                     </p>
                     <Link
@@ -117,10 +117,10 @@ const ApplyJobPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-20">
-            <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="min-h-screen bg-[var(--bg-main)] pb-20">
+            <div className="bg-[var(--bg-surface)] border-b border-[var(--border-main)] sticky top-0 z-10">
                 <div className="max-w-3xl mx-auto px-4 py-4">
-                    <Link to={`/careers/${id}`} className="flex items-center text-gray-600 hover:text-indigo-600 transition-colors font-medium">
+                    <Link to={`/careers/${id}`} className="flex items-center text-[var(--text-muted)] hover:text-indigo-600 transition-colors font-medium">
                         <ArrowLeft className="w-5 h-5 mr-2" />
                         {t('backToJobDetails')}
                     </Link>
@@ -128,7 +128,7 @@ const ApplyJobPage = () => {
             </div>
 
             <div className="max-w-3xl mx-auto px-4 mt-12">
-                <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                <div className="bg-[var(--bg-surface)] rounded-3xl shadow-xl border border-[var(--border-main)] overflow-hidden">
                     <div className="bg-indigo-600 px-8 py-10 text-white">
                         <h1 className="text-3xl font-bold mb-2">{t('applyFor', { title: job.title })}</h1>
                         <p className="text-indigo-100">{t('sendUsDetails')}</p>
@@ -136,7 +136,7 @@ const ApplyJobPage = () => {
 
                     <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-8">
                         {error && (
-                            <div className="flex items-center p-4 bg-red-50 text-red-700 rounded-2xl border border-red-100">
+                            <div className="flex items-center p-4 bg-red-500/10 text-red-500 rounded-2xl border border-red-500/20">
                                 <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
                                 <span className="text-sm font-medium">{error}</span>
                             </div>
@@ -144,24 +144,24 @@ const ApplyJobPage = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-700 ml-1">{t('firstName')}</label>
+                                <label className="text-sm font-bold text-[var(--text-soft)] ml-1">{t('firstName')}</label>
                                 <input
                                     required
                                     type="text"
                                     name="first_name"
-                                    className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 focus:ring-2 focus:ring-indigo-500 transition-all"
+                                    className="w-full bg-[var(--bg-input)] border-none rounded-2xl px-5 py-4 focus:ring-2 focus:ring-indigo-500 transition-all text-[var(--text-main)] placeholder-[var(--text-muted)]"
                                     placeholder="John"
                                     value={formData.first_name}
                                     onChange={handleInputChange}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-700 ml-1">{t('lastName')}</label>
+                                <label className="text-sm font-bold text-[var(--text-soft)] ml-1">{t('lastName')}</label>
                                 <input
                                     required
                                     type="text"
                                     name="last_name"
-                                    className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 focus:ring-2 focus:ring-indigo-500 transition-all"
+                                    className="w-full bg-[var(--bg-input)] border-none rounded-2xl px-5 py-4 focus:ring-2 focus:ring-indigo-500 transition-all text-[var(--text-main)] placeholder-[var(--text-muted)]"
                                     placeholder="Doe"
                                     value={formData.last_name}
                                     onChange={handleInputChange}
@@ -171,24 +171,24 @@ const ApplyJobPage = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-700 ml-1">{t('emailAddress')}</label>
+                                <label className="text-sm font-bold text-[var(--text-soft)] ml-1">{t('emailAddress')}</label>
                                 <input
                                     required
                                     type="email"
                                     name="email"
-                                    className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 focus:ring-2 focus:ring-indigo-500 transition-all"
+                                    className="w-full bg-[var(--bg-input)] border-none rounded-2xl px-5 py-4 focus:ring-2 focus:ring-indigo-500 transition-all text-[var(--text-main)] placeholder-[var(--text-muted)]"
                                     placeholder="john.doe@example.com"
                                     value={formData.email}
                                     onChange={handleInputChange}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-bold text-gray-700 ml-1">{t('phone')}</label>
+                                <label className="text-sm font-bold text-[var(--text-soft)] ml-1">{t('phone')}</label>
                                 <input
                                     required
                                     type="tel"
                                     name="phone"
-                                    className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 focus:ring-2 focus:ring-indigo-500 transition-all"
+                                    className="w-full bg-[var(--bg-input)] border-none rounded-2xl px-5 py-4 focus:ring-2 focus:ring-indigo-500 transition-all text-[var(--text-main)] placeholder-[var(--text-muted)]"
                                     placeholder="+1 234 567 890"
                                     value={formData.phone}
                                     onChange={handleInputChange}
@@ -197,10 +197,10 @@ const ApplyJobPage = () => {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700 ml-1">{t('resumeCvLabel')}</label>
+                            <label className="text-sm font-bold text-[var(--text-soft)] ml-1">{t('resumeCvLabel')}</label>
                             <label className={`
                                 border-2 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all gap-2
-                                ${formData.resume ? 'bg-emerald-50 border-emerald-200' : 'bg-gray-50 border-gray-200 hover:border-indigo-300 hover:bg-indigo-50'}
+                                ${formData.resume ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-[var(--bg-input)] border-[var(--border-main)] hover:border-indigo-500/50 hover:bg-indigo-500/5'}
                             `}>
                                 <input
                                     type="file"
@@ -216,20 +216,20 @@ const ApplyJobPage = () => {
                                     </>
                                 ) : (
                                     <>
-                                        <Upload className="w-10 h-10 text-gray-400 group-hover:text-indigo-400" />
-                                        <span className="font-bold text-gray-600">{t('chooseFileOrDrag')}</span>
-                                        <span className="text-xs text-gray-500">{t('maximumSize5MB')}</span>
+                                        <Upload className="w-10 h-10 text-[var(--text-muted)] group-hover:text-indigo-500" />
+                                        <span className="font-bold text-[var(--text-soft)]">{t('chooseFileOrDrag')}</span>
+                                        <span className="text-xs text-[var(--text-muted)]">{t('maximumSize5MB')}</span>
                                     </>
                                 )}
                             </label>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700 ml-1">{t('coverLetterOptional')}</label>
+                            <label className="text-sm font-bold text-[var(--text-soft)] ml-1">{t('coverLetterOptional')}</label>
                             <textarea
                                 name="cover_letter"
                                 rows="5"
-                                className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 focus:ring-2 focus:ring-indigo-500 transition-all"
+                                className="w-full bg-[var(--bg-input)] border-none rounded-2xl px-5 py-4 focus:ring-2 focus:ring-indigo-500 transition-all text-[var(--text-main)] placeholder-[var(--text-muted)]"
                                 placeholder={t('fitForRolePlaceholder')}
                                 value={formData.cover_letter}
                                 onChange={handleInputChange}
@@ -253,7 +253,7 @@ const ApplyJobPage = () => {
                     </form>
                 </div>
 
-                <p className="mt-8 text-center text-sm text-gray-500">
+                <p className="mt-8 text-center text-sm text-[var(--text-muted)]">
                     {t('agreeRecruitmentTerms')}
                 </p>
             </div>

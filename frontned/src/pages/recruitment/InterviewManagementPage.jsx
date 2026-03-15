@@ -44,10 +44,10 @@ const InterviewManagementPage = () => {
 
     const getStatusStyle = (status) => {
         switch (status) {
-            case 'scheduled': return 'bg-blue-50 text-blue-600 border-blue-100';
-            case 'completed': return 'bg-green-50 text-green-600 border-green-100';
-            case 'cancelled': return 'bg-red-50 text-red-600 border-red-100';
-            default: return 'bg-gray-50 text-gray-600 border-gray-100';
+            case 'scheduled': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+            case 'completed': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+            case 'cancelled': return 'bg-red-500/10 text-red-500 border-red-500/20';
+            default: return 'bg-[var(--bg-surface-soft)] text-[var(--text-muted)] border-[var(--border-main)]';
         }
     };
 
@@ -123,7 +123,7 @@ const InterviewManagementPage = () => {
                             </div>
 
                             <div className="flex items-center gap-4 mb-6">
-                                <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl flex-shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all transform group-hover:scale-110 group-hover:rotate-3">
+                                <div className="w-14 h-14 bg-indigo-500/10 text-indigo-500 rounded-2xl flex items-center justify-center font-black text-xl flex-shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all transform group-hover:scale-110 group-hover:rotate-3">
                                     {interview.JobApplication?.Applicant?.first_name[0]}{interview.JobApplication?.Applicant?.last_name[0]}
                                 </div>
                                 <div className="min-w-0">

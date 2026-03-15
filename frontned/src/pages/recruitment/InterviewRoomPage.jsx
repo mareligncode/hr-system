@@ -103,7 +103,7 @@ const InterviewRoomPage = () => {
     if (!interview) {
         return (
             <div className="flex flex-col items-center justify-center min-vh-100 bg-[var(--bg-base)] text-center p-6">
-                <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mb-6">
+                <div className="w-20 h-20 bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center mb-6">
                     <VideoOff className="w-10 h-10" />
                 </div>
                 <h2 className="text-2xl font-black text-[var(--text-main)] mb-2">{t('interviewNotFound') || "Interview Not Found"}</h2>
