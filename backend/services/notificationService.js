@@ -1,6 +1,31 @@
-import { EmployeeDocument, EmployeeCertification, Employee, User, JobPosting } from '../models/index.js';
+import { EmployeeDocument, EmployeeCertification, Employee, User, JobPosting, Notification, NotificationSetting } from '../models/index.js';
 import { Op } from 'sequelize';
 import { sendEmail } from './emailService.js';
+
+/**
+ * Sends an in-app notification to all users with given roles (e.g. admin, hr).
+ * Used to alert HR/Admin whenever an employee takes an important action.
+ */
+export const notifyByRole = async ({ roles = ['admin', 'hr'], title, message, type = 'info', link = null, relatedEntityType = null, relatedEntityId = null }) => {
+    try {
+        const admins = await User.findAll({
+            where: { role: { [Op.in]: roles }, status: 'active' }
+        });
+        await Promise.all(admins.map(admin =>
+            Notification.create({
+                user_id: admin.id,
+                title,
+                message,
+                type,
+                link,
+                related_entity_type: relatedEntityType,
+                related_entity_id: relatedEntityId
+            }).catch(e => console.error(`[notifyByRole] Failed for user ${admin.id}:`, e))
+        ));
+    } catch (error) {
+        console.error('[notifyByRole] Failed:', error);
+    }
+};
 
 /**
  * Scans for documents and certifications expiring within a specific window
@@ -291,5 +316,80 @@ export const sendInterviewInvitation = async (interview, application, applicant,
         });
     } catch (error) {
         console.error(`[Notification] Failed to send interview invitation to ${applicant.email}:`, error);
+    }
+};
+
+/**
+ * Creates an in-app notification and optionally sends an email based on user settings.
+ */
+export const createNotification = async ({
+    userId,
+    title,
+    message,
+    type = 'info',
+    link = null,
+    relatedEntityType = null,
+    relatedEntityId = null,
+    sendEmailFlag = false, // override to force email if needed, or rely on settings
+    settingKey = null // e.g., 'notify_on_leave_status', checks NotificationSettings
+}) => {
+    try {
+        // 1. Create In-App Notification
+        const notification = await Notification.create({
+            user_id: userId,
+            title,
+            message,
+            type,
+            link,
+            related_entity_type: relatedEntityType,
+            related_entity_id: relatedEntityId
+        });
+
+        // 2. Decide on Email Dispatch
+        let shouldEmail = sendEmailFlag;
+        let userEmail = null;
+        let userName = 'User';
+
+        const user = await User.findByPk(userId);
+        if (user) {
+            userEmail = user.email;
+            userName = user.first_name || 'User';
+        }
+
+        if (!shouldEmail && settingKey && user) {
+            const settings = await NotificationSetting.findOne({ where: { user_id: userId } });
+            if (settings) {
+                // If the key exists in settings and is true, AND global email_notifications is true
+                if (settings.email_notifications && settings[settingKey] !== false) {
+                    shouldEmail = true;
+                }
+            } else {
+                // Default behavior if settings row not created yet is usually to send
+                shouldEmail = true;
+            }
+        }
+
+        if (shouldEmail && userEmail) {
+            const html = `
+                <div style="font-family: sans-serif; padding: 20px; color: #333;">
+                    <h2 style="color: #2563eb;">${title}</h2>
+                    <p>Hello <strong>${userName}</strong>,</p>
+                    <p>${message}</p>
+                    ${link ? `<p><a href="${link}" style="background-color: #2563eb; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">View Details</a></p>` : ''}
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+                    <p style="font-size: 12px; color: #666;">This is an automated system notification.</p>
+                </div>
+            `;
+            await sendEmail({
+                to: userEmail,
+                subject: title,
+                html
+            }).catch(e => console.error('[NotificationService] Email failed:', e));
+        }
+
+        return notification;
+    } catch (error) {
+        console.error('[NotificationService] Failed to create notification:', error);
+        throw error; // Return error upwards
     }
 };

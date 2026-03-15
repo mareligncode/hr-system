@@ -4,6 +4,7 @@ import { ShiftType, ShiftAssignment, ShiftSwapRequest, ShiftTemplate, ShiftRotat
 import { Op } from 'sequelize';
 import sequelize from '../config/database.js';
 import { logActivity } from '../services/auditService.js';
+import { createNotification, notifyByRole } from '../services/notificationService.js';
 import {
     checkShiftConflict,
     validateShiftAssignment,
@@ -603,6 +604,29 @@ export const createShiftSwap = async (req, res) => {
         });
 
         await logActivity(req.user.id, 'CREATE_SHIFT_SWAP', 'ShiftSwapRequest', swapRequest.id, null, swapRequest.toJSON(), req);
+
+        // 🔔 Notify the target employee about the swap request
+        createNotification({
+            userId: target_employee_id,
+            title: '🔄 Shift Swap Request',
+            message: `${req.user.first_name || 'A colleague'} has requested to swap a shift with you on ${assignment.assignment_date}.`,
+            type: 'info',
+            link: '/shifts/swaps',
+            relatedEntityType: 'ShiftSwapRequest',
+            relatedEntityId: swapRequest.id,
+            sendEmailFlag: true,
+            settingKey: 'notify_on_shift_swap'
+        }).catch(e => console.error('[Swap] Target employee notification failed:', e));
+
+        // 🔔 Notify HR/Admin too
+        notifyByRole({
+            roles: ['admin', 'hr', 'manager'],
+            title: '🔄 New Shift Swap Request',
+            message: `${req.user.first_name || 'An employee'} ${req.user.last_name || ''} has requested a shift swap on ${assignment.assignment_date}.`,
+            type: 'info',
+            link: '/shifts/swaps'
+        }).catch(e => console.error('[Swap] HR notification failed:', e));
+
         res.status(201).json(swapRequest);
     } catch (error) {
         console.error('createShiftSwap error:', error);
@@ -678,6 +702,20 @@ export const approveShiftSwap = async (req, res) => {
 
         await transaction.commit();
         await logActivity(req.user.id, 'APPROVE_SHIFT_SWAP', 'ShiftSwapRequest', id, null, { status: 'approved' }, req);
+
+        // 🔔 Notify the requester employee that their swap was approved
+        createNotification({
+            userId: swapRequest.requesting_employee_id,
+            title: '✅ Shift Swap Approved',
+            message: `Your shift swap request has been approved by ${req.user.first_name || 'management'}.`,
+            type: 'info',
+            link: '/shifts/my',
+            relatedEntityType: 'ShiftSwapRequest',
+            relatedEntityId: swapRequest.id,
+            sendEmailFlag: true,
+            settingKey: 'notify_on_shift_swap'
+        }).catch(e => console.error('[Swap] Approve notification failed:', e));
+
         res.status(200).json({ message: 'Shift swap approved and assignment updated' });
     } catch (error) {
         if (transaction) await transaction.rollback();
@@ -719,6 +757,20 @@ export const rejectShiftSwap = async (req, res) => {
         });
 
         await logActivity(req.user.id, 'REJECT_SHIFT_SWAP', 'ShiftSwapRequest', id, null, { status: 'rejected', rejection_reason }, req);
+
+        // 🔔 Notify the requester that their swap was rejected
+        createNotification({
+            userId: swapRequest.requesting_employee_id,
+            title: '❌ Shift Swap Rejected',
+            message: `Your shift swap request has been rejected. Reason: ${rejection_reason || 'No reason provided.'}`,
+            type: 'alert',
+            link: '/shifts/swaps',
+            relatedEntityType: 'ShiftSwapRequest',
+            relatedEntityId: swapRequest.id,
+            sendEmailFlag: true,
+            settingKey: 'notify_on_shift_swap'
+        }).catch(e => console.error('[Swap] Reject notification failed:', e));
+
         res.status(200).json({ message: 'Shift swap rejected' });
     } catch (error) {
         console.error('rejectShiftSwap error:', error);

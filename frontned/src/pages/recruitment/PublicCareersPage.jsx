@@ -32,14 +32,14 @@ const PublicCareersPage = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-main)]">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[var(--bg-main)]">
             {/* Hero Section */}
             <div className="bg-indigo-700 text-white py-20 px-4">
                 <div className="max-w-5xl mx-auto text-center">
@@ -55,7 +55,7 @@ const PublicCareersPage = () => {
                         <input
                             type="text"
                             placeholder={t('searchByRoleOrDept')}
-                            className="block w-full pl-10 pr-3 py-4 border border-transparent rounded-xl leading-5 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white focus:border-white sm:text-lg shadow-lg"
+                            className="block w-full pl-10 pr-3 py-4 border border-transparent rounded-xl leading-5 bg-[var(--bg-surface)] text-[var(--text-main)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-lg shadow-lg"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -66,16 +66,16 @@ const PublicCareersPage = () => {
             {/* Job List section */}
             <div className="max-w-5xl mx-auto py-16 px-4">
                 <div className="flex justify-between items-center mb-10">
-                    <h2 className="text-2xl font-bold text-gray-900">
+                    <h2 className="text-2xl font-bold text-[var(--text-main)]">
                         {t('currentOpenings', { count: filteredJobs.length })}
                     </h2>
                 </div>
 
                 {filteredJobs.length === 0 ? (
-                    <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
-                        <Briefcase className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900">{t('noPositionsFound')}</h3>
-                        <p className="text-gray-500">{t('tryAdjustingSearch')}</p>
+                    <div className="text-center py-20 bg-[var(--bg-surface)] rounded-2xl shadow-sm border border-[var(--border-main)]">
+                        <Briefcase className="mx-auto h-12 w-12 text-[var(--text-muted)] mb-4" />
+                        <h3 className="text-lg font-medium text-[var(--text-main)]">{t('noPositionsFound')}</h3>
+                        <p className="text-[var(--text-muted)]">{t('tryAdjustingSearch')}</p>
                     </div>
                 ) : (
                     <div className="space-y-4">
@@ -83,30 +83,30 @@ const PublicCareersPage = () => {
                             <Link
                                 key={job.id}
                                 to={`/careers/${job.id}`}
-                                className="block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-indigo-300 hover:shadow-md transition-all group"
+                                className="block bg-[var(--bg-surface)] rounded-2xl p-6 shadow-sm border border-[var(--border-main)] hover:border-indigo-500/50 hover:shadow-md transition-all group"
                             >
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-2">
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100 uppercase tracking-wider">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 uppercase tracking-wider">
                                                 {job.Position?.Department?.name || 'Hotel'}
                                             </span>
-                                            <span className="inline-flex items-center text-xs text-gray-500">
+                                            <span className="inline-flex items-center text-xs text-[var(--text-muted)]">
                                                 <Clock className="w-3.5 h-3.5 mr-1" />
                                                 {job.employment_type?.replace('_', ' ')}
                                             </span>
                                         </div>
-                                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                                        <h3 className="text-xl font-bold text-[var(--text-main)] group-hover:text-indigo-500 transition-colors">
                                             {job.title}
                                         </h3>
-                                        <div className="mt-2 flex items-center text-sm text-gray-500 gap-4">
+                                        <div className="mt-2 flex items-center text-sm text-[var(--text-soft)] gap-4">
                                             <div className="flex items-center">
-                                                <MapPin className="w-4 h-4 mr-1 text-gray-400" />
+                                                <MapPin className="w-4 h-4 mr-1 text-[var(--text-muted)]" />
                                                 {job.location || t('onSite')}
                                             </div>
                                             {job.experience_level && (
                                                 <div className="flex items-center capitalize">
-                                                    <Briefcase className="w-4 h-4 mr-1 text-gray-400" />
+                                                    <Briefcase className="w-4 h-4 mr-1 text-[var(--text-muted)]" />
                                                     {job.experience_level}
                                                 </div>
                                             )}
@@ -129,9 +129,9 @@ const PublicCareersPage = () => {
             </div>
 
             {/* Footer */}
-            <div className="bg-white border-t border-gray-200 py-12 mt-10">
+            <div className="bg-[var(--bg-surface)] border-t border-[var(--border-main)] py-12 mt-10">
                 <div className="max-w-5xl mx-auto px-4 text-center">
-                    <p className="text-gray-500 text-sm">
+                    <p className="text-[var(--text-muted)] text-sm">
                         {t('allRightsReservedRecruitment')}
                     </p>
                 </div>

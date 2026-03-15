@@ -3,7 +3,7 @@ const Input = ({ id, label, type = 'text', placeholder, value, onChange, error, 
     return (
         <div className="flex flex-col gap-1">
             {label && (
-                <label htmlFor={id} className="text-sm font-medium text-slate-300">
+                <label htmlFor={id} className="text-sm font-medium text-[var(--text-soft)]">
                     {label} {required && <span className="text-red-400">*</span>}
                 </label>
             )}

@@ -4,6 +4,7 @@ import organizationReducer from './organizationSlice.js';
 import employeeReducer from './employeeSlice.js';
 import roleReducer from './roleSlice.js';
 import auditReducer from './auditSlice.js';
+import notificationReducer from './notificationSlice.js';
 
 const store = configureStore({
     reducer: {
@@ -12,6 +13,7 @@ const store = configureStore({
         employees: employeeReducer,
         roles: roleReducer,
         audit: auditReducer,
+        notifications: notificationReducer,
     },
 });
 

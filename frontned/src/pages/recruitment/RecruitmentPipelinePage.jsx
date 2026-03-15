@@ -98,13 +98,13 @@ const RecruitmentPipelinePage = () => {
 
     const getStageLightColor = (color) => {
         switch (color) {
-            case 'blue': return 'bg-blue-50 border-blue-100';
-            case 'indigo': return 'bg-indigo-50 border-indigo-100';
-            case 'purple': return 'bg-purple-50 border-purple-100';
-            case 'emerald': return 'bg-emerald-50 border-emerald-100';
-            case 'green': return 'bg-green-50 border-green-100';
-            case 'red': return 'bg-red-50 border-red-100';
-            default: return 'bg-gray-50 border-gray-100';
+            case 'blue': return 'bg-blue-500/10 border-blue-500/20';
+            case 'indigo': return 'bg-indigo-500/10 border-indigo-500/20';
+            case 'purple': return 'bg-purple-500/10 border-purple-500/20';
+            case 'emerald': return 'bg-emerald-500/10 border-emerald-500/20';
+            case 'green': return 'bg-green-600/10 border-green-600/20';
+            case 'red': return 'bg-red-500/10 border-red-500/20';
+            default: return 'bg-[var(--bg-surface-soft)] border-[var(--border-main)]';
         }
     };
 
@@ -185,7 +185,7 @@ const RecruitmentPipelinePage = () => {
 
                                             <div className="relative z-10">
                                                 <div className="flex items-start justify-between mb-4">
-                                                    <div className="w-12 h-12 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-2xl flex items-center justify-center font-black text-lg text-[var(--text-main)] group-hover:from-blue-500 group-hover:to-indigo-600 group-hover:text-white transition-all transform group-hover:scale-110 group-hover:rotate-3 shadow-sm">
+                                                    <div className="w-12 h-12 bg-gradient-to-br from-[var(--bg-surface-soft)] to-[var(--bg-input)] rounded-2xl flex items-center justify-center font-black text-lg text-[var(--text-main)] group-hover:from-blue-500 group-hover:to-indigo-600 group-hover:text-white transition-all transform group-hover:scale-110 group-hover:rotate-3 shadow-sm">
                                                         {app.Applicant?.first_name[0]}{app.Applicant?.last_name[0]}
                                                     </div>
                                                     <div className="flex gap-1">
@@ -219,7 +219,7 @@ const RecruitmentPipelinePage = () => {
                                                                     const prevStage = STAGES[STAGES.findIndex(s => s.id === stage.id) - 1];
                                                                     handleUpdateStatus(app.id, prevStage.id);
                                                                 }}
-                                                                className="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all scale-90"
+                                                                className="w-8 h-8 flex items-center justify-center rounded-xl bg-[var(--bg-surface-soft)] text-[var(--text-muted)] hover:bg-[var(--bg-input)] transition-all scale-90"
                                                             >
                                                                 <ArrowRight className="w-4 h-4 rotate-180" />
                                                             </button>
@@ -232,7 +232,7 @@ const RecruitmentPipelinePage = () => {
                                                                     const nextStage = STAGES[STAGES.findIndex(s => s.id === stage.id) + 1];
                                                                     handleUpdateStatus(app.id, nextStage.id);
                                                                 }}
-                                                                className="w-8 h-8 flex items-center justify-center rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all scale-95 shadow-sm"
+                                                                className="w-8 h-8 flex items-center justify-center rounded-xl bg-blue-500/10 text-blue-500 hover:bg-blue-600 hover:text-white transition-all scale-95 shadow-sm"
                                                             >
                                                                 <ArrowRight className="w-4 h-4" />
                                                             </button>

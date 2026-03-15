@@ -1,6 +1,7 @@
 import { LeaveType, LeaveRequest, User, Employee, Department } from '../models/index.js';
 import { Op } from 'sequelize';
 import { logActivity } from '../services/auditService.js';
+import { createNotification, notifyByRole } from '../services/notificationService.js';
 
 // --- Leave Type Controllers ---
 
@@ -93,6 +94,18 @@ export const requestLeave = async (req, res) => {
 
         await logActivity(userId, 'REQUEST_LEAVE', 'LeaveRequest', leaveRequest.id, null, leaveRequest.toJSON(), req);
 
+        // 🔔 Notify HR/Admin about the new leave request
+        const submitter = req.user;
+        notifyByRole({
+            roles: ['admin', 'hr'],
+            title: '📋 New Leave Request',
+            message: `${submitter.first_name || 'An employee'} ${submitter.last_name || ''} has submitted a new leave request (${days} day${days !== 1 ? 's' : ''}) from ${start_date} to ${end_date}.`,
+            type: 'info',
+            link: '/leave/approvals',
+            relatedEntityType: 'LeaveRequest',
+            relatedEntityId: leaveRequest.id
+        }).catch(e => console.error('[Leave] HR notification failed:', e)); // fire quietly
+
         res.status(201).json({ message: 'Leave request submitted successfully', leaveRequest });
     } catch (error) {
         console.error('Leave Request Error:', error);
@@ -173,6 +186,23 @@ export const approveLeave = async (req, res) => {
         });
 
         await logActivity(req.user.id, `LEAVE_${status.toUpperCase()}`, 'LeaveRequest', id, null, { status, rejection_reason, comments }, req);
+
+        // 🔔 Dispatch in-app notification (and email if user settings allow) to the employee
+        const employeeUserId = leaveRequest.employee_id;
+        const isApproved = status === 'approved';
+        await createNotification({
+            userId: employeeUserId,
+            title: isApproved ? '✅ Leave Request Approved' : '❌ Leave Request Rejected',
+            message: isApproved
+                ? `Your leave request has been approved by ${req.user.first_name || 'HR'}.`
+                : `Your leave request was rejected. Reason: ${rejection_reason || comments || 'No reason provided.'}`,
+            type: isApproved ? 'info' : 'alert',
+            link: '/leave/history',
+            relatedEntityType: 'LeaveRequest',
+            relatedEntityId: leaveRequest.id,
+            sendEmailFlag: true,
+            settingKey: 'notify_on_leave_status'
+        });
 
         res.status(200).json({ message: `Leave request ${status} successfully` });
     } catch (error) {

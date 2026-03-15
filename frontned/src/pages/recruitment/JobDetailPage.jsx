@@ -39,7 +39,7 @@ const JobDetailPage = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-main)]">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
             </div>
         );
@@ -56,11 +56,11 @@ const JobDetailPage = () => {
     ].filter(s => s.content);
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-20">
+        <div className="min-h-screen bg-[var(--bg-main)] pb-20">
             {/* Navigation Header */}
-            <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+            <div className="bg-[var(--bg-surface)] border-b border-[var(--border-main)] sticky top-0 z-10">
                 <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-                    <Link to="/careers" className="flex items-center text-gray-600 hover:text-indigo-600 transition-colors font-medium">
+                    <Link to="/careers" className="flex items-center text-[var(--text-muted)] hover:text-indigo-600 transition-colors font-medium">
                         <ArrowLeft className="w-5 h-5 mr-2" />
                         {t('backToJobs')}
                     </Link>
@@ -80,7 +80,7 @@ const JobDetailPage = () => {
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-8">
                         {/* Header Card */}
-                        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                        <div className="bg-[var(--bg-surface)] rounded-3xl p-8 shadow-sm border border-[var(--border-main)]">
                             <div className="flex items-center gap-3 mb-4">
                                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 uppercase">
                                     {job.Position?.Department?.name || 'Department'}
@@ -92,33 +92,33 @@ const JobDetailPage = () => {
                                     </span>
                                 )}
                             </div>
-                            <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-6">{job.title}</h1>
+                            <h1 className="text-3xl md:text-4xl font-extrabold text-[var(--text-main)] mb-6">{job.title}</h1>
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="p-4 bg-gray-50 rounded-2xl">
-                                    <p className="text-xs text-gray-500 mb-1">{t('employmentType')}</p>
-                                    <p className="font-semibold text-gray-900 capitalize flex items-center">
+                                <div className="p-4 bg-[var(--bg-surface-soft)] rounded-2xl">
+                                    <p className="text-xs text-[var(--text-muted)] mb-1">{t('employmentType')}</p>
+                                    <p className="font-semibold text-[var(--text-main)] capitalize flex items-center">
                                         <Clock className="w-4 h-4 mr-2 text-indigo-600" />
                                         {job.employment_type?.replace('_', ' ')}
                                     </p>
                                 </div>
-                                <div className="p-4 bg-gray-50 rounded-2xl">
-                                    <p className="text-xs text-gray-500 mb-1">{t('workLocation')}</p>
-                                    <p className="font-semibold text-gray-900 flex items-center">
+                                <div className="p-4 bg-[var(--bg-surface-soft)] rounded-2xl">
+                                    <p className="text-xs text-[var(--text-muted)] mb-1">{t('workLocation')}</p>
+                                    <p className="font-semibold text-[var(--text-main)] flex items-center">
                                         <MapPin className="w-4 h-4 mr-2 text-indigo-600" />
                                         {job.location || t('onSite')}
                                     </p>
                                 </div>
-                                <div className="p-4 bg-gray-50 rounded-2xl">
-                                    <p className="text-xs text-gray-500 mb-1">{t('experience')}</p>
-                                    <p className="font-semibold text-gray-900 capitalize flex items-center">
+                                <div className="p-4 bg-[var(--bg-surface-soft)] rounded-2xl">
+                                    <p className="text-xs text-[var(--text-muted)] mb-1">{t('experience')}</p>
+                                    <p className="font-semibold text-[var(--text-main)] capitalize flex items-center">
                                         <Briefcase className="w-4 h-4 mr-2 text-indigo-600" />
                                         {job.experience_level || 'N/A'}
                                     </p>
                                 </div>
-                                <div className="p-4 bg-gray-50 rounded-2xl">
-                                    <p className="text-xs text-gray-500 mb-1">{t('salary')}</p>
-                                    <p className="font-semibold text-gray-900 flex items-center">
+                                <div className="p-4 bg-[var(--bg-surface-soft)] rounded-2xl">
+                                    <p className="text-xs text-[var(--text-muted)] mb-1">{t('salary')}</p>
+                                    <p className="font-semibold text-[var(--text-main)] flex items-center">
                                         <DollarSign className="w-4 h-4 mr-1 text-indigo-600" />
                                         {job.max_salary ? `${job.min_salary} - ${job.max_salary}` : t('competitive')}
                                     </p>
@@ -128,14 +128,14 @@ const JobDetailPage = () => {
 
                         {/* Detail Sections */}
                         {sections.map((section, idx) => (
-                            <section key={idx} className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-                                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                                    <span className="p-2 bg-indigo-50 text-indigo-600 rounded-lg mr-3">
+                            <section key={idx} className="bg-[var(--bg-surface)] rounded-3xl p-8 shadow-sm border border-[var(--border-main)]">
+                                <h3 className="text-xl font-bold text-[var(--text-main)] mb-6 flex items-center">
+                                    <span className="p-2 bg-indigo-500/10 text-indigo-500 rounded-lg mr-3">
                                         {section.icon}
                                     </span>
                                     {section.title}
                                 </h3>
-                                <div className="prose prose-indigo max-w-none text-gray-600 whitespace-pre-line leading-relaxed">
+                                <div className="prose prose-indigo max-w-none text-[var(--text-soft)] whitespace-pre-line leading-relaxed">
                                     {section.content}
                                 </div>
                             </section>
@@ -151,7 +151,7 @@ const JobDetailPage = () => {
                             </p>
                             <Link
                                 to={`/careers/apply/${job.id}`}
-                                className="block w-full bg-white text-indigo-600 py-4 px-6 rounded-2xl font-bold text-center hover:bg-gray-50 transition-colors"
+                                className="block w-full bg-white text-indigo-600 py-4 px-6 rounded-2xl font-bold text-center hover:bg-white/90 transition-colors"
                             >
                                 {t('applyForThisPosition')}
                             </Link>
@@ -174,13 +174,13 @@ const JobDetailPage = () => {
                             </div>
                         </div>
 
-                        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-                            <h4 className="font-bold text-gray-900 mb-4">{t('shareThisRole')}</h4>
+                        <div className="bg-[var(--bg-surface)] rounded-3xl p-8 shadow-sm border border-[var(--border-main)]">
+                            <h4 className="font-bold text-[var(--text-main)] mb-4">{t('shareThisRole')}</h4>
                             <div className="flex gap-4">
-                                <button className="p-3 bg-gray-50 hover:bg-indigo-50 hover:text-indigo-600 rounded-2xl transition-all flex-1 border border-gray-100">
+                                <button className="p-3 bg-[var(--bg-surface-soft)] hover:bg-indigo-500/10 hover:text-indigo-500 rounded-2xl transition-all flex-1 border border-[var(--border-main)] text-[var(--text-soft)]">
                                     LinkedIn
                                 </button>
-                                <button className="p-3 bg-gray-50 hover:bg-indigo-50 hover:text-indigo-600 rounded-2xl transition-all flex-1 border border-gray-100">
+                                <button className="p-3 bg-[var(--bg-surface-soft)] hover:bg-indigo-500/10 hover:text-indigo-500 rounded-2xl transition-all flex-1 border border-[var(--border-main)] text-[var(--text-soft)]">
                                     Twitter
                                 </button>
                             </div>

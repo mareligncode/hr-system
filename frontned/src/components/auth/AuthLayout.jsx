@@ -55,7 +55,7 @@ const AuthLayout = ({ children, title, subtitle }) => {
                             { icon: '💰', text: 'Automated payroll with tip distribution' },
                             { icon: '📊', text: 'Real-time analytics & dashboards' },
                         ].map(({ icon, text }) => (
-                            <div key={text} className={`flex items-center gap-3 ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+                            <div key={text} className={`flex items-center gap-3 ${isLight ? 'text-[var(--text-soft)]' : 'text-[var(--text-soft)]'}`}>
                                 <span className="text-xl">{icon}</span>
                                 <span className="text-sm">{t(text.replace(/\s+/g, '')) || text}</span>
                             </div>
@@ -64,7 +64,7 @@ const AuthLayout = ({ children, title, subtitle }) => {
                 </div>
 
                 {/* Footer */}
-                <div className="relative z-10 text-slate-500 text-xs">
+                <div className="relative z-10 text-[var(--text-muted)] text-xs">
                     © 2026 {t('appName')}. {t('allRightsReserved') || 'All rights reserved.'}
                 </div>
             </div>

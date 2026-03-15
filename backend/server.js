@@ -25,6 +25,9 @@ import jobApplicationRoutes from './routes/jobApplicationRoutes.js';
 import applicantRoutes from './routes/applicantRoutes.js';
 import interviewRoutes from './routes/interviewRoutes.js';
 import offerRoutes from './routes/offerRoutes.js';
+import payrollRoutes from './routes/payrollRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import reportRoutes from './routes/reportRoutes.js';
 
 dotenv.config();
 
@@ -92,6 +95,9 @@ app.use('/api/job-applications', jobApplicationRoutes);
 app.use('/api/applicants', applicantRoutes);
 app.use('/api/interviews', interviewRoutes);
 app.use('/api/offers', offerRoutes);
+app.use('/api/payroll', payrollRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/reports', reportRoutes);
 
 app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok', message: 'Server is running' });

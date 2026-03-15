@@ -25,6 +25,11 @@ import ApplicantDocument from './ApplicantDocument.js';
 import Interview from './Interview.js';
 import InterviewFeedback from './InterviewFeedback.js';
 import Offer from './Offer.js';
+import PayrollPeriod from './PayrollPeriod.js';
+import PayrollItem from './PayrollItem.js';
+import Notification from './Notification.js';
+import NotificationSetting from './NotificationSetting.js';
+import NotificationTemplate from './NotificationTemplate.js';
 
 // User & Role (Many-to-Many)
 User.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id' });
@@ -163,6 +168,23 @@ Offer.belongsTo(JobApplication, { foreignKey: 'job_application_id' });
 
 Offer.belongsTo(User, { as: 'Creator', foreignKey: 'created_by' });
 
+// Payroll Management
+User.hasMany(PayrollPeriod, { foreignKey: 'created_by' });
+PayrollPeriod.belongsTo(User, { as: 'Creator', foreignKey: 'created_by' });
+
+PayrollPeriod.hasMany(PayrollItem, { foreignKey: 'payroll_period_id' });
+PayrollItem.belongsTo(PayrollPeriod, { foreignKey: 'payroll_period_id' });
+
+User.hasMany(PayrollItem, { foreignKey: 'user_id' });
+PayrollItem.belongsTo(User, { foreignKey: 'user_id' });
+
+// Notifications
+User.hasMany(Notification, { foreignKey: 'user_id' });
+Notification.belongsTo(User, { foreignKey: 'user_id' });
+
+User.hasOne(NotificationSetting, { foreignKey: 'user_id' });
+NotificationSetting.belongsTo(User, { foreignKey: 'user_id' });
+
 export {
     User,
     Department,
@@ -190,5 +212,10 @@ export {
     ApplicantDocument,
     Interview,
     InterviewFeedback,
-    Offer
+    Offer,
+    PayrollPeriod,
+    PayrollItem,
+    Notification,
+    NotificationSetting,
+    NotificationTemplate
 };

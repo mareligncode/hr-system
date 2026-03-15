@@ -68,8 +68,8 @@ const CodeInput = ({ length = 6, value, onChange, label, error }) => {
                         onChange={(e) => handleChange(e, index)}
                         onKeyDown={(e) => handleKeyDown(e, index)}
                         onPaste={handlePaste}
-                        className={`w-12 h-14 text-center text-xl font-bold bg-slate-800/50 border ${error ? 'border-red-500' : 'border-slate-700'
-                            } rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-axent focus:border-transparent transition-all`}
+                        className={`w-12 h-14 text-center text-xl font-bold bg-[var(--bg-input)] border ${error ? 'border-red-500' : 'border-[var(--border-input)]'
+                            } rounded-lg text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
                     />
                 ))}
             </div>
