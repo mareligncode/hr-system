@@ -62,6 +62,13 @@ import NotificationCenter from './pages/notifications/NotificationCenter.jsx';
 import NotificationPreferences from './pages/notifications/NotificationPreferences.jsx';
 import NotificationTemplates from './pages/admin/NotificationTemplates.jsx';
 
+// Dashboards & Reports (Phase 12) 
+import ExecutiveDashboard from './pages/admin/ExecutiveDashboard.jsx';
+import HRDashboard from './pages/admin/HRDashboard.jsx';
+import ManagerDashboard from './pages/admin/ManagerDashboard.jsx';
+import FinanceDashboard from './pages/admin/FinanceDashboard.jsx';
+import ReportCenter from './pages/admin/ReportCenter.jsx';
+
 import AttendanceCalendar from './pages/attendance/AttendanceCalendar.jsx';
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
 import DashboardLayout from './components/layout/DashboardLayout.jsx';
@@ -302,6 +309,33 @@ function App() {
             <Route path="/admin/notifications/templates" element={
               <ProtectedRoute requiredRoles={['admin', 'hr']}>
                 <NotificationTemplates />
+              </ProtectedRoute>
+            } />
+
+            {/* Reports & Dashboards (Phase 12) */}
+            <Route path="/dashboard/executive" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'finance']}>
+                <ExecutiveDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/hr" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr']}>
+                <HRDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/manager" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <ManagerDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/finance" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'finance']}>
+                <FinanceDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/reports" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager', 'finance']}>
+                <ReportCenter />
               </ProtectedRoute>
             } />
           </Route>

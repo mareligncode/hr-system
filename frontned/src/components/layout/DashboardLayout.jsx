@@ -48,6 +48,13 @@ const DashboardLayout = () => {
         // Payroll
         { path: '/payroll/periods', label: t('payrollManagement') || 'Payroll Management', icon: '💰', roles: ['admin', 'hr', 'finance'] },
         { path: '/payroll/payslips', label: t('myPayslips') || 'My Payslips', icon: '📄' },
+
+        // Reports & Analytics (Phase 12)
+        { path: '/dashboard/executive', label: t('executiveAnalytics') || 'Executive Analytics', icon: '📈', roles: ['admin', 'hr', 'finance'] },
+        { path: '/dashboard/hr', label: t('hrAnalytics') || 'HR Analytics', icon: '📊', roles: ['admin', 'hr'] },
+        { path: '/dashboard/manager', label: t('teamAnalytics') || 'Team Analytics', icon: '📈', roles: ['admin', 'hr', 'manager'] },
+        { path: '/dashboard/finance', label: t('financeAnalytics') || 'Finance Analytics', icon: '💰', roles: ['admin', 'hr', 'finance'] },
+        { path: '/reports', label: t('reportCenter') || 'Report Center', icon: '📋', roles: ['admin', 'hr', 'manager', 'finance'] },
     ];
 
     const filteredMenuItems = menuItems.filter(item => {
