@@ -84,6 +84,16 @@ const EmployeeDocument = sequelize.define('EmployeeDocument', {
             model: 'users',
             key: 'id'
         }
+    },
+    file_url: {
+        type: DataTypes.VIRTUAL,
+        get() {
+            const path = this.getDataValue('file_path');
+            if (!path) return null;
+            if (path.startsWith('http')) return path;
+            const baseUrl = process.env.API_URL || 'http://localhost:5000';
+            return `${baseUrl}/${path.replace(/\\/g, '/')}`;
+        }
     }
 }, {
     tableName: 'employee_documents',

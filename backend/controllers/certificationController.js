@@ -1,6 +1,5 @@
 import { EmployeeCertification } from '../models/index.js';
 import { logActivity } from '../services/auditService.js';
-import cloudinary from '../services/cloudinaryService.js';
 
 export const addCertification = async (req, res) => {
     try {
@@ -11,7 +10,10 @@ export const addCertification = async (req, res) => {
 
         await logActivity(req.user.id, 'CREATE', 'EmployeeCertification', certification.id, null, certification.toJSON(), req);
 
-        res.status(201).json(certification);
+        res.status(201).json({
+            ...certification.toJSON(),
+            file_url: certification.file_url
+        });
     } catch (error) {
         res.status(400).json({ error: 'Failed to add certification', details: error.message });
     }
@@ -22,7 +24,11 @@ export const getEmployeeCertifications = async (req, res) => {
         const certifications = await EmployeeCertification.findAll({
             where: { employee_id: req.params.employeeId }
         });
-        res.status(200).json(certifications);
+        const certsWithUrls = certifications.map(cert => ({
+            ...cert.toJSON(),
+            file_url: cert.file_url
+        }));
+        res.status(200).json(certsWithUrls);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch certifications', details: error.message });
     }
@@ -68,41 +74,7 @@ export const getCertificationDownloadUrl = async (req, res) => {
             return res.status(404).json({ error: 'Certification file not found' });
         }
 
-        const urlParts = certification.file_path.split('/');
-        const uploadIndex = urlParts.indexOf('upload');
-        if (uploadIndex === -1) throw new Error('Invalid Cloudinary URL');
-
-        const resourceType = urlParts[uploadIndex - 1] || 'image';
-
-        let filePathParts = urlParts.slice(uploadIndex + 1);
-
-        if (filePathParts[0].startsWith('v') && !isNaN(filePathParts[0].substring(1))) {
-            filePathParts.shift();
-        }
-
-        const fullPath = filePathParts.join('/');
-        const lastDotIndex = fullPath.lastIndexOf('.');
-        const extension = lastDotIndex !== -1 ? fullPath.substring(lastDotIndex + 1) : null;
-
-        let publicId = fullPath;
-        let options = {
-            secure: true,
-            sign_url: true,
-            resource_type: resourceType,
-            type: 'upload',
-            flags: 'attachment',
-            attachment: `${certification.certification_name.replace(/\s+/g, '_')}_certificate`
-        };
-
-        if (resourceType === 'image' || resourceType === 'video') {
-            if (lastDotIndex !== -1) {
-                publicId = fullPath.substring(0, lastDotIndex);
-                options.format = extension;
-            }
-        }
-
-        const downloadUrl = cloudinary.url(publicId, options);
-        res.status(200).json({ download_url: downloadUrl });
+        res.status(200).json({ download_url: certification.file_url });
     } catch (error) {
         res.status(500).json({ error: 'Failed to generate download URL', details: error.message });
     }

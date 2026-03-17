@@ -103,9 +103,9 @@ const Navbar = () => {
                                 </div>
                             </div>
                             <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-black shadow-lg shadow-blue-500/30 border-2 border-white/10 overflow-hidden">
-                                {user?.profile_picture ? (
+                                {user?.profile_picture_url ? (
                                     <img
-                                        src={user.profile_picture.startsWith('http') ? user.profile_picture.replace('http://', 'https://') : user.profile_picture}
+                                        src={user.profile_picture_url}
                                         alt="Avatar"
                                         className="w-full h-full object-cover"
                                         onError={(e) => {

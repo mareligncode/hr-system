@@ -37,10 +37,10 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-            "img-src": ["'self'", "data:", "res.cloudinary.com"],
-            "connect-src": ["'self'", "res.cloudinary.com"],
-            "frame-src": ["'self'", "res.cloudinary.com"],
-            "object-src": ["'self'", "res.cloudinary.com"],
+            "img-src": ["'self'", "data:", "http://localhost:5000", "https://*.cloudinary.com"], // Keep Cloudinary for old links if any, but add localhost
+            "connect-src": ["'self'"],
+            "frame-src": ["'self'"],
+            "object-src": ["'self'"],
         },
     },
     crossOriginEmbedderPolicy: false,

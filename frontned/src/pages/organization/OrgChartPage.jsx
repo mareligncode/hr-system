@@ -76,9 +76,9 @@ const OrgChartPage = () => {
                 {node.Manager && (
                     <div className="pt-4 border-t border-[var(--border-main)] flex flex-col items-center">
                         <div className="w-10 h-10 rounded-full bg-slate-800 border-2 border-blue-500/20 mb-2 overflow-hidden flex items-center justify-center text-[10px] font-bold text-white uppercase">
-                            {node.Manager.profile_picture ? (
+                            {node.Manager.profile_picture_url ? (
                                 <img
-                                    src={node.Manager.profile_picture.replace('http://', 'https://')}
+                                    src={node.Manager.profile_picture_url}
                                     alt=""
                                     className="w-full h-full object-cover"
                                 />
@@ -104,9 +104,9 @@ const OrgChartPage = () => {
                                     className="inline-block h-8 w-8 rounded-full ring-2 ring-[var(--bg-surface)] bg-slate-200 overflow-hidden cursor-help"
                                     title={`${emp.User.first_name} ${emp.User.last_name}`}
                                 >
-                                    {emp.User.profile_picture ? (
+                                    {emp.User.profile_picture_url ? (
                                         <img
-                                            src={emp.User.profile_picture.replace('http://', 'https://')}
+                                            src={emp.User.profile_picture_url}
                                             alt=""
                                             className="h-full w-full object-cover"
                                         />

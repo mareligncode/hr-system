@@ -8,8 +8,12 @@ const storage = multer.diskStorage({
         let folder = 'uploads';
 
         // Map fieldnames to subfolders
-        if (file.fieldname === 'resume' || file.fieldname === 'document') {
+        if (file.fieldname === 'resume') {
             folder = 'uploads/resumes';
+        } else if (file.fieldname === 'document') {
+            folder = 'uploads/documents';
+        } else if (file.fieldname === 'certification') {
+            folder = 'uploads/certifications';
         } else if (file.fieldname === 'profile_picture') {
             folder = 'uploads/profiles';
         }

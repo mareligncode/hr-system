@@ -113,6 +113,8 @@ export const login = async (req, res) => {
                     last_name: user.last_name,
                     status: user.status,
                     role: user.role,
+                    profile_picture: user.profile_picture,
+                    profile_picture_url: user.profile_picture_url,
                     permissions: Array.from(permissions),
                     employee_details: user.Employee ? {
                         id: user.Employee.id,
@@ -167,6 +169,7 @@ export const getProfile = async (req, res) => {
 
             const userData = user.toJSON();
             userData.permissions = Array.from(permissions);
+            userData.profile_picture_url = user.profile_picture_url;
             res.json(userData);
         } else {
             res.status(404).json({ message: 'User not found' });
@@ -206,7 +209,7 @@ export const updateProfile = async (req, res) => {
                 first_name: updatedUser.first_name,
                 last_name: updatedUser.last_name,
                 phone: updatedUser.phone,
-                profile_picture: updatedUser.profile_picture
+                profile_picture_url: updatedUser.profile_picture_url
             });
         } else {
             res.status(404).json({ message: 'User not found' });

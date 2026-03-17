@@ -14,6 +14,10 @@ const generateEmployeeNumber = async () => {
 
 export const getAllEmployees = async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 12; // 12 fits grid well
+        const offset = (page - 1) * limit;
+
         const { search, department_id, position_id, status } = req.query;
         const whereClause = {};
         const userWhere = {};
@@ -39,13 +43,13 @@ export const getAllEmployees = async (req, res) => {
             ];
         }
 
-        const employees = await Employee.findAll({
+        const { count, rows } = await Employee.findAndCountAll({
             where: whereClause,
             include: [
                 {
                     model: User,
                     where: Object.keys(userWhere).length > 0 ? userWhere : undefined,
-                    attributes: ['id', 'first_name', 'last_name', 'email', 'employee_id', 'profile_picture', 'role'],
+                    attributes: ['id', 'first_name', 'last_name', 'email', 'employee_id', 'profile_picture', 'profile_picture_url', 'role'],
                     include: [
                         {
                             model: Role,
@@ -58,11 +62,19 @@ export const getAllEmployees = async (req, res) => {
                 { model: Position, attributes: ['id', 'title', 'code', 'grade'] },
                 { model: User, as: 'Manager', attributes: ['id', 'first_name', 'last_name'] }
             ],
-            group: ['Employee.user_id'], // Ensure each employee appears only once
+            distinct: true, // Crucial for count when using includes
+            limit: limit,
+            offset: offset,
             order: [[User, 'first_name', 'ASC']]
         });
 
-        res.status(200).json(employees);
+        res.status(200).json({
+            employees: rows,
+            total: count,
+            page: page,
+            limit: limit,
+            totalPages: Math.ceil(count / limit)
+        });
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch employees', details: error.message });
     }
@@ -160,7 +172,10 @@ export const createEmployee = async (req, res) => {
             }
         }
 
-        res.status(201).json(employee);
+        res.status(201).json({
+            ...employee.toJSON(),
+            profile_picture_url: user.profile_picture_url
+        });
     } catch (error) {
         await t.rollback();
         console.error('Create Employee Error:', error);
@@ -219,7 +234,12 @@ export const updateEmployee = async (req, res) => {
         await logActivity(req.user.id, 'UPDATE', 'Employee', employee.user_id, oldValues, newValues, req);
 
         await t.commit();
-        res.status(200).json(employee);
+        // Return employee with virtual profile_picture_url from User model
+        const updatedUser = await User.findByPk(id);
+        res.status(200).json({
+            ...employee.toJSON(),
+            profile_picture_url: updatedUser.profile_picture_url
+        });
     } catch (error) {
         await t.rollback();
         console.error('Update Employee Error:', error);

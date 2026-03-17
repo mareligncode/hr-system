@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     User, Users, Mail, Phone, MapPin, Briefcase, Calendar, Building2,
     FileText, Award, ShieldCheck, Clock, Download,
-    Plus, Trash2, CheckCircle, AlertCircle, ExternalLink,
+    Plus, Trash2, CheckCircle, AlertCircle, ExternalLink, X,
     ChevronLeft, Edit, Upload, CheckCircle2, ArrowRightLeft, History
 } from 'lucide-react';
 import { fetchEmployeeById } from '../../store/employeeSlice';
@@ -221,11 +221,12 @@ const EmployeeProfile = () => {
         const formData = new FormData();
         formData.append('employee_id', id);
         Object.keys(certForm).forEach(key => {
-            if (certForm[key]) formData.append(key, certForm[key]);
+            if (key === 'file') {
+                if (certForm.file) formData.append('certification', certForm.file);
+            } else if (certForm[key]) {
+                formData.append(key, certForm[key]);
+            }
         });
-        if (certForm.file) {
-            formData.append('certification', certForm.file);
-        }
 
         try {
             await employeeService.createCertification(formData);
@@ -333,9 +334,9 @@ const EmployeeProfile = () => {
                         <div className="flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">
                             <div className="w-32 h-32 rounded-3xl bg-[var(--bg-surface)] p-1 border-4 border-[var(--bg-surface)] shadow-2xl relative">
                                 <div className="w-full h-full rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 flex items-center justify-center overflow-hidden">
-                                    {(emp.User?.profile_picture && !imgError) ? (
+                                    {(emp.User?.profile_picture_url && !imgError) ? (
                                         <img
-                                            src={emp.User.profile_picture.startsWith('http') ? emp.User.profile_picture.replace('http://', 'https://') : emp.User.profile_picture}
+                                            src={emp.User.profile_picture_url}
                                             alt=""
                                             className="w-full h-full object-cover"
                                             onError={() => setImgError(true)}
@@ -593,7 +594,7 @@ const EmployeeProfile = () => {
                                                     </div>
                                                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <a
-                                                            href={doc.file_path}
+                                                            href={doc.file_url}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="p-2 hover:bg-white rounded-lg transition-colors text-blue-500"
@@ -625,6 +626,76 @@ const EmployeeProfile = () => {
                                                     </span>
                                                     <span className="text-[var(--text-muted)]">
                                                         {new Date(doc.created_at).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'certifications' && (
+                            <motion.div
+                                key="certifications"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-6"
+                            >
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-xl font-bold">{t('certifications')}</h3>
+                                    {(hasPermission('manage_employees') || isOwnProfile) && (
+                                        <Button
+                                            onClick={() => setIsCertModalOpen(true)}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <Plus className="w-4 h-4" />
+                                            {t('addCertification')}
+                                        </Button>
+                                    )}
+                                </div>
+                                {certifications.length === 0 ? (
+                                    <div className="p-16 text-center border-2 border-dashed border-[var(--border-main)] rounded-3xl">
+                                        <Award className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-4" />
+                                        <p className="text-[var(--text-soft)]">{t('noCertificationsFound')}</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {certifications.map((cert) => (
+                                            <div key={cert.id} className="bg-[var(--bg-surface-soft)] p-6 rounded-2xl border border-[var(--border-main)] hover:border-indigo-500/50 transition-all group">
+                                                <div className="flex justify-between items-start mb-4">
+                                                    <div className="p-3 bg-indigo-500/10 rounded-xl text-indigo-500">
+                                                        <Award className="w-6 h-6" />
+                                                    </div>
+                                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        {cert.file_url && (
+                                                            <a
+                                                                href={cert.file_url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="p-2 hover:bg-white rounded-lg transition-colors text-indigo-500"
+                                                                title="View Certificate"
+                                                            >
+                                                                <ExternalLink className="w-4 h-4" />
+                                                            </a>
+                                                        )}
+                                                        <button
+                                                            onClick={() => handleDeleteCertification(cert.id)}
+                                                            className="p-2 hover:bg-rose-500/10 rounded-lg transition-colors text-rose-500"
+                                                            title="Delete Certification"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <h4 className="font-bold text-[var(--text-main)] truncate mb-1">{cert.certification_name}</h4>
+                                                <p className="text-xs text-[var(--text-soft)] mb-2">{cert.issuing_body}</p>
+                                                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest mt-4">
+                                                    <span className={cert.is_verified ? 'text-emerald-500' : 'text-amber-500'}>
+                                                        {cert.is_verified ? t('verified') : t('pending')}
+                                                    </span>
+                                                    <span className="text-[var(--text-muted)]">
+                                                        {new Date(cert.issue_date).toLocaleDateString()}
                                                     </span>
                                                 </div>
                                             </div>
@@ -735,6 +806,96 @@ const EmployeeProfile = () => {
                     </div>
                 )}
             </AnimatePresence>
+            {/* Certification Upload Modal */}
+            <AnimatePresence>
+                {isCertModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-[var(--bg-surface)] w-full max-w-lg rounded-3xl border border-[var(--border-main)] shadow-2xl overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="flex justify-between items-center p-6 border-b border-[var(--border-main)]">
+                                <h3 className="text-xl font-bold flex items-center gap-2">
+                                    <Award className="w-5 h-5 text-indigo-500" />
+                                    {t('addCertification')}
+                                </h3>
+                                <button
+                                    onClick={() => setIsCertModalOpen(false)}
+                                    className="p-2 hover:bg-[var(--bg-surface-soft)] rounded-full transition-colors"
+                                >
+                                    <X className="w-4 h-4" />
+                                    <span className="sr-only">Close</span>
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleCertUploadSubmit} className="p-6 space-y-4">
+                                {uploadError && <Alert type="error" message={uploadError} />}
+
+                                <Input
+                                    label={t('certificationName')}
+                                    value={certForm.certification_name}
+                                    onChange={(e) => setCertForm({ ...certForm, certification_name: e.target.value })}
+                                    required
+                                />
+
+                                <Input
+                                    label={t('issuingBody')}
+                                    value={certForm.issuing_body}
+                                    onChange={(e) => setCertForm({ ...certForm, issuing_body: e.target.value })}
+                                />
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Input
+                                        label={t('issueDate')}
+                                        type="date"
+                                        value={certForm.issue_date}
+                                        onChange={(e) => setCertForm({ ...certForm, issue_date: e.target.value })}
+                                        required
+                                    />
+                                    <Input
+                                        label={t('expiryDate')}
+                                        type="date"
+                                        value={certForm.expiry_date}
+                                        onChange={(e) => setCertForm({ ...certForm, expiry_date: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-sm font-medium text-[var(--text-soft)]">{t('certificateFile')}</label>
+                                    <input
+                                        type="file"
+                                        onChange={(e) => setCertForm({ ...certForm, file: e.target.files[0] })}
+                                        className="w-full text-sm text-[var(--text-soft)] file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/10 file:text-indigo-500 hover:file:bg-indigo-500/20 border border-[var(--border-input)] rounded-xl p-1"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="flex gap-3 pt-6 mt-6 border-t border-[var(--border-main)]">
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        onClick={() => setIsCertModalOpen(false)}
+                                        className="flex-1"
+                                    >
+                                        {t('cancel')}
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        loading={uploading}
+                                        className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+                                    >
+                                        {t('uploadCertification')}
+                                    </Button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             {/* Shift Swap Modal */}
             <AnimatePresence>
                 {isSwapModalOpen && (

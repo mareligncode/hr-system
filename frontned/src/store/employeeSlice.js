@@ -49,9 +49,18 @@ const employeeSlice = createSlice({
             })
             .addCase(fetchEmployees.fulfilled, (state, action) => {
                 state.loading = false;
-                // Backend currently returns a direct array, not { employees, total }
-                state.employees = Array.isArray(action.payload) ? action.payload : (action.payload.employees || []);
-                state.pagination.total = Array.isArray(action.payload) ? action.payload.length : (action.payload.total || 0);
+                if (action.payload && action.payload.employees) {
+                    state.employees = action.payload.employees;
+                    state.pagination = {
+                        total: action.payload.total,
+                        page: action.payload.page,
+                        limit: action.payload.limit,
+                        totalPages: action.payload.totalPages
+                    };
+                } else {
+                    state.employees = action.payload;
+                    state.pagination.total = action.payload.length;
+                }
             })
             .addCase(fetchEmployees.rejected, (state, action) => {
                 state.loading = false;

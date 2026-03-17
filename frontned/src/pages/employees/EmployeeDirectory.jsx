@@ -16,7 +16,7 @@ const UserAvatar = ({ src, size = "w-10 h-10", iconSize = "w-5 h-5" }) => {
         <div className={`${size} rounded-full bg-blue-500/10 flex items-center justify-center overflow-hidden border border-[var(--border-main)]`}>
             {src && !error ? (
                 <img
-                    src={src.replace('http://', 'https://')}
+                    src={src}
                     alt=""
                     className="w-full h-full object-cover"
                     onError={() => setError(true)}
@@ -39,30 +39,52 @@ const StatCard = ({ label, value, icon: Icon, color }) => (
         </div>
     </div>
 );
+
 const EmployeeDirectory = () => {
     const dispatch = useDispatch();
     const { t } = useSettings();
     const { hasPermission } = usePermission();
     const { employees, loading, error } = useSelector((state) => state.employees);
     const { departments } = useSelector((state) => state.organization);
+    const pagination = useSelector((state) => state.employees.pagination);
 
+    const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilter, setActiveFilter] = useState('all');
     const [selectedDept, setSelectedDept] = useState('');
-    const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [viewMode, setViewMode] = useState('grid');
 
     useEffect(() => {
-        dispatch(fetchEmployees());
-    }, [dispatch]);
+        const params = {
+            page: currentPage,
+            limit: itemsPerPage,
+            search: searchTerm,
+            status: activeFilter === 'all' ? '' : activeFilter,
+            department_id: selectedDept
+        };
+        dispatch(fetchEmployees(params));
+    }, [dispatch, currentPage, searchTerm, activeFilter, selectedDept, itemsPerPage]);
 
-    const filteredEmployees = employees.filter(emp => {
-        const matchesSearch = `${emp.User?.first_name} ${emp.User?.last_name} ${emp.employee_number}`
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase());
-        const matchesStatus = activeFilter === 'all' || emp.employment_status === activeFilter;
-        const matchesDept = !selectedDept || emp.department_id === parseInt(selectedDept);
-        return matchesSearch && matchesStatus && matchesDept;
-    });
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1); // Reset to page 1 on search
+    };
+
+    const handleFilterChange = (filter) => {
+        setActiveFilter(filter);
+        setCurrentPage(1); // Reset on filter
+    };
+
+    const handleDeptChange = (e) => {
+        setSelectedDept(e.target.value);
+        setCurrentPage(1); // Reset on dept change
+    };
+
+    const handleLimitChange = (e) => {
+        setItemsPerPage(parseInt(e.target.value));
+        setCurrentPage(1); // Reset to page 1 when limit changes
+    };
 
     const exportToCSV = async () => {
         try {
@@ -117,7 +139,7 @@ const EmployeeDirectory = () => {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard label={t('totalEmployees')} value={employees.length} icon={Users} color="blue" />
+                <StatCard label={t('totalEmployees')} value={pagination.total} icon={Users} color="blue" />
                 <StatCard label={t('activeStatus')} value={employees.filter(e => e.employment_status === 'active').length} icon={ShieldCheck} color="emerald" />
                 <StatCard label={t('departments')} value={new Set(employees.map(e => e.department_id)).size} icon={Building2} color="purple" />
                 <StatCard label={t('positions')} value={new Set(employees.map(e => e.position_id)).size} icon={Briefcase} color="amber" />
@@ -132,7 +154,7 @@ const EmployeeDirectory = () => {
                             type="text"
                             placeholder={t('searchEmployees')}
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={handleSearchChange}
                             className="w-full bg-[var(--bg-input)] border border-[var(--border-input)] rounded-2xl py-4 pl-12 pr-4 text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-medium"
                         />
                     </div>
@@ -142,7 +164,7 @@ const EmployeeDirectory = () => {
                             {['all', 'active', 'on_leave', 'terminated'].map((f) => (
                                 <button
                                     key={f}
-                                    onClick={() => setActiveFilter(f)}
+                                    onClick={() => handleFilterChange(f)}
                                     className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${activeFilter === f
                                         ? 'bg-white text-gray-900 shadow-lg'
                                         : 'text-[var(--text-soft)] hover:text-[var(--text-main)]'
@@ -155,7 +177,7 @@ const EmployeeDirectory = () => {
 
                         <select
                             value={selectedDept}
-                            onChange={(e) => setSelectedDept(e.target.value)}
+                            onChange={handleDeptChange}
                             className="bg-[var(--bg-input)] border border-[var(--border-input)] rounded-2xl py-4 px-6 text-sm font-bold text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none bg-no-repeat bg-[right_1.5rem_center]"
                             style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'currentColor\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\' /%3E%3C/svg%3E")', backgroundSize: '1.2rem' }}
                         >
@@ -194,7 +216,7 @@ const EmployeeDirectory = () => {
                 <div className="p-12 text-center bg-rose-500/5 border border-rose-500/20 rounded-2xl text-rose-500 font-medium">
                     {error}
                 </div>
-            ) : filteredEmployees.length === 0 ? (
+            ) : employees.length === 0 ? (
                 <div className="text-center py-20 bg-[var(--bg-surface)] rounded-3xl border border-[var(--border-main)]">
                     <div className="w-16 h-16 bg-[var(--bg-surface-soft)] rounded-2xl flex items-center justify-center text-[var(--text-muted)] mx-auto mb-4">
                         <Users className="w-8 h-8" />
@@ -208,7 +230,7 @@ const EmployeeDirectory = () => {
                     className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
                 >
                     <AnimatePresence>
-                        {filteredEmployees.map((emp) => (
+                        {employees.map((emp) => (
                             <EmployeeCard key={emp.user_id} employee={emp} />
                         ))}
                     </AnimatePresence>
@@ -227,11 +249,11 @@ const EmployeeDirectory = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[var(--border-main)]/50">
-                                {filteredEmployees.map((emp) => (
+                                {employees.map((emp) => (
                                     <tr key={emp.user_id} className="hover:bg-[var(--bg-surface-soft)]/30 transition-colors">
                                         <td className="p-4">
                                             <div className="flex items-center gap-3">
-                                                <UserAvatar src={emp.User?.profile_picture} />
+                                                <UserAvatar src={emp.User?.profile_picture_url} />
                                                 <div>
                                                     <h3 className="font-bold text-sm text-[var(--text-main)] group-hover:text-blue-500 transition-colors">{emp.User?.first_name} {emp.User?.last_name}</h3>
                                                     <p className="text-[10px] text-[var(--text-muted)] font-mono">{emp.employee_number}</p>
@@ -267,6 +289,78 @@ const EmployeeDirectory = () => {
                     </div>
                 </div>
             )}
+
+            {/* Pagination Controls */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mt-12 bg-[var(--bg-surface)] p-6 rounded-[2rem] border border-[var(--border-main)] shadow-sm">
+                <div className="flex items-center gap-3">
+                    <span className="text-sm font-bold text-[var(--text-soft)]">{t('rowsPerPage') || 'Rows per page'}:</span>
+                    <select
+                        value={itemsPerPage}
+                        onChange={handleLimitChange}
+                        className="bg-[var(--bg-surface-soft)] border border-[var(--border-main)] rounded-xl py-2 px-4 text-sm font-bold text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none bg-no-repeat bg-[right_1rem_center] pr-10"
+                        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'currentColor\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\' /%3E%3C/svg%3E")', backgroundSize: '1rem' }}
+                    >
+                        {[5, 10, 20, 50].map(val => (
+                            <option key={val} value={val}>{val}</option>
+                        ))}
+                    </select>
+                    <span className="text-xs font-medium text-[var(--text-muted)] ml-2">
+                        {t('showing') || 'Showing'} {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, pagination.total)} {t('of') || 'of'} {pagination.total}
+                    </span>
+                </div>
+
+                {pagination.totalPages > 1 && (
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="secondary"
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            className="px-4 py-2 text-xs font-bold"
+                        >
+                            {t('previous') || 'Previous'}
+                        </Button>
+
+                        <div className="hidden md:flex items-center gap-1">
+                            {[...Array(pagination.totalPages)].map((_, i) => {
+                                const pageNum = i + 1;
+                                if (
+                                    pageNum === 1 ||
+                                    pageNum === pagination.totalPages ||
+                                    (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+                                ) {
+                                    return (
+                                        <button
+                                            key={pageNum}
+                                            onClick={() => setCurrentPage(pageNum)}
+                                            className={`w-10 h-10 rounded-xl font-bold text-xs transition-all ${currentPage === pageNum
+                                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                                                    : 'text-[var(--text-soft)] hover:bg-[var(--bg-surface-soft)]'
+                                                }`}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    );
+                                } else if (
+                                    pageNum === currentPage - 2 ||
+                                    pageNum === currentPage + 2
+                                ) {
+                                    return <span key={pageNum} className="text-[var(--text-muted)] px-1">...</span>;
+                                }
+                                return null;
+                            })}
+                        </div>
+
+                        <Button
+                            variant="secondary"
+                            disabled={currentPage === pagination.totalPages}
+                            onClick={() => setCurrentPage(prev => prev + 1)}
+                            className="px-4 py-2 text-xs font-bold"
+                        >
+                            {t('next') || 'Next'}
+                        </Button>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

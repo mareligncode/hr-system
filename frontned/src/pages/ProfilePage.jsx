@@ -109,11 +109,11 @@ const ProfilePage = () => {
                     {/* Avatar */}
                     <div className="relative group mr-2">
                         <div className="w-24 h-24 bg-[var(--accent)] rounded-3xl flex items-center justify-center text-3xl font-bold text-white shadow-xl shadow-blue-900/40 shrink-0 overflow-hidden border-4 border-[var(--bg-surface)]">
-                            {user?.profile_picture ? (
+                            {user?.profile_picture_url ? (
                                 <img
-                                    src={user.profile_picture.replace('http://', 'https://')}
+                                    src={user.profile_picture_url}
+                                    alt=""
                                     className="w-full h-full object-cover"
-                                    alt="Avatar"
                                 />
                             ) : (
                                 `${user.first_name?.[0] || ''}${user.last_name?.[0] || ''}`.toUpperCase()

@@ -1,6 +1,7 @@
 import { EmployeeDocument, Employee } from '../models/index.js';
 import { logActivity } from '../services/auditService.js';
-import cloudinary from '../services/cloudinaryService.js';
+import path from 'path';
+import fs from 'fs';
 
 export const uploadDocument = async (req, res) => {
     try {
@@ -18,7 +19,7 @@ export const uploadDocument = async (req, res) => {
             employee_id,
             document_type,
             document_name: cleanDocumentName || 'unnamed_document',
-            file_path: req.file.path, // Full Cloudinary URL
+            file_path: req.file.path, // Local file path
             file_size: req.file.size,
             mime_type: req.file.mimetype,
             issue_date,
@@ -31,7 +32,10 @@ export const uploadDocument = async (req, res) => {
 
         await logActivity(req.user.id, 'UPLOAD', 'EmployeeDocument', document.id, null, document.toJSON(), req);
 
-        res.status(201).json(document);
+        res.status(201).json({
+            ...document.toJSON(),
+            file_url: document.file_url
+        });
     } catch (error) {
         res.status(500).json({ error: 'Failed to upload document', details: error.message });
     }
@@ -50,7 +54,11 @@ export const getEmployeeDocuments = async (req, res) => {
             where: { employee_id: employeeId },
             order: [['created_at', 'DESC']]
         });
-        res.status(200).json(documents);
+        const docsWithUrls = documents.map(doc => ({
+            ...doc.toJSON(),
+            file_url: doc.file_url
+        }));
+        res.status(200).json(docsWithUrls);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch documents', details: error.message });
     }
@@ -82,7 +90,6 @@ export const deleteDocument = async (req, res) => {
         const document = await EmployeeDocument.findByPk(req.params.id);
         if (!document) return res.status(404).json({ error: 'Document not found' });
 
-        // await cloudinary.uploader.destroy(public_id); // This line was in the instruction's snippet, but commented out and not part of the core logActivity change.
         const oldValues = document.toJSON();
         await document.destroy();
 
@@ -100,49 +107,7 @@ export const getDownloadUrl = async (req, res) => {
         const document = await EmployeeDocument.findByPk(req.params.id);
         if (!document) return res.status(404).json({ error: 'Document not found' });
 
-        const urlParts = document.file_path.split('/');
-        const uploadIndex = urlParts.indexOf('upload');
-
-        if (uploadIndex === -1) throw new Error('Invalid Cloudinary URL');
-
-        const resourceType = urlParts[uploadIndex - 1] || 'image';
-
-        // Extract everything after /upload/
-        let filePathParts = urlParts.slice(uploadIndex + 1);
-
-        // Skip version (v1234567)
-        if (filePathParts[0].startsWith('v') && !isNaN(filePathParts[0].substring(1))) {
-            filePathParts.shift();
-        }
-
-        const fullPath = filePathParts.join('/');
-        const lastDotIndex = fullPath.lastIndexOf('.');
-        const extension = lastDotIndex !== -1 ? fullPath.substring(lastDotIndex + 1) : null;
-
-        let publicId = fullPath;
-        let options = {
-            secure: true,
-            sign_url: true,
-            resource_type: resourceType,
-            type: 'upload',
-            flags: 'attachment',
-            attachment: document.document_name
-        };
-
-        // Cloudinary logic:
-        // 1. For 'raw' files, publicId MUST include the extension.
-        // 2. For 'image'/'video', the helper prefers publicId WITHOUT extension, 
-        //    with the extension passed as 'format'.
-
-        if (resourceType === 'image' || resourceType === 'video') {
-            if (lastDotIndex !== -1) {
-                publicId = fullPath.substring(0, lastDotIndex);
-                options.format = extension;
-            }
-        }
-
-        const downloadUrl = cloudinary.url(publicId, options);
-        res.status(200).json({ download_url: downloadUrl });
+        res.status(200).json({ download_url: document.file_url });
     } catch (error) {
         res.status(500).json({ error: 'Failed to generate download URL', details: error.message });
     }

@@ -67,6 +67,16 @@ const User = sequelize.define('User', {
     reset_code_expires_at: {
         type: DataTypes.DATE,
         allowNull: true
+    },
+    profile_picture_url: {
+        type: DataTypes.VIRTUAL,
+        get() {
+            const pic = this.getDataValue('profile_picture');
+            if (!pic) return null;
+            if (pic.startsWith('http')) return pic;
+            const baseUrl = process.env.API_URL || 'http://localhost:5000';
+            return `${baseUrl}/${pic.replace(/\\/g, '/')}`;
+        }
     }
 }, {
     tableName: 'users',
