@@ -24,21 +24,36 @@ const formatElapsed = (seconds) => {
 };
 
 /* ───────────────────────── GPS Status Badge ───────────────────────────── */
-const GpsBadge = ({ status, coords, address }) => {
+const GpsBadge = ({ status, coords, address, error, onRetry, isRetrying }) => {
+    const isError = status === 'unavailable' || status === 'denied' || status === 'insecure';
     const cfg = {
         locating: { color: 'text-amber-400', bg: 'bg-amber-400/10  border-amber-400/30', icon: <Loader2 className="w-3 h-3 animate-spin" />, label: 'Locating…' },
         acquired: { color: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/30', icon: <MapPin className="w-3 h-3" />, label: address || 'GPS Acquired' },
-        unavailable: { color: 'text-rose-400', bg: 'bg-rose-400/10    border-rose-400/30', icon: <WifiOff className="w-3 h-3" />, label: 'GPS Unavailable' },
+        denied: { color: 'text-rose-400', bg: 'bg-rose-400/10    border-rose-400/30', icon: <Shield className="w-3 h-3" />, label: 'Location Blocked' },
+        insecure: { color: 'text-rose-400', bg: 'bg-rose-400/10    border-rose-400/30', icon: <AlertCircle className="w-3 h-3" />, label: 'HTTP: GPS Disabled' },
+        unavailable: { color: 'text-rose-400', bg: 'bg-rose-400/10    border-rose-400/30', icon: <WifiOff className="w-3 h-3" />, label: error || 'GPS Unavailable' },
     }[status] ?? { color: 'text-slate-400', bg: 'bg-slate-400/10 border-slate-400/30', icon: <Wifi className="w-3 h-3" />, label: 'GPS' };
 
     return (
-        <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-widest ${cfg.color} ${cfg.bg}`}>
-            {cfg.icon}
-            <span className="max-w-[150px] truncate">{cfg.label}</span>
-            {status === 'acquired' && coords && !address && (
-                <span className="opacity-60 normal-case tracking-normal font-normal">
-                    {coords.lat.toFixed(3)}, {coords.lng.toFixed(3)}
-                </span>
+        <div className="flex items-center gap-2">
+            <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-bold uppercase tracking-widest ${cfg.color} ${cfg.bg} transition-all duration-300`}>
+                {cfg.icon}
+                <span className="max-w-[180px] truncate">{cfg.label}</span>
+                {status === 'acquired' && coords && !address && (
+                    <span className="opacity-60 normal-case tracking-normal font-normal">
+                        {coords.lat.toFixed(3)}, {coords.lng.toFixed(3)}
+                    </span>
+                )}
+            </div>
+            {isError && onRetry && (
+                <button
+                    onClick={onRetry}
+                    disabled={isRetrying}
+                    className="p-1.5 rounded-full bg-[var(--bg-surface-soft)] border border-[var(--border-main)] hover:text-blue-500 transition-colors"
+                    title="Retry GPS"
+                >
+                    <RotateCcw className={`w-3.5 h-3.5 ${isRetrying ? 'animate-spin' : ''}`} />
+                </button>
             )}
         </div>
     );
@@ -174,7 +189,7 @@ const WebcamModal = ({ onCapture, onClose }) => {
 };
 
 /* ──────────────────────── Confirmation Step ───────────────────────────── */
-const ConfirmStep = ({ type, selfie, coords, address, gpsStatus, onConfirm, onCancel, loading }) => (
+const ConfirmStep = ({ type, selfie, coords, address, gpsStatus, error, onConfirm, onCancel, loading }) => (
     <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -204,7 +219,7 @@ const ConfirmStep = ({ type, selfie, coords, address, gpsStatus, onConfirm, onCa
                 )}
 
                 <div className="space-y-2">
-                    <GpsBadge status={gpsStatus} coords={coords} address={address} />
+                    <GpsBadge status={gpsStatus} coords={coords} address={address} error={error} onRetry={onConfirm} isRetrying={loading} />
                     {!window.isSecureContext && window.location.hostname !== 'localhost' && (
                         <p className="text-[10px] text-rose-500 font-bold px-1 bg-rose-500/10 py-1 rounded-lg">
                             ⚠️ Insecure context detected (HTTP). Geolocation requires HTTPS or localhost.
@@ -280,6 +295,7 @@ const AttendanceDashboard = () => {
     const [gpsStatus, setGpsStatus] = useState('locating');
     const [coords, setCoords] = useState(null);
     const [address, setAddress] = useState(null);
+    const [gpsErrorMsg, setGpsErrorMsg] = useState(null);
 
     /* ── Reverse Geocoding ── */
     const fetchAddress = async (lat, lng) => {
@@ -297,47 +313,83 @@ const AttendanceDashboard = () => {
     };
 
     /* ── GPS ── */
-    useEffect(() => {
-        if (!navigator.geolocation) { setGpsStatus('unavailable'); return; }
-        setGpsStatus('locating');
+    const [retryCount, setRetryCount] = useState(0);
 
+    useEffect(() => {
+        // Check for insecure context (HTTP on IP address)
+        if (!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            setGpsStatus('insecure');
+            setGpsErrorMsg('HTTPS Required');
+            return;
+        }
+
+        if (!navigator.geolocation) {
+            setGpsStatus('unavailable');
+            setGpsErrorMsg('Not Supported');
+            return;
+        }
+
+        let watchId = null;
         let geocodingTriggered = false;
 
-        const onGpsError = (err) => {
-            console.error('GPS Error:', err);
-            // If high accuracy failed or timed out, try again with low accuracy
-            if (err.code === 3 || err.code === 1) {
-                setGpsStatus('unavailable');
-            } else {
-                setGpsStatus('unavailable');
-            }
+        const startWatching = (highAccuracy = true) => {
+            setGpsStatus('locating');
+
+            const options = {
+                enableHighAccuracy: highAccuracy,
+                timeout: highAccuracy ? 8000 : 20000,
+                maximumAge: 30000
+            };
+
+            watchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    const newCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    if (newCoords.lat === 0 && newCoords.lng === 0) return;
+
+                    setGpsStatus('acquired');
+                    setCoords(newCoords);
+                    setGpsErrorMsg(null);
+
+                    if (!geocodingTriggered) {
+                        fetchAddress(newCoords.lat, newCoords.lng);
+                        geocodingTriggered = true;
+                    }
+                },
+                (err) => {
+                    console.error(`GPS (${highAccuracy ? 'High' : 'Low'} Accuracy) Error:`, err);
+
+                    if (err.code === 1) { // PERMISSION_DENIED
+                        setGpsStatus('denied');
+                        setGpsErrorMsg('Permission Denied');
+                        return;
+                    }
+
+                    if (highAccuracy) {
+                        // If high accuracy fails or times out, try low accuracy
+                        console.log('Switching to low accuracy GPS...');
+                        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+                        startWatching(false);
+                    } else {
+                        setGpsStatus('unavailable');
+                        setGpsErrorMsg(err.code === 3 ? 'Timeout' : 'Signal Lost');
+                    }
+                },
+                options
+            );
         };
 
-        const options = {
-            enableHighAccuracy: true, // Try high accuracy first
-            timeout: 10000,
-            maximumAge: 60000
+        startWatching(true);
+
+        return () => {
+            if (watchId !== null) navigator.geolocation.clearWatch(watchId);
         };
+    }, [retryCount]);
 
-        const id = navigator.geolocation.watchPosition(
-            (pos) => {
-                const newCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                // Filter out obviously wrong data (like 0,0)
-                if (newCoords.lat === 0 && newCoords.lng === 0) return;
-
-                setGpsStatus('acquired');
-                setCoords(newCoords);
-
-                if (!geocodingTriggered) {
-                    fetchAddress(newCoords.lat, newCoords.lng);
-                    geocodingTriggered = true;
-                }
-            },
-            onGpsError,
-            options
-        );
-        return () => navigator.geolocation.clearWatch(id);
-    }, []);
+    const handleGpsRetry = () => {
+        setGpsStatus('locating');
+        setGpsErrorMsg(null);
+        setRetryCount(prev => prev + 1);
+    };
 
     /* ── Data fetch ── */
     const fetchData = useCallback(async () => {
@@ -441,8 +493,41 @@ const AttendanceDashboard = () => {
                         <h1 className="text-3xl font-black tracking-tight mb-1 uppercase">{t('attendance')}</h1>
                         <p className="text-[var(--text-soft)]">{format(now, 'EEEE, MMMM do')}</p>
                     </div>
-                    <GpsBadge status={gpsStatus} coords={coords} address={address} />
+                    <GpsBadge
+                        status={gpsStatus}
+                        coords={coords}
+                        address={address}
+                        error={gpsErrorMsg}
+                        onRetry={handleGpsRetry}
+                        isRetrying={gpsStatus === 'locating'}
+                    />
                 </div>
+
+                {gpsStatus === 'denied' && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex flex-col sm:flex-row items-center justify-between gap-4"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-xl bg-rose-500/20 text-rose-500">
+                                <Shield className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-black uppercase tracking-tight text-rose-500">Enable Location Access</p>
+                                <p className="text-xs text-[var(--text-soft)] mt-0.5">Please click the **Lock Icon** 🔒 in your address bar and set **Location** to **"Allow"**, then click Retry.</p>
+                            </div>
+                        </div>
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            className="bg-rose-500 hover:bg-rose-600 rounded-xl"
+                            onClick={handleGpsRetry}
+                        >
+                            <RotateCcw className="w-4 h-4 mr-2" /> Retry
+                        </Button>
+                    </motion.div>
+                )}
 
                 {error && <Alert type="error" message={error} onClose={() => setError(null)} />}
                 {success && <Alert type="success" message={success} onClose={() => setSuccess(null)} />}
@@ -518,9 +603,9 @@ const AttendanceDashboard = () => {
 
                                 {/* GPS & Camera indicators */}
                                 <div className="mt-6 flex items-center justify-center gap-4 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
-                                    <div className={`flex items-center gap-1.5 ${gpsStatus === 'acquired' ? 'text-emerald-500' : gpsStatus === 'locating' ? 'text-amber-500' : 'text-rose-500'}`}>
+                                    <div className={`flex items-center gap-1.5 ${gpsStatus === 'acquired' ? 'text-emerald-500' : (gpsStatus === 'locating' ? 'text-amber-500' : 'text-rose-500')}`}>
                                         <MapPin className="w-3.5 h-3.5" />
-                                        <span className="max-w-[80px] truncate">{address || (gpsStatus === 'acquired' ? 'GPS Ready' : gpsStatus === 'locating' ? 'Locating…' : 'No GPS')}</span>
+                                        <span className="max-w-[80px] truncate">{address || (gpsStatus === 'acquired' ? 'GPS Ready' : (gpsStatus === 'locating' ? 'Locating…' : (gpsErrorMsg || 'No GPS')))}</span>
                                     </div>
                                     <div className="flex items-center gap-1.5 text-blue-400">
                                         <Camera className="w-3.5 h-3.5" />
@@ -680,6 +765,7 @@ const AttendanceDashboard = () => {
                         coords={coords}
                         address={address}
                         gpsStatus={gpsStatus}
+                        error={gpsErrorMsg}
                         onConfirm={handleConfirm}
                         onCancel={() => { setShowConfirm(false); setCapturedSelfie(null); setPendingType(null); }}
                         loading={actionLoading}
