@@ -4,7 +4,7 @@ import {
     Clock, MapPin, Camera, CheckCircle2, XCircle,
     AlertCircle, Calendar, History, Download,
     Wifi, WifiOff, Loader2, X, RotateCcw, Check,
-    TrendingUp, Zap, Shield
+    TrendingUp, Zap, Shield, MessageSquare
 } from 'lucide-react';
 import { format } from 'date-fns';
 import attendanceService from '../../services/attendanceService';
@@ -710,6 +710,12 @@ const AttendanceDashboard = () => {
                                                             <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-3">
                                                                 <span>IN: {format(new Date(row.clock_in), 'hh:mm a')}</span>
                                                                 {row.clock_out && <><span>→</span><span>OUT: {format(new Date(row.clock_out), 'hh:mm a')}</span></>}
+                                                                {row.location_in && (
+                                                                    <span className="flex items-center gap-1 text-blue-500 normal-case lowercase tracking-normal">
+                                                                        <MapPin className="w-2 h-2" />
+                                                                        {typeof row.location_in === 'object' ? row.location_in.address : row.location_in}
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -740,6 +746,17 @@ const AttendanceDashboard = () => {
                                                         </div>
                                                     </div>
                                                 </div>
+
+                                                {row.admin_comment && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, height: 0 }}
+                                                        animate={{ opacity: 1, height: 'auto' }}
+                                                        className="mt-3 flex items-start gap-2 text-[10px] text-blue-400 bg-blue-400/5 p-2 rounded-xl border border-blue-400/10 italic"
+                                                    >
+                                                        <MessageSquare className="w-3 h-3 mt-0.5 shrink-0" />
+                                                        <p>Admin Feedback: "{row.admin_comment}"</p>
+                                                    </motion.div>
+                                                )}
                                             </motion.div>
                                         );
                                     })

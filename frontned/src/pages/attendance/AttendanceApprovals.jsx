@@ -8,7 +8,8 @@ import {
     MessageSquare,
     User as UserIcon,
     Calendar as CalendarIcon,
-    ArrowRight
+    ArrowRight,
+    MapPin
 } from 'lucide-react';
 import attendanceService from '../../services/attendanceService';
 import { toast } from 'react-hot-toast';
@@ -155,6 +156,21 @@ const AttendanceApprovals = () => {
                                                 </div>
                                             </div>
 
+                                            {corr.Attendance?.location_in && (
+                                                <div className="flex items-center gap-2 text-xs text-blue-600 bg-blue-50 p-2 rounded-lg border border-blue-100">
+                                                    <MapPin className="h-3.5 w-3.5" />
+                                                    <span className="font-medium">Location: {typeof corr.Attendance.location_in === 'object' ? (corr.Attendance.location_in.address || `${corr.Attendance.location_in.lat?.toFixed(4) || '???'}, ${corr.Attendance.location_in.lng?.toFixed(4) || '???'}`) : corr.Attendance.location_in}</span>
+                                                    <a
+                                                        href={`https://www.google.com/maps?q=${typeof corr.Attendance.location_in === 'object' ? `${corr.Attendance.location_in.lat},${corr.Attendance.location_in.lng}` : corr.Attendance.location_in}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="ml-auto underline hover:text-blue-800"
+                                                    >
+                                                        View Map
+                                                    </a>
+                                                </div>
+                                            )}
+
                                             <div className="flex items-start gap-2 text-sm text-gray-600 p-2 border-l-4 border-yellow-400 bg-yellow-50 rounded">
                                                 <MessageSquare className="h-4 w-4 mt-0.5 text-yellow-600 shrink-0" />
                                                 <p className="italic">"{corr.reason}"</p>
@@ -242,6 +258,21 @@ const AttendanceApprovals = () => {
                                                     Total Worked: <span className="text-blue-600">{att.work_hours} hrs</span>
                                                     {att.overtime_hours > 0 && <span className="ml-2 text-orange-600">(+{att.overtime_hours} OT)</span>}
                                                 </div>
+
+                                                {att.location_in && (
+                                                    <div className="col-span-2 flex items-center gap-2 text-xs text-blue-600 bg-blue-50 p-2 rounded-lg border border-blue-100 mt-1">
+                                                        <MapPin className="h-3.5 w-3.5" />
+                                                        <span className="font-medium">Location: {typeof att.location_in === 'object' ? (att.location_in.address || `${att.location_in.lat?.toFixed(4) || '???'}, ${att.location_in.lng?.toFixed(4) || '???'}`) : att.location_in}</span>
+                                                        <a
+                                                            href={`https://www.google.com/maps?q=${typeof att.location_in === 'object' ? `${att.location_in.lat},${att.location_in.lng}` : att.location_in}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="ml-auto underline hover:text-blue-800"
+                                                        >
+                                                            View Map
+                                                        </a>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 

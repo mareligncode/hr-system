@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
     Users, Calendar, CheckCircle, XCircle,
-    ArrowRight, Search, Filter, Download, Clock
+    ArrowRight, Search, Filter, Download, Clock, MapPin
 } from 'lucide-react';
 import { format } from 'date-fns';
 import attendanceService from '../../services/attendanceService';
@@ -103,6 +103,7 @@ const TeamAttendance = () => {
                                 <th className="p-6 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('clockIn')}</th>
                                 <th className="p-6 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('clockOut')}</th>
                                 <th className="p-6 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('hoursWorked')}</th>
+                                <th className="p-6 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">Location</th>
                                 <th className="p-6 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('status')}</th>
                                 <th className="p-6 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] text-right">{t('actions')}</th>
                             </tr>
@@ -168,6 +169,23 @@ const TeamAttendance = () => {
                                         </td>
                                         <td className="p-6">
                                             <span className="text-sm font-black text-[var(--text-main)]">{row.work_hours || 0} HRS</span>
+                                        </td>
+                                        <td className="p-6">
+                                            {row.location_in ? (
+                                                <div className="flex items-center gap-2">
+                                                    <MapPin className="w-3.5 h-3.5 text-blue-500" />
+                                                    <a
+                                                        href={`https://www.google.com/maps?q=${typeof row.location_in === 'object' ? `${row.location_in.lat},${row.location_in.lng}` : row.location_in}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-[10px] font-bold text-blue-500 underline uppercase tracking-tighter"
+                                                    >
+                                                        {typeof row.location_in === 'object' ? (row.location_in.address || `${row.location_in.lat?.toFixed(2)},${row.location_in.lng?.toFixed(2)}`) : 'MAP'}
+                                                    </a>
+                                                </div>
+                                            ) : (
+                                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">N/A</span>
+                                            )}
                                         </td>
                                         <td className="p-6">
                                             <div className={`inline-flex px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${row.status === 'approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :

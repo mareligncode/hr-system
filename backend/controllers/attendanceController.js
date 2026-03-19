@@ -206,7 +206,11 @@ export const approveAttendance = async (req, res) => {
         const attendance = await Attendance.findByPk(id);
         if (!attendance) return res.status(404).json({ error: 'Record not found' });
 
-        await attendance.update({ status, verified_by: req.user.id });
+        await attendance.update({
+            status,
+            verified_by: req.user.id,
+            admin_comment: comment || null
+        });
 
         if (comment) {
             await AttendanceCorrection.update(
@@ -270,7 +274,8 @@ export const approveCorrection = async (req, res) => {
                     clock_in: correction.requested_clock_in || sequelize.col('clock_in'),
                     clock_out: correction.requested_clock_out || sequelize.col('clock_out'),
                     status: 'approved',
-                    verified_by: req.user.id
+                    verified_by: req.user.id,
+                    admin_comment: correction.manager_comment || null
                 },
                 { where: { id: correction.attendance_id } }
             );

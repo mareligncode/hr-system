@@ -65,6 +65,10 @@ const Attendance = sequelize.define('Attendance', {
             model: 'users',
             key: 'id'
         }
+    },
+    admin_comment: {
+        type: DataTypes.TEXT,
+        allowNull: true
     }
 }, {
     tableName: 'attendance',
