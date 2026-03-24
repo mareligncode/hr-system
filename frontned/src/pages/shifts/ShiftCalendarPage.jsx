@@ -82,7 +82,8 @@ const ShiftCalendarPage = () => {
     const fetchEmployees = async () => {
         try {
             const data = await employeeService.getEmployees();
-            setEmployees(data);
+            // Handle both flat array and paginated object structures
+            setEmployees(data.employees || data);
         } catch (error) {
             console.error('Failed to load employees');
         }

@@ -60,7 +60,7 @@ const ShiftTemplatesPage = () => {
     const fetchEmployees = async () => {
         try {
             const data = await employeeService.getEmployees();
-            setEmployees(data);
+            setEmployees(data.employees || data);
         } catch (error) {
             console.error(t('failedToLoadEmployees'));
         }

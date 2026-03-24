@@ -65,7 +65,7 @@ const ShiftRotationsPage = () => {
             setRotations(rotRes.data);
             setShiftTypes(typesRes.data);
             setDepartments(deptsRes);
-            setEmployees(empRes);
+            setEmployees(empRes.employees || empRes);
         } catch (error) {
             toast.error(t('failedToLoadData'));
         } finally {

@@ -34,7 +34,8 @@ const MyShiftsPage = () => {
     const fetchColleagues = async () => {
         try {
             // Fetch employees in the same department
-            const employees = await employeeService.getEmployees();
+            const data = await employeeService.getEmployees();
+            const employees = data.employees || data;
             // Filter out the current user
             setColleagues(employees.filter(e => e.user_id !== user.id));
         } catch (error) {
