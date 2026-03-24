@@ -203,14 +203,40 @@ export const updateProfile = async (req, res) => {
             }
 
             const updatedUser = await user.save();
-            res.json({
-                id: updatedUser.id,
-                email: updatedUser.email,
-                first_name: updatedUser.first_name,
-                last_name: updatedUser.last_name,
-                phone: updatedUser.phone,
-                profile_picture_url: updatedUser.profile_picture_url
+
+            // Also update linked Employee record if it exists
+            const employee = await Employee.findOne({ where: { user_id: req.user.id } });
+            if (employee) {
+                // List of fields that belong to the Employee model and are allowed to be updated by the user
+                const allowedEmployeeFields = [
+                    'date_of_birth', 'gender', 'marital_status', 'nationality',
+                    'id_number', 'id_type', 'id_expiry_date',
+                    'bank_name', 'bank_account_number', 'bank_account_name', 'bank_iban', 'bank_swift',
+                    'tax_id', 'social_security_number',
+                    'address_line1', 'address_line2', 'city', 'state', 'postal_code', 'country',
+                    'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relation',
+                    'work_email', 'work_phone', 'office_location'
+                ];
+
+                const employeeUpdateData = {};
+                allowedEmployeeFields.forEach(field => {
+                    if (req.body[field] !== undefined) {
+                        employeeUpdateData[field] = req.body[field] === '' ? null : req.body[field];
+                    }
+                });
+
+                if (Object.keys(employeeUpdateData).length > 0) {
+                    await employee.update(employeeUpdateData);
+                }
+            }
+
+            // Refetch user with associations to return complete data
+            const finalUser = await User.findByPk(user.id, {
+                attributes: { exclude: ['password_hash'] },
+                include: [{ model: Employee }]
             });
+
+            res.json(finalUser);
         } else {
             res.status(404).json({ message: 'User not found' });
         }

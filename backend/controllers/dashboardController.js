@@ -1,4 +1,4 @@
-import { Employee, Department, Position, EmployeeDocument, EmployeeCertification, User, AuditLog } from '../models/index.js';
+import { Employee, Department, Position, EmployeeDocument, EmployeeCertification, User, AuditLog, Attendance, PayrollItem, PayrollPeriod } from '../models/index.js';
 import { Op } from 'sequelize';
 
 export const getDashboardStats = async (req, res) => {
@@ -17,11 +17,9 @@ export const getDashboardStats = async (req, res) => {
         const totalEmployees = await Employee.count({ where: whereClause });
         const totalDepartments = managerDeptId ? 1 : await Department.count();
 
-        // Filter positions by department if manager
         const positionWhere = managerDeptId ? { department_id: managerDeptId } : {};
         const totalPositions = await Position.count({ where: positionWhere });
 
-        // Count active certifications (scoped if manager)
         const activeCertifications = await EmployeeCertification.count({
             where: {
                 expiry_date: { [Op.gt]: new Date() }
@@ -33,7 +31,6 @@ export const getDashboardStats = async (req, res) => {
             }] : []
         });
 
-        // Get counts by department (only own department if manager)
         const deptStatsWhere = managerDeptId ? { id: managerDeptId } : {};
         const deptStats = await Department.findAll({
             where: deptStatsWhere,
@@ -52,6 +49,56 @@ export const getDashboardStats = async (req, res) => {
             group: ['contract_type']
         });
 
+        // ─── Time Series Data for Charts ───────────────────────────────────────────
+
+        // 1. Attendance Trends (Last 4 Weeks)
+        const fourWeeksAgo = new Date();
+        fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+        const attendanceTrends = await Attendance.findAll({
+            where: {
+                clock_in: { [Op.gte]: fourWeeksAgo },
+                status: 'approved'
+            },
+            attributes: [
+                [Employee.sequelize.fn('DATE_FORMAT', Employee.sequelize.col('clock_in'), '%Y-%u'), 'week'],
+                [Employee.sequelize.fn('COUNT', Employee.sequelize.col('id')), 'count'],
+                [Employee.sequelize.fn('SUM', Employee.sequelize.col('work_hours')), 'total_hours']
+            ],
+            group: [Employee.sequelize.fn('DATE_FORMAT', Employee.sequelize.col('clock_in'), '%Y-%u')],
+            order: [[Employee.sequelize.fn('DATE_FORMAT', Employee.sequelize.col('clock_in'), '%Y-%u'), 'ASC']]
+        });
+
+        // 2. Payroll Trends (Last 6 Months)
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        const payrollTrends = await PayrollPeriod.findAll({
+            where: {
+                end_date: { [Op.gte]: sixMonthsAgo },
+                status: 'approved'
+            },
+            attributes: ['end_date', 'description'],
+            include: [{
+                model: PayrollItem,
+                attributes: [[Employee.sequelize.fn('SUM', Employee.sequelize.col('gross_pay')), 'total_payroll']],
+            }],
+            group: ['PayrollPeriod.id'],
+            order: [['end_date', 'ASC']]
+        });
+
+        // 3. Employee Growth (Last 6 Months)
+        // This is a bit more complex as we need cumulative count, but we can return monthly hires
+        const employeeGrowth = await Employee.findAll({
+            where: {
+                hire_date: { [Op.gte]: sixMonthsAgo }
+            },
+            attributes: [
+                [Employee.sequelize.fn('DATE_FORMAT', Employee.sequelize.col('hire_date'), '%Y-%m'), 'month'],
+                [Employee.sequelize.fn('COUNT', Employee.sequelize.col('user_id')), 'hires']
+            ],
+            group: [Employee.sequelize.fn('DATE_FORMAT', Employee.sequelize.col('hire_date'), '%Y-%m')],
+            order: [[Employee.sequelize.fn('DATE_FORMAT', Employee.sequelize.col('hire_date'), '%Y-%m'), 'ASC']]
+        });
+
         res.status(200).json({
             metrics: {
                 totalEmployees,
@@ -61,6 +108,9 @@ export const getDashboardStats = async (req, res) => {
             },
             departmentDistribution: deptStats,
             contractDistribution: contractStats,
+            attendanceTrends,
+            payrollTrends,
+            employeeGrowth,
             isScoped: !!managerDeptId
         });
     } catch (error) {

@@ -10,7 +10,13 @@ import {
 import { format } from 'date-fns';
 import dashboardService from '../../services/dashboardService';
 import { useSettings } from '../../context/SettingsContext';
+import {
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+    AreaChart, Area, PieChart, Pie, Cell
+} from 'recharts';
 import Button from '../../components/ui/Button';
+
+const COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4'];
 
 const Dashboard = () => {
     const { t } = useSettings();
@@ -49,6 +55,15 @@ const Dashboard = () => {
                 }
 
                 const [empData, statsData, expiringData, activityData] = await Promise.all(promises);
+
+                // Flatten complex chart data if needed
+                if (statsData?.payrollTrends) {
+                    statsData.payrollTrends = statsData.payrollTrends.map(item => ({
+                        ...item,
+                        total_payroll: item.PayrollItems?.[0]?.total_payroll || 0
+                    }));
+                }
+
                 setEmployeeData(empData);
                 setStats(statsData);
                 setExpiring(expiringData || { documents: [], certifications: [] });
@@ -262,6 +277,53 @@ const Dashboard = () => {
                     </div>
                 </div>
             )}
+            {/* Role-Based Quick Actions */}
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <Button
+                    variant="outline"
+                    className="flex flex-col items-center gap-2 p-6 rounded-3xl border-[var(--border-main)] hover:bg-blue-500/5 hover:border-blue-500/30 group"
+                    onClick={() => navigate('/attendance/my')}
+                >
+                    <Clock className="w-6 h-6 text-blue-500 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">{t('clockInOut')}</span>
+                </Button>
+                {['admin', 'hr'].includes(user?.role) && (
+                    <Button
+                        variant="outline"
+                        className="flex flex-col items-center gap-2 p-6 rounded-3xl border-[var(--border-main)] hover:bg-purple-500/5 hover:border-purple-500/30 group"
+                        onClick={() => navigate('/employees/add')}
+                    >
+                        <Users className="w-6 h-6 text-purple-500 group-hover:scale-110 transition-transform" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">{t('addEmployee')}</span>
+                    </Button>
+                )}
+                {['admin', 'finance'].includes(user?.role) && (
+                    <Button
+                        variant="outline"
+                        className="flex flex-col items-center gap-2 p-6 rounded-3xl border-[var(--border-main)] hover:bg-emerald-500/5 hover:border-emerald-500/30 group"
+                        onClick={() => navigate('/payroll/periods')}
+                    >
+                        <FileText className="w-6 h-6 text-emerald-500 group-hover:scale-110 transition-transform" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">{t('processPayroll')}</span>
+                    </Button>
+                )}
+                <Button
+                    variant="outline"
+                    className="flex flex-col items-center gap-2 p-6 rounded-3xl border-[var(--border-main)] hover:bg-amber-500/5 hover:border-amber-500/30 group"
+                    onClick={() => navigate('/leave/request')}
+                >
+                    <Calendar className="w-6 h-6 text-amber-500 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">{t('requestLeave')}</span>
+                </Button>
+                <Button
+                    variant="outline"
+                    className="flex flex-col items-center gap-2 p-6 rounded-3xl border-[var(--border-main)] hover:bg-rose-500/5 hover:border-rose-500/30 group"
+                    onClick={() => navigate('/notifications')}
+                >
+                    <Activity className="w-6 h-6 text-rose-500 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] font-black uppercase tracking-widest">{t('viewActivity')}</span>
+                </Button>
+            </div>
 
             {/* Content for Admins/Managers only */}
             {!isEmployee && (
@@ -292,25 +354,112 @@ const Dashboard = () => {
                         </div>
                     )}
 
-                    {/* Workforce Composition - Scoped for management/finance */}
-                    {['admin', 'hr', 'finance'].includes(user?.role) && stats?.contractDistribution && (
-                        <div className="bg-[var(--bg-surface)] p-8 rounded-[2.5rem] border border-[var(--border-main)] shadow-sm overflow-hidden">
-                            <div className="flex items-center gap-3 mb-8">
-                                <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-600">
-                                    <Users className="w-5 h-5" />
-                                </div>
-                                <h2 className="text-xl font-bold">{t('workforceComposition')}</h2>
-                            </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                                {stats.contractDistribution.map((item, idx) => (
-                                    <div key={idx} className="p-4 bg-[var(--bg-surface-soft)] rounded-2xl border border-[var(--border-main)]/50">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-1">{item.contract_type || t('unspecified')}</p>
-                                        <p className="text-2xl font-black text-[var(--text-main)]">{item.count}</p>
-                                    </div>
-                                ))}
+                    {/* Advanced Analytics Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Workforce Composition Chart */}
+                        <div className="bg-[var(--bg-surface)] p-8 rounded-[2.5rem] border border-[var(--border-main)] shadow-sm">
+                            <h2 className="text-xl font-bold mb-8 flex items-center gap-3">
+                                <Users className="w-5 h-5 text-blue-500" />
+                                {t('departmentDistribution')}
+                            </h2>
+                            <div className="h-[300px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={stats?.departmentDistribution || []}
+                                            dataKey="employee_count"
+                                            nameKey="name"
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={60}
+                                            outerRadius={100}
+                                            paddingAngle={5}
+                                        >
+                                            {(stats?.departmentDistribution || []).map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-main)', borderRadius: '1rem' }}
+                                        />
+                                        <Legend verticalAlign="bottom" height={36} />
+                                    </PieChart>
+                                </ResponsiveContainer>
                             </div>
                         </div>
-                    )}
+
+                        {/* Attendance Trends Chart */}
+                        <div className="bg-[var(--bg-surface)] p-8 rounded-[2.5rem] border border-[var(--border-main)] shadow-sm">
+                            <h2 className="text-xl font-bold mb-8 flex items-center gap-3">
+                                <Activity className="w-5 h-5 text-emerald-500" />
+                                {t('attendancePulse')}
+                            </h2>
+                            <div className="h-[300px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={stats?.attendanceTrends || []}>
+                                        <defs>
+                                            <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-main)" />
+                                        <XAxis dataKey="week" stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
+                                        <YAxis stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-main)', borderRadius: '1rem' }}
+                                        />
+                                        <Area type="monotone" dataKey="total_hours" stroke="#10b981" fillOpacity={1} fill="url(#colorHours)" strokeWidth={3} />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        {/* Payroll Trends Chart - only for finance/admin */}
+                        {['admin', 'finance'].includes(user?.role) && (
+                            <div className="bg-[var(--bg-surface)] p-8 rounded-[2.5rem] border border-[var(--border-main)] shadow-sm">
+                                <h2 className="text-xl font-bold mb-8 flex items-center gap-3">
+                                    <FileText className="w-5 h-5 text-purple-500" />
+                                    {t('payrollFlow')}
+                                </h2>
+                                <div className="h-[300px] w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={stats?.payrollTrends || []}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-main)" />
+                                            <XAxis dataKey="description" stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
+                                            <YAxis stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
+                                            <Tooltip
+                                                cursor={{ fill: 'rgba(139, 92, 246, 0.05)' }}
+                                                contentStyle={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-main)', borderRadius: '1rem' }}
+                                            />
+                                            <Bar dataKey="total_payroll" fill="#8b5cf6" radius={[6, 6, 0, 0]} barSize={40} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Employee Growth Chart */}
+                        <div className="bg-[var(--bg-surface)] p-8 rounded-[2.5rem] border border-[var(--border-main)] shadow-sm">
+                            <h2 className="text-xl font-bold mb-8 flex items-center gap-3">
+                                <Building2 className="w-5 h-5 text-amber-500" />
+                                {t('workforceGrowth')}
+                            </h2>
+                            <div className="h-[300px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={stats?.employeeGrowth || []}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-main)" />
+                                        <XAxis dataKey="month" stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
+                                        <YAxis stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-main)', borderRadius: '1rem' }}
+                                        />
+                                        <Bar dataKey="hires" fill="#f59e0b" radius={[6, 6, 0, 0]} barSize={40} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    </div>
 
                     {(canSeeAlerts || canSeeStats) && (
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
