@@ -190,8 +190,35 @@ export const getFinanceDashboard = async (req, res) => {
             where: { status: 'approved' }
         });
 
-        const currentPayroll = lastPeriod ? await PayrollItem.sum('gross_pay', { where: { payroll_period_id: lastPeriod.id } }) : 0;
-        const totalOT = lastPeriod ? await PayrollItem.sum('overtime_hours', { where: { payroll_period_id: lastPeriod.id } }) : 0;
+        let metrics = {
+            currentPayroll: 0,
+            totalOT: 0,
+            netPay: 0,
+            laborCostRatio: "28%", // Requires company revenue model
+            totalDeductions: 0,
+            pendingPeriods: 0
+        };
+
+        if (lastPeriod) {
+            const results = await PayrollItem.findOne({
+                attributes: [
+                    [sequelize.fn('SUM', sequelize.col('gross_pay')), 'totalGross'],
+                    [sequelize.fn('SUM', sequelize.col('net_pay')), 'totalNet'],
+                    [sequelize.fn('SUM', sequelize.col('overtime_hours')), 'totalOT']
+                ],
+                where: { payroll_period_id: lastPeriod.id }
+            });
+
+            metrics.currentPayroll = parseFloat(results.get('totalGross') || 0);
+            metrics.netPay = parseFloat(results.get('totalNet') || 0);
+            metrics.totalOT = parseFloat(results.get('totalOT') || 0);
+            metrics.totalDeductions = metrics.currentPayroll - metrics.netPay;
+        }
+
+        // Count pending tasks
+        metrics.pendingPeriods = await PayrollPeriod.count({
+            where: { status: { [Op.not]: 'approved' } }
+        });
 
         const laborCostByDeptRaw = await PayrollItem.findAll({
             attributes: [
@@ -209,11 +236,10 @@ export const getFinanceDashboard = async (req, res) => {
                         attributes: []
                     }]
                 }]
-            }, {
-                model: PayrollPeriod,
-                attributes: [],
-                where: { status: 'approved' }
             }],
+            where: {
+                payroll_period_id: lastPeriod ? lastPeriod.id : { [Op.is]: null }
+            },
             group: ['User->Employee->Department.id', 'User->Employee->Department.name'],
             raw: true
         });
@@ -223,23 +249,68 @@ export const getFinanceDashboard = async (req, res) => {
             cost: parseFloat(item.totalCost || 0)
         }));
 
-        res.status(200).json({
-            metrics: {
-                currentPayroll,
-                totalOT,
-                netPay: currentPayroll * 0.85, // Simple estimate
-                laborCostRatio: "28%"
-            },
-            laborCostByDept,
-            payrollHistory: [
-                { period: 'Oct', amount: 45000 },
-                { period: 'Nov', amount: 48000 },
-                { period: 'Dec', amount: 52000 },
-                { period: 'Jan', amount: 47000 },
-                { period: 'Feb', amount: 46000 },
-                { period: 'Mar', amount: 49000 }
-            ]
+        // Dynamic History
+        const historyPeriods = await PayrollPeriod.findAll({
+            limit: 6,
+            order: [['end_date', 'DESC']],
+            where: { status: 'approved' }
         });
+
+        const payrollHistoryRaw = await PayrollItem.findAll({
+            attributes: [
+                [sequelize.col('PayrollPeriod.end_date'), 'periodDate'],
+                [sequelize.fn('SUM', sequelize.col('gross_pay')), 'totalAmount']
+            ],
+            include: [{
+                model: PayrollPeriod,
+                attributes: [],
+                where: { id: { [Op.in]: historyPeriods.map(p => p.id) } }
+            }],
+            group: ['PayrollPeriod.id', 'PayrollPeriod.end_date'],
+            order: [[sequelize.col('PayrollPeriod.end_date'), 'ASC']],
+            raw: true
+        });
+
+        const payrollHistory = payrollHistoryRaw.map(item => ({
+            period: new Date(item.periodDate).toLocaleString('default', { month: 'short' }),
+            amount: parseFloat(item.totalAmount || 0)
+        }));
+
+        // Top Overtime Depts
+        const topOTDeptsRaw = await PayrollItem.findAll({
+            attributes: [
+                [sequelize.col('User->Employee->Department.name'), 'name'],
+                [sequelize.fn('SUM', sequelize.col('overtime_hours')), 'hours']
+            ],
+            include: [{
+                model: User,
+                attributes: [],
+                include: [{
+                    model: Employee,
+                    attributes: [],
+                    include: [{ model: Department, attributes: [] }]
+                }]
+            }],
+            where: {
+                payroll_period_id: lastPeriod ? lastPeriod.id : { [Op.is]: null },
+                overtime_hours: { [Op.gt]: 0 }
+            },
+            group: ['User->Employee->Department.id', 'User->Employee->Department.name'],
+            order: [[sequelize.fn('SUM', sequelize.col('overtime_hours')), 'DESC']],
+            limit: 5,
+            raw: true
+        });
+
+        res.status(200).json({
+            metrics,
+            laborCostByDept,
+            payrollHistory,
+            topOTDepts: topOTDeptsRaw.map(d => ({
+                name: d.name || 'Unknown',
+                hours: parseFloat(d.hours || 0)
+            }))
+        });
+
     } catch (error) {
         console.error('Finance Dashboard Error:', error);
         res.status(500).json({ error: 'Failed to fetch Finance dashboard' });
