@@ -95,8 +95,8 @@ const DashboardLayout = () => {
             icon: <Users className="w-5 h-5" />,
             items: [
                 { path: '/employees', label: t('employees'), icon: <Users className="w-4 h-4" />, permission: 'view_employees' },
-                { path: '/departments', label: t('departments'), icon: <Building2 className="w-4 h-4" /> },
-                { path: '/positions', label: t('positions'), icon: <Briefcase className="w-4 h-4" /> },
+                { path: '/departments', label: t('departments'), icon: <Building2 className="w-4 h-4" />, roles: ['admin', 'hr', 'manager'] },
+                { path: '/positions', label: t('positions'), icon: <Briefcase className="w-4 h-4" />, roles: ['admin', 'hr', 'manager'] },
                 { path: '/org-chart', label: t('orgChart'), icon: <Network className="w-4 h-4" />, permission: 'view_employees' },
             ]
         },
