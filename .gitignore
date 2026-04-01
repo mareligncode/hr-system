@@ -1,2 +1,4 @@
 image.png
 phase.md
+docker-compose stop
+docker-compose up -d
