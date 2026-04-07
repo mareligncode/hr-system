@@ -1,10 +1,47 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { motion, AnimatePresence } from 'framer-motion';
+import r2unisonImg from '../assets/images/r2unison.webp';
+
+const slides = [
+    {
+        image: r2unisonImg,
+        accent: "Precision in Staff Harmony",
+        title: <>Experience <span className="text-lp-secondary-fixed-dim">Institutional Unison</span> in HR</>,
+        description: "The global benchmark for human capital management. Orchestrate your entire hospitality workforce with elite precision and 5-star digital infrastructure.",
+        cta1: "Get Started",
+        cta2: "Explore Features"
+    },
+    {
+        image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAX3AQ6xsQ-pib0GVHEjma9OJRR4wIl8s_awnvJmuvi0aOftcc8euTgEO_wFsFuMfKezr668DmtgIpF9afeqi2gJYCS0XFBB9ZrTVEvynkz3WA2jajJEe3uNiRQQ_EFxKZ-5-4fM3UYfOxA-7I2V_Qj12o02xVfX2WngTlJMppRhgFnQbKvgGAXhfrg497TYn0sdA-f9Pdobstpvd8ElBZR12JTD0BZHYPyCLa2b7Xy8wOw3O96d45QtO33uYEw6mSHr278hK16QMo",
+        accent: "Excellence in Hospitality HR",
+        title: <>Elevate Your Hotel Workforce with <span className="text-lp-secondary-fixed-dim">World-Class HR</span></>,
+        description: "Seamless management, global standards, and unparalleled efficiency for the hospitality industry. Crafted for the world's most prestigious hotels.",
+        cta1: "Sign In",
+        cta2: "View Demo"
+    },
+    {
+        image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCG5I0lR5xWfowi3vyCB_hJ-_VG5mUdHV9chEY1WJie3sN8RajeX7t3wszyBGhjIO8KkX1q591iKVOKoClgA7DpvjRh1-Sw68qJefY_C61GyhvlqE6AJUVSy8hZnxK9v4cg5dkHtGcSxFLh5YoYysLsYgLNedQMAooGS94dimxjxDFC70jsot2jK5hXDj1tLDxWVXBTzrZA-ZaHZRZOZOnlAuHa2w8PXlontM88VVPo8Q_VvEu6bbx2VV8uVzrG2wpgNv4b-F-NnwQ",
+        accent: "Advanced Talent Management",
+        title: <>Sophisticated <span className="text-lp-secondary-fixed-dim">Talent Analytics</span> & Performance</>,
+        description: "Gain deep insights into your staff potential with AI-driven KPIs tailored for high-touch luxury service environments. Operational excellence refined.",
+        cta1: "Demo Now",
+        cta2: "View Stories"
+    }
+];
 
 const LandingPage = () => {
     const navigate = useNavigate();
     const { isAuthenticated } = useSelector((state) => state.auth);
+    const [currentSlide, setCurrentSlide] = useState(0);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentSlide((prev) => (prev + 1) % slides.length);
+        }, 5000);
+        return () => clearInterval(timer);
+    }, []);
 
     return (
         <div className="bg-lp-surface text-lp-on-surface font-body selection:bg-lp-secondary-container selection:text-lp-on-secondary-container min-h-screen">
@@ -50,53 +87,97 @@ const LandingPage = () => {
 
             {/* Hero Section */}
             <header className="relative min-h-screen flex items-center overflow-hidden">
-                <div className="absolute inset-0 z-0">
-                    <img
-                        className="w-full h-full object-cover brightness-[0.3]"
-                        alt="luxury hotel lobby"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAX3AQ6xsQ-pib0GVHEjma9OJRR4wIl8s_awnvJmuvi0aOftcc8euTgEO_wFsFuMfKezr668DmtgIpF9afeqi2gJYCS0XFBB9ZrTVEvynkz3WA2jajJEe3uNiRQQ_EFxKZ-5-4fM3UYfOxA-7I2V_Qj12o02xVfX2WngTlJMppRhgFnQbKvgGAXhfrg497TYn0sdA-f9Pdobstpvd8ElBZR12JTD0BZHYPyCLa2b7Xy8wOw3O96d45QtO33uYEw6mSHr278hK16QMo"
-                    />
-                </div>
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={currentSlide}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 1 }}
+                        className="absolute inset-0 z-0"
+                    >
+                        <motion.img
+                            initial={{ scale: 1.1 }}
+                            animate={{ scale: 1 }}
+                            transition={{ duration: 3, ease: "easeOut" }}
+                            className="w-full h-full object-cover brightness-[0.3]"
+                            alt="luxury hotel"
+                            src={slides[currentSlide].image}
+                        />
+                    </motion.div>
+                </AnimatePresence>
+
                 {/* Glassmorphism Overlay Content */}
                 <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 pt-20">
-                    <div className="max-w-3xl">
-                        <div className="flex items-center space-x-4 mb-6">
-                            <span className="h-[1px] w-12 bg-lp-secondary"></span>
-                            <span className="text-lp-secondary font-label tracking-[0.3em] uppercase text-xs">Excellence in Hospitality HR</span>
-                        </div>
-                        <h1 className="text-5xl md:text-7xl font-headline font-extrabold text-white leading-tight mb-8">
-                            Elevate Your Hotel Workforce with <span className="text-lp-secondary-fixed-dim">World-Class HR</span>
-                        </h1>
-                        <p className="text-xl md:text-2xl font-light text-white/80 mb-12 leading-relaxed">
-                            Seamless management, global standards, and unparalleled efficiency for the hospitality industry. Crafted for the world's most prestigious hotels.
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-6">
-                            <button
-                                onClick={() => navigate(isAuthenticated ? '/dashboard' : '/register')}
-                                className="hero-gradient text-lp-on-primary px-10 py-5 rounded-xl font-bold tracking-widest uppercase shadow-2xl hover:scale-105 transition-transform"
-                            >
-                                {isAuthenticated ? 'Go to Dashboard' : 'Get Started'}
-                            </button>
-                            <button className="border border-white/20 backdrop-blur-md text-white px-10 py-5 rounded-xl font-bold tracking-widest uppercase hover:bg-white/10 transition-all">
-                                Explore Features
-                            </button>
-                        </div>
-                    </div>
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={currentSlide}
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -30 }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                            className="max-w-3xl"
+                        >
+                            <div className="flex items-center space-x-4 mb-6">
+                                <span className="h-[1px] w-12 bg-lp-secondary"></span>
+                                <span className="text-lp-secondary font-label tracking-[0.3em] uppercase text-xs">
+                                    {slides[currentSlide].accent}
+                                </span>
+                            </div>
+                            <h1 className="text-5xl md:text-7xl font-headline font-extrabold text-white leading-tight mb-8">
+                                {slides[currentSlide].title}
+                            </h1>
+                            <p className="text-xl md:text-2xl font-light text-white/80 mb-12 leading-relaxed">
+                                {slides[currentSlide].description}
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-6">
+                                <button
+                                    onClick={() => navigate(isAuthenticated ? '/dashboard' : '/register')}
+                                    className="hero-gradient text-lp-on-primary px-10 py-5 rounded-xl font-bold tracking-widest uppercase shadow-2xl hover:scale-105 transition-transform"
+                                >
+                                    {isAuthenticated ? 'Go to Dashboard' : slides[currentSlide].cta1}
+                                </button>
+                                <button className="border border-white/20 backdrop-blur-md text-white px-10 py-5 rounded-xl font-bold tracking-widest uppercase hover:bg-white/10 transition-all">
+                                    {slides[currentSlide].cta2}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </AnimatePresence>
                 </div>
-                {/* Floating Elements */}
+                {/* Floating Elements (Constant) */}
                 <div className="absolute right-20 bottom-20 hidden lg:block">
-                    <div className="glass-panel p-8 rounded-2xl shadow-2xl border-t-2 border-lp-secondary/20 max-w-xs transform rotate-3">
+                    <motion.div
+                        animate={{ y: [0, -10, 0] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                        className="glass-panel p-8 rounded-2xl shadow-2xl border-t-2 border-lp-secondary/20 max-w-xs transform rotate-3"
+                    >
                         <div className="flex items-center mb-4">
                             <span className="material-symbols-outlined text-lp-secondary mr-3" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                             <span className="text-lp-primary font-bold text-sm">Top-Rated Global HR 2024</span>
                         </div>
                         <p className="text-lp-on-surface-variant text-sm leading-relaxed">Trusted by 5-star establishments to manage over 100,000 global staff members daily.</p>
-                    </div>
+                    </motion.div>
+                </div>
+                {/* Dots Indicator */}
+                <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 flex space-x-3 z-20">
+                    {slides.map((_, i) => (
+                        <div
+                            key={i}
+                            className={`w-2 h-2 rounded-full transition-all duration-300 ${i === currentSlide ? 'bg-lp-secondary w-6' : 'bg-white/30'}`}
+                        />
+                    ))}
                 </div>
             </header>
 
             {/* Features Section (Bento Grid) */}
-            <section id="features" className="py-32 px-6 md:px-12 bg-lp-surface">
+            <motion.section
+                id="features"
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.8 }}
+                className="py-32 px-6 md:px-12 bg-lp-surface"
+            >
                 <div className="max-w-7xl mx-auto">
                     <div className="mb-20 text-center md:text-left flex flex-col md:flex-row justify-between items-end gap-8">
                         <div className="max-w-2xl">
@@ -105,46 +186,88 @@ const LandingPage = () => {
                         </div>
                         <div className="text-lp-secondary font-bold tracking-tighter text-6xl opacity-10">01 / FEATURES</div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {/* Large Feature Card */}
-                        <div className="md:col-span-2 group relative overflow-hidden rounded-2xl bg-lp-surface-container-lowest p-12 shadow-sm border-t-2 border-lp-secondary/10 transition-all hover:shadow-xl">
+                    <motion.div
+                        initial="hidden"
+                        whileInView="show"
+                        viewport={{ once: true }}
+                        variants={{
+                            hidden: { opacity: 0 },
+                            show: {
+                                opacity: 1,
+                                transition: {
+                                    staggerChildren: 0.2
+                                }
+                            }
+                        }}
+                        className="grid grid-cols-1 md:grid-cols-3 gap-8"
+                    >
+                        <motion.div
+                            variants={{ hidden: { opacity: 0, scale: 0.95 }, show: { opacity: 1, scale: 1 } }}
+                            className="md:col-span-2 group relative overflow-hidden rounded-2xl bg-lp-surface-container-lowest p-12 shadow-sm border-t-2 border-lp-secondary/10 transition-all hover:shadow-xl"
+                        >
                             <div className="relative z-10">
-                                <span className="material-symbols-outlined text-4xl text-lp-secondary mb-6">rocket_launch</span>
-                                <h3 className="text-2xl font-headline font-bold text-lp-primary mb-4">Employee Onboarding</h3>
-                                <p className="text-lp-on-surface-variant leading-relaxed max-w-md">Streamline the entry of elite talent with a bespoke onboarding experience that reflects your brand's prestige from day one.</p>
+                                <span className="material-symbols-outlined text-4xl text-lp-secondary mb-6">diversity_3</span>
+                                <h3 className="text-2xl font-headline font-bold text-lp-primary mb-4">Elite Staff Unison</h3>
+                                <p className="text-lp-on-surface-variant leading-relaxed max-w-md">Orchestrate your hospitality teams with surgical precision. Our Unison engine ensures every department moves in perfect harmony toward guest delight.</p>
                             </div>
-                            <div className="absolute bottom-0 right-0 w-64 h-64 opacity-5 group-hover:opacity-10 transition-opacity">
-                                <span className="material-symbols-outlined text-[12rem]">person_add</span>
+                            <div className="absolute bottom-0 right-0 w-full h-full pointer-events-none opacity-[0.03] group-hover:opacity-[0.08] transition-all duration-700">
+                                <img
+                                    className="w-full h-full object-cover grayscale scale-110 group-hover:scale-100 transition-transform duration-1000"
+                                    src={r2unisonImg}
+                                    alt="Staff Unison"
+                                />
                             </div>
-                        </div>
+                            <div className="absolute top-10 right-10 opacity-20 transform -rotate-12 group-hover:rotate-0 transition-transform">
+                                <span className="material-symbols-outlined text-8xl text-lp-secondary">hands_clapping</span>
+                            </div>
+                        </motion.div>
                         {/* Small Feature Card */}
-                        <div className="group bg-lp-tertiary-container p-12 rounded-2xl transition-all hover:scale-[1.02]">
+                        <motion.div
+                            variants={{ hidden: { opacity: 0, scale: 0.95 }, show: { opacity: 1, scale: 1 } }}
+                            className="group bg-lp-tertiary-container p-12 rounded-2xl transition-all hover:scale-[1.02]"
+                        >
                             <span className="material-symbols-outlined text-4xl text-lp-secondary-fixed-dim mb-6">query_stats</span>
                             <h3 className="text-2xl font-headline font-bold text-white mb-4">Performance Analytics</h3>
                             <p className="text-lp-tertiary-fixed-dim leading-relaxed">Deep insights into staff performance using AI-driven KPIs tailored for high-touch service environments.</p>
-                        </div>
+                        </motion.div>
                         {/* Three Bottom Cards */}
-                        <div className="group bg-lp-surface-container-lowest p-10 rounded-2xl border-t-2 border-lp-secondary/5 shadow-sm hover:shadow-lg transition-all">
+                        <motion.div
+                            variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
+                            className="group bg-lp-surface-container-lowest p-10 rounded-2xl border-t-2 border-lp-secondary/5 shadow-sm hover:shadow-lg transition-all"
+                        >
                             <span className="material-symbols-outlined text-3xl text-lp-secondary mb-6">schedule</span>
                             <h3 className="text-xl font-headline font-bold text-lp-primary mb-3">Staff Scheduling</h3>
                             <p className="text-lp-on-surface-variant text-sm">Dynamic shift management optimized for occupancy rates and seasonal fluctuations.</p>
-                        </div>
-                        <div className="group bg-lp-surface-container-lowest p-10 rounded-2xl border-t-2 border-lp-secondary/5 shadow-sm hover:shadow-lg transition-all">
+                        </motion.div>
+                        <motion.div
+                            variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
+                            className="group bg-lp-surface-container-lowest p-10 rounded-2xl border-t-2 border-lp-secondary/5 shadow-sm hover:shadow-lg transition-all"
+                        >
                             <span className="material-symbols-outlined text-3xl text-lp-secondary mb-6">payments</span>
                             <h3 className="text-xl font-headline font-bold text-lp-primary mb-3">Payroll Automation</h3>
                             <p className="text-lp-on-surface-variant text-sm">Multi-currency, tax-compliant payroll processing across international borders.</p>
-                        </div>
-                        <div className="group bg-lp-surface-container-lowest p-10 rounded-2xl border-t-2 border-lp-secondary/5 shadow-sm hover:shadow-lg transition-all">
+                        </motion.div>
+                        <motion.div
+                            variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
+                            className="group bg-lp-surface-container-lowest p-10 rounded-2xl border-t-2 border-lp-secondary/5 shadow-sm hover:shadow-lg transition-all"
+                        >
                             <span className="material-symbols-outlined text-3xl text-lp-secondary mb-6">verified_user</span>
                             <h3 className="text-xl font-headline font-bold text-lp-primary mb-3">Compliance Management</h3>
                             <p className="text-lp-on-surface-variant text-sm">Automated legal tracking ensuring global labor laws and safety standards are met.</p>
-                        </div>
-                    </div>
+                        </motion.div>
+                    </motion.div>
                 </div>
-            </section>
+            </motion.section>
 
             {/* Why Choose Us / Stats Section */}
-            <section id="why-us" className="bg-lp-primary text-white py-32 overflow-hidden relative">
+            <motion.section
+                id="why-us"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1 }}
+                className="bg-lp-primary text-white py-32 overflow-hidden relative"
+            >
                 <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none">
                     <div className="absolute top-20 right-[-10%] w-[800px] h-[800px] border-[1px] border-lp-secondary rounded-full"></div>
                     <div className="absolute top-40 right-[-5%] w-[600px] h-[600px] border-[1px] border-lp-secondary rounded-full"></div>
@@ -152,26 +275,41 @@ const LandingPage = () => {
                 <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
                         <div className="order-2 lg:order-1">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                                <div className="bg-white/5 backdrop-blur-lg p-10 rounded-2xl">
+                            <motion.div
+                                initial="hidden"
+                                whileInView="show"
+                                viewport={{ once: true }}
+                                variants={{
+                                    hidden: { opacity: 0 },
+                                    show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+                                }}
+                                className="grid grid-cols-1 sm:grid-cols-2 gap-8"
+                            >
+                                <motion.div variants={{ hidden: { opacity: 0, scale: 0.8 }, show: { opacity: 1, scale: 1 } }} className="bg-white/5 backdrop-blur-lg p-10 rounded-2xl">
                                     <div className="text-5xl font-headline font-extrabold text-lp-secondary-fixed-dim mb-2">500+</div>
                                     <div className="text-sm font-label tracking-widest uppercase opacity-60">Hotels Integrated Globally</div>
-                                </div>
-                                <div className="bg-white/5 backdrop-blur-lg p-10 rounded-2xl mt-12">
+                                </motion.div>
+                                <motion.div variants={{ hidden: { opacity: 0, scale: 0.8 }, show: { opacity: 1, scale: 1 } }} className="bg-white/5 backdrop-blur-lg p-10 rounded-2xl mt-12">
                                     <div className="text-5xl font-headline font-extrabold text-lp-secondary-fixed-dim mb-2">99%</div>
                                     <div className="text-sm font-label tracking-widest uppercase opacity-60">Staff Satisfaction</div>
-                                </div>
-                                <div className="bg-white/5 backdrop-blur-lg p-10 rounded-2xl -mt-12">
+                                </motion.div>
+                                <motion.div variants={{ hidden: { opacity: 0, scale: 0.8 }, show: { opacity: 1, scale: 1 } }} className="bg-white/5 backdrop-blur-lg p-10 rounded-2xl -mt-12">
                                     <div className="text-5xl font-headline font-extrabold text-lp-secondary-fixed-dim mb-2">24h</div>
                                     <div className="text-sm font-label tracking-widest uppercase opacity-60">Concierge Support</div>
-                                </div>
-                                <div className="bg-white/5 backdrop-blur-lg p-10 rounded-2xl">
+                                </motion.div>
+                                <motion.div variants={{ hidden: { opacity: 0, scale: 0.8 }, show: { opacity: 1, scale: 1 } }} className="bg-white/5 backdrop-blur-lg p-10 rounded-2xl">
                                     <div className="text-5xl font-headline font-extrabold text-lp-secondary-fixed-dim mb-2">12M+</div>
                                     <div className="text-sm font-label tracking-widest uppercase opacity-60">Shifts Managed</div>
-                                </div>
-                            </div>
+                                </motion.div>
+                            </motion.div>
                         </div>
-                        <div className="order-1 lg:order-2">
+                        <motion.div
+                            initial={{ opacity: 0, x: 50 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.8 }}
+                            className="order-1 lg:order-2"
+                        >
                             <h2 className="text-4xl md:text-6xl font-headline font-bold mb-8 leading-tight">Sophistication at <span className="text-lp-secondary-fixed-dim italic">Scale</span></h2>
                             <p className="text-xl text-lp-primary-fixed-dim font-light leading-relaxed mb-10">
                                 Luxury hospitality requires a different level of attention. Our system isn't just software; it's a digital infrastructure built on the philosophy of white-glove service. We empower your management to focus on guests, while we automate the administrative complexities.
@@ -186,13 +324,20 @@ const LandingPage = () => {
                                     <span className="text-lg">Seamless PMS & ERP Integration</span>
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
                     </div>
                 </div>
-            </section>
+            </motion.section>
 
             {/* Testimonials Section */}
-            <section id="stories" className="py-32 px-6 md:px-12 bg-lp-surface-container-low">
+            <motion.section
+                id="stories"
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+                className="py-32 px-6 md:px-12 bg-lp-surface-container-low"
+            >
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-20">
                         <h2 className="text-4xl md:text-5xl font-headline font-bold text-lp-primary mb-4">Voices of Leadership</h2>
@@ -220,7 +365,14 @@ const LandingPage = () => {
                                 img: "https://lh3.googleusercontent.com/aida-public/AB6AXuDNNurUOEOvPVSaD6NXRMkxFCxIo6birTn-U1HpzTunUxR3jFDh99NustXzPXj_8WDAza9fg3ckUWYz8Fk11-vKAuYPV19DdHQkPN8N18JFGiyTvOnhhGVu_0Yh3CQonyrK3Mb7BgdYl_HbYPt41X-Sxnwv-gumomE0_8hHpg0m61y02Ps_uGdKNLIavXWEUpUfJHJye8xjP7d0_zTdaIj-okulw9YLlPnn1Q5A-uoxzpZwtXtWLqZspECcrnl3twd8YhIdaPCMt4c"
                             }
                         ].map((t, i) => (
-                            <div key={i} className="bg-lp-surface-container-lowest p-12 rounded-2xl shadow-sm border-t-4 border-lp-secondary transition-all hover:shadow-2xl">
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.1 }}
+                                viewport={{ once: true }}
+                                className="bg-lp-surface-container-lowest p-12 rounded-2xl shadow-sm border-t-4 border-lp-secondary transition-all hover:shadow-2xl"
+                            >
                                 <div className="flex text-lp-secondary-container mb-6">
                                     {[...Array(5)].map((_, j) => (
                                         <span key={j} className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
@@ -234,14 +386,20 @@ const LandingPage = () => {
                                         <p className="text-xs font-label uppercase tracking-widest text-lp-secondary">{t.role}</p>
                                     </div>
                                 </div>
-                            </div>
+                            </motion.div>
                         ))}
                     </div>
                 </div>
-            </section>
+            </motion.section>
 
             {/* CTA / Contact Section */}
-            <section className="py-32 px-6 md:px-12 relative overflow-hidden">
+            <motion.section
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1 }}
+                className="py-32 px-6 md:px-12 relative overflow-hidden"
+            >
                 <div className="absolute inset-0 z-0">
                     <img
                         className="w-full h-full object-cover brightness-95"
@@ -250,7 +408,13 @@ const LandingPage = () => {
                     />
                 </div>
                 <div className="relative z-10 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-20">
-                    <div className="lg:w-1/2">
+                    <motion.div
+                        initial={{ opacity: 0, x: -50 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8 }}
+                        className="lg:w-1/2"
+                    >
                         <h2 className="text-5xl md:text-6xl font-headline font-bold text-lp-primary mb-8 leading-tight">Ready for a <span className="text-lp-secondary">New Standard?</span></h2>
                         <p className="text-xl text-lp-on-surface-variant font-light leading-relaxed mb-12">
                             Join the ranks of the world's finest hotels. Schedule a private demonstration with our senior consultants and discover the future of human capital.
@@ -263,8 +427,14 @@ const LandingPage = () => {
                             </div>
                             <p className="text-sm font-bold text-lp-primary uppercase tracking-widest">Join 500+ Luxury Partners</p>
                         </div>
-                    </div>
-                    <div className="lg:w-1/2 w-full">
+                    </motion.div>
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8 }}
+                        className="lg:w-1/2 w-full"
+                    >
                         <div className="glass-panel p-8 md:p-12 rounded-2xl shadow-2xl border border-white/50">
                             <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
                                 <div className="gold-border-focus transition-all">
@@ -284,9 +454,9 @@ const LandingPage = () => {
                                 </button>
                             </form>
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
-            </section>
+            </motion.section>
 
             {/* Footer */}
             <footer className="bg-blue-950 w-full py-20 px-6 md:px-12">
