@@ -15,6 +15,20 @@ const router = express.Router();
 router.use(protect);
 
 router.get('/export', authorize('admin', 'hr', 'manager'), exportEmployees);
+/**
+ * @swagger
+ * /api/employees:
+ *   get:
+ *     summary: Get all employees
+ *     tags: [Employees]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of employees
+ *       401:
+ *         description: Unauthorized
+ */
 router.get('/', authorize('admin', 'hr', 'manager', 'employee'), getAllEmployees);
 router.get('/:id', authorize('admin', 'hr', 'manager', 'employee'), getEmployeeById);
 router.post('/', authorize('admin', 'hr'), upload.single('profile_picture'), createEmployee);

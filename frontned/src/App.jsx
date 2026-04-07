@@ -72,6 +72,7 @@ import ReportCenter from './pages/admin/ReportCenter.jsx';
 import AttendanceCalendar from './pages/attendance/AttendanceCalendar.jsx';
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
 import DashboardLayout from './components/layout/DashboardLayout.jsx';
+import LandingPage from './pages/LandingPage.jsx';
 
 function App() {
   const { isAuthenticated } = useSelector((state) => state.auth);
@@ -343,7 +344,7 @@ function App() {
           {/* Default redirect */}
           <Route
             path="/"
-            element={<Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />}
+            element={<LandingPage />}
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
