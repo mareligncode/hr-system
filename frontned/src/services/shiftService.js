@@ -22,6 +22,7 @@ const shiftService = {
     createShiftSwap: (data) => api.post('/shifts/swaps', data),
     approveShiftSwap: (id) => api.put(`/shifts/swaps/${id}/approve`),
     rejectShiftSwap: (id, data) => api.put(`/shifts/swaps/${id}/reject`, data),
+    claimShiftSwap: (id) => api.put(`/shifts/swaps/${id}/claim`),
 
     // --- Shift Templates ---
     getShiftTemplates: (params) => api.get('/shifts/templates', { params }),
@@ -29,6 +30,7 @@ const shiftService = {
     updateShiftTemplate: (id, data) => api.put(`/shifts/templates/${id}`, data),
     deleteShiftTemplate: (id) => api.delete(`/shifts/templates/${id}`),
     applyShiftTemplate: (id, data) => api.post(`/shifts/templates/${id}/apply`, data),
+    autoSchedule: (id, data) => api.post(`/shifts/templates/${id}/auto-schedule`, data),
 
     // --- Shift Rotations ---
     getShiftRotations: (params) => api.get('/shifts/rotations', { params }),
@@ -39,6 +41,9 @@ const shiftService = {
 
     // --- Shift Reports ---
     getShiftReports: (params) => api.get('/shifts/reports', { params }),
+
+    // --- Optimization ---
+    getRecommendations: (params) => api.get('/shifts/recommendations', { params }),
 };
 
 export default shiftService;

@@ -1,4 +1,4 @@
-import { LeaveType, LeaveRequest, User, Employee, Department } from '../models/index.js';
+import { LeaveType, LeaveRequest, User, Employee, Department, LeaveBlackoutDate, LeaveBalance } from '../models/index.js';
 import { Op } from 'sequelize';
 import { logActivity } from '../services/auditService.js';
 import { createNotification, notifyByRole } from '../services/notificationService.js';
@@ -69,14 +69,57 @@ export const requestLeave = async (req, res) => {
             return res.status(400).json({ error: 'End date cannot be before start date' });
         }
 
-        // Generate request number
-        const requestNumber = `LV-${Date.now()}`;
+        // --- NEW: Blackout Date Check ---
+        const blackoutDates = await LeaveBlackoutDate.findAll({
+            where: {
+                is_active: true,
+                [Op.or]: [
+                    {
+                        start_date: { [Op.between]: [start_date, end_date] }
+                    },
+                    {
+                        end_date: { [Op.between]: [start_date, end_date] }
+                    },
+                    {
+                        [Op.and]: [
+                            { start_date: { [Op.lte]: start_date } },
+                            { end_date: { [Op.gte]: end_date } }
+                        ]
+                    }
+                ],
+                [Op.or]: [
+                    { department_id: null },
+                    { department_id: employee.department_id }
+                ]
+            }
+        });
 
-        // Calculate days (simple logic for now, can be improved to exclude holidays/weekends)
+        if (blackoutDates.length > 0) {
+            const names = blackoutDates.map(b => b.name).join(', ');
+            return res.status(400).json({
+                error: `Requested dates fall within a blackout period: ${names}. Leave is restricted during this time.`
+            });
+        }
+
+        // --- NEW: Balance Check ---
+        const currentYear = new Date().getFullYear();
+        const balance = await LeaveBalance.findOne({
+            where: {
+                employee_id: userId,
+                leave_type_id,
+                year: currentYear
+            }
+        });
+
+        // Calculate days
         const start = new Date(start_date);
         const end = new Date(end_date);
         let days = ((end - start) / (1000 * 60 * 60 * 24)) + 1;
         if (is_half_day) days = 0.5;
+
+        if (balance && parseFloat(balance.balance) < days) {
+            return res.status(400).json({ error: `Insufficient leave balance. Available: ${balance.balance} days.` });
+        }
 
         const leaveRequest = await LeaveRequest.create({
             employee_id: userId,
@@ -184,6 +227,34 @@ export const approveLeave = async (req, res) => {
             approved_by: req.user.id,
             approved_at: new Date()
         });
+
+        // --- NEW: Update Leave Balance on Approval ---
+        if (status === 'approved') {
+            const currentYear = new Date(leaveRequest.start_date).getFullYear();
+            const balance = await LeaveBalance.findOne({
+                where: {
+                    employee_id: leaveRequest.employee_id,
+                    leave_type_id: leaveRequest.leave_type_id,
+                    year: currentYear
+                }
+            });
+
+            if (balance) {
+                await balance.update({
+                    used_days: parseFloat(balance.used_days) + parseFloat(leaveRequest.days_requested)
+                });
+            } else {
+                // If no balance record exists, create one with the used days
+                // (Though ideally balances should be initialized)
+                await LeaveBalance.create({
+                    employee_id: leaveRequest.employee_id,
+                    leave_type_id: leaveRequest.leave_type_id,
+                    year: currentYear,
+                    accrued_days: 0,
+                    used_days: leaveRequest.days_requested
+                });
+            }
+        }
 
         await logActivity(req.user.id, `LEAVE_${status.toUpperCase()}`, 'LeaveRequest', id, null, { status, rejection_reason, comments }, req);
 

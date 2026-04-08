@@ -28,6 +28,8 @@ import LeaveRequestPage from './pages/leave/LeaveRequestPage.jsx';
 import LeaveBalancePage from './pages/leave/LeaveBalancePage.jsx';
 import LeaveApprovalsPage from './pages/leave/LeaveApprovalsPage.jsx';
 import LeaveTypePage from './pages/leave/LeaveTypePage.jsx';
+import LeaveBlackoutPage from './pages/leave/LeaveBlackoutPage.jsx';
+import LeaveEncashmentPage from './pages/leave/LeaveEncashmentPage.jsx';
 
 // Shifts
 import ShiftTypesPage from './pages/shifts/ShiftTypesPage.jsx';
@@ -210,6 +212,12 @@ function App() {
                 <LeaveTypePage />
               </ProtectedRoute>
             } />
+            <Route path="/leave/blackout" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr']}>
+                <LeaveBlackoutPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/leave/encashments" element={<LeaveEncashmentPage />} />
             {/* Shift Management */}
             <Route path="/shifts/my" element={<MyShiftsPage />} />
             <Route path="/shifts/calendar" element={

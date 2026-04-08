@@ -13,6 +13,7 @@ import {
     getOvertimeReport,
     getDepartmentShiftSummary
 } from '../services/shiftService.js';
+import optimizationService from '../services/optimizationService.js';
 
 // ============================================================
 // HELPER: Get manager's department_id
@@ -547,8 +548,8 @@ export const createShiftSwap = async (req, res) => {
         const { shift_assignment_id, target_employee_id, reason } = req.body;
         const requesting_employee_id = req.user.id;
 
-        if (!shift_assignment_id || !target_employee_id) {
-            return res.status(400).json({ error: 'shift_assignment_id and target_employee_id are required' });
+        if (!shift_assignment_id) {
+            return res.status(400).json({ error: 'shift_assignment_id is required' });
         }
 
         // Validate the assignment belongs to the requester
@@ -560,38 +561,28 @@ export const createShiftSwap = async (req, res) => {
             return res.status(403).json({ error: 'You can only swap your own shifts' });
         }
 
-        // Cannot swap with yourself
-        if (requesting_employee_id === parseInt(target_employee_id)) {
-            return res.status(400).json({ error: 'Cannot swap a shift with yourself' });
-        }
-
-        // Check if target employee exists
-        const targetEmployee = await Employee.findOne({ where: { user_id: target_employee_id } });
-        if (!targetEmployee) return res.status(404).json({ error: 'Target employee not found' });
-
-        // Check for duplicate pending swap
-        const existingSwap = await ShiftSwapRequest.findOne({
-            where: {
-                shift_assignment_id,
-                requesting_employee_id,
-                status: 'pending'
+        // Check if target employee exists (if provided)
+        if (target_employee_id) {
+            // Cannot swap with yourself
+            if (requesting_employee_id === parseInt(target_employee_id)) {
+                return res.status(400).json({ error: 'Cannot swap a shift with yourself' });
             }
-        });
-        if (existingSwap) {
-            return res.status(400).json({ error: 'A pending swap request already exists for this shift' });
-        }
 
-        // Check if target employee would have a conflict
-        const conflict = await checkShiftConflict(
-            target_employee_id,
-            assignment.assignment_date,
-            assignment.shift_type_id
-        );
-        if (conflict.hasConflict) {
-            return res.status(409).json({
-                error: 'Target employee has a conflicting shift on this date',
-                conflicts: conflict.conflicts
-            });
+            const targetEmployee = await Employee.findOne({ where: { user_id: target_employee_id } });
+            if (!targetEmployee) return res.status(404).json({ error: 'Target employee not found' });
+
+            // Check if target employee would have a conflict
+            const conflict = await checkShiftConflict(
+                target_employee_id,
+                assignment.assignment_date,
+                assignment.shift_type_id
+            );
+            if (conflict.hasConflict) {
+                return res.status(409).json({
+                    error: 'Target employee has a conflicting shift on this date',
+                    conflicts: conflict.conflicts
+                });
+            }
         }
 
         const swapRequest = await ShiftSwapRequest.create({
@@ -605,18 +596,29 @@ export const createShiftSwap = async (req, res) => {
 
         await logActivity(req.user.id, 'CREATE_SHIFT_SWAP', 'ShiftSwapRequest', swapRequest.id, null, swapRequest.toJSON(), req);
 
-        // 🔔 Notify the target employee about the swap request
-        createNotification({
-            userId: target_employee_id,
-            title: '🔄 Shift Swap Request',
-            message: `${req.user.first_name || 'A colleague'} has requested to swap a shift with you on ${assignment.assignment_date}.`,
-            type: 'info',
-            link: '/shifts/swaps',
-            relatedEntityType: 'ShiftSwapRequest',
-            relatedEntityId: swapRequest.id,
-            sendEmailFlag: true,
-            settingKey: 'notify_on_shift_swap'
-        }).catch(e => console.error('[Swap] Target employee notification failed:', e));
+        // 🔔 Notify the target employee about the swap request (if peer-to-peer)
+        if (target_employee_id) {
+            createNotification({
+                userId: target_employee_id,
+                title: '🔄 Shift Swap Request',
+                message: `${req.user.first_name || 'A colleague'} has requested to swap a shift with you on ${assignment.assignment_date}.`,
+                type: 'info',
+                link: '/shifts/swaps',
+                relatedEntityType: 'ShiftSwapRequest',
+                relatedEntityId: swapRequest.id,
+                sendEmailFlag: true,
+                settingKey: 'notify_on_shift_swap'
+            }).catch(e => console.error('[Swap] Target employee notification failed:', e));
+        } else {
+            // Notify managers about open swap
+            notifyByRole({
+                roles: ['admin', 'hr', 'manager'],
+                title: '📢 New Open Shift Posting',
+                message: `${req.user.first_name} has posted their ${assignment.ShiftType.name} shift on ${assignment.assignment_date} to the marketplace.`,
+                type: 'info',
+                link: '/shifts/swaps'
+            }).catch(e => console.error('[Swap] Marketplace notification failed:', e));
+        }
 
         // 🔔 Notify HR/Admin too
         notifyByRole({
@@ -775,6 +777,61 @@ export const rejectShiftSwap = async (req, res) => {
     } catch (error) {
         console.error('rejectShiftSwap error:', error);
         res.status(500).json({ error: 'Failed to reject shift swap', details: error.message });
+    }
+};
+
+/**
+ * PUT /shifts/swaps/:id/claim
+ * Claim an open shift swap from the marketplace.
+ */
+export const claimShiftSwap = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        const swapRequest = await ShiftSwapRequest.findByPk(id, {
+            include: [{ model: ShiftAssignment, include: [{ model: ShiftType }] }]
+        });
+
+        if (!swapRequest) return res.status(404).json({ error: 'Swap request not found' });
+        if (swapRequest.status !== 'pending') return res.status(400).json({ error: 'Request is no longer pending' });
+        if (swapRequest.target_employee_id) return res.status(400).json({ error: 'This is a private swap request, not an open ones' });
+        if (swapRequest.requesting_employee_id === userId) return res.status(400).json({ error: 'You cannot claim your own shift' });
+
+        // Check for conflict
+        const conflict = await checkShiftConflict(
+            userId,
+            swapRequest.ShiftAssignment.assignment_date,
+            swapRequest.ShiftAssignment.shift_type_id
+        );
+        if (conflict.hasConflict) {
+            return res.status(409).json({
+                error: 'Conflict detected',
+                message: 'You already have a shift at this time',
+                conflicts: conflict.conflicts
+            });
+        }
+
+        // Update target employee
+        await swapRequest.update({
+            target_employee_id: userId,
+            // Marketplace swaps usually need manager approval too, so keep status as pending
+        });
+
+        await logActivity(userId, 'CLAIM_SHIFT_SWAP', 'ShiftSwapRequest', id, null, { target_employee_id: userId }, req);
+
+        // Notify managers that someone claimed it
+        notifyByRole({
+            roles: ['admin', 'hr', 'manager'],
+            title: '🏷️ Shift Claimed',
+            message: `${req.user.first_name} has claimed the open shift on ${swapRequest.requested_date}. Approval required.`,
+            type: 'info',
+            link: '/shifts/swaps'
+        }).catch(e => console.error('[Swap] Claim notification failed:', e));
+
+        res.status(200).json({ message: 'Shift claimed successfully, awaiting manager approval' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to claim shift', details: error.message });
     }
 };
 
@@ -1276,5 +1333,92 @@ export const getShiftReports = async (req, res) => {
     } catch (error) {
         console.error('getShiftReports error:', error);
         res.status(500).json({ error: 'Failed to generate shift reports', details: error.message });
+    }
+};
+
+/**
+ * GET /api/shifts/recommendations
+ * Query: date, shift_type_id
+ */
+export const getRecommendations = async (req, res) => {
+    try {
+        const { date, shift_type_id } = req.query;
+        if (!date || !shift_type_id) {
+            return res.status(400).json({ error: 'date and shift_type_id are required' });
+        }
+
+        const mgrDeptId = await getManagerDepartmentId(req.user.id);
+        if (!mgrDeptId && req.user.role !== 'admin' && req.user.role !== 'hr') {
+            return res.status(403).json({ error: 'Only managers or HR can get recommendations' });
+        }
+
+        const deptId = req.query.department_id || mgrDeptId;
+
+        const results = await optimizationService.getEmployeeRecommendations(date, shift_type_id, deptId);
+        res.status(200).json(results);
+    } catch (error) {
+        res.status(500).json({ error: 'Optimization failed', details: error.message });
+    }
+};
+
+
+/**
+ * POST /shifts/templates/:id/auto-schedule
+ * Distributes shifts in a template intelligently across department employees.
+ */
+export const generateIntelligentSchedule = async (req, res) => {
+    const transaction = await sequelize.transaction();
+    try {
+        const { id } = req.params;
+        const { start_date, end_date } = req.body;
+
+        const template = await ShiftTemplate.findByPk(id);
+        if (!template) {
+            await transaction.rollback();
+            return res.status(404).json({ error: 'Template not found' });
+        }
+
+        const pattern = template.pattern;
+        const assignments = [];
+        
+        let curr = new Date(start_date);
+        const last = new Date(end_date);
+
+        while (curr <= last) {
+            const dateStr = curr.toISOString().split('T')[0];
+            const dayName = curr.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+            const dailyPatterns = pattern[dayName] || [];
+
+            for (const p of dailyPatterns) {
+                // Get recommendations for this specific slot
+                const recs = await optimizationService.getEmployeeRecommendations(dateStr, p.shift_type_id, template.department_id);
+                
+                // Pick the best available one who isn't already assigned in this run for the same day
+                const best = recs.find(r => !assignments.some(a => a.employee_id === r.employee_id && a.assignment_date === dateStr));
+                
+                if (best) {
+                    assignments.push({
+                        employee_id: best.employee_id,
+                        shift_type_id: p.shift_type_id,
+                        assignment_date: dateStr,
+                        status: 'scheduled',
+                        created_by: req.user.id
+                    });
+                }
+            }
+            curr.setDate(curr.getDate() + 1);
+        }
+
+        const created = await ShiftAssignment.bulkCreate(assignments, { transaction });
+        await transaction.commit();
+
+        res.status(201).json({ 
+            message: 'Intelligent schedule generated', 
+            count: created.length,
+            assignments: created 
+        });
+    } catch (error) {
+        if (transaction) await transaction.rollback();
+        res.status(500).json({ error: 'Auto-scheduling failed', details: error.message });
     }
 };

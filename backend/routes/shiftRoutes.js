@@ -34,6 +34,7 @@ import {
     createShiftSwap,
     approveShiftSwap,
     rejectShiftSwap,
+    claimShiftSwap,
     // Shift Templates
     getShiftTemplates,
     createShiftTemplate,
@@ -47,7 +48,10 @@ import {
     deleteShiftRotation,
     reactivateShiftRotation,
     // Reports
-    getShiftReports
+    getShiftReports,
+    // Recommendations
+    getRecommendations,
+    generateIntelligentSchedule
 } from '../controllers/shiftController.js';
 import { protect, authorize } from '../middlewares/authMiddleware.js';
 
@@ -78,6 +82,7 @@ router.get('/swaps', authorize('admin', 'hr', 'manager'), getShiftSwaps);
 router.post('/swaps', createShiftSwap);
 router.put('/swaps/:id/approve', authorize('admin', 'hr', 'manager'), approveShiftSwap);
 router.put('/swaps/:id/reject', authorize('admin', 'hr', 'manager'), rejectShiftSwap);
+router.put('/swaps/:id/claim', claimShiftSwap);
 
 // --- Shift Templates ---
 router.get('/templates', authorize('admin', 'hr', 'manager'), getShiftTemplates);
@@ -85,6 +90,7 @@ router.post('/templates', authorize('admin', 'hr', 'manager'), createShiftTempla
 router.put('/templates/:id', authorize('admin', 'hr', 'manager'), updateShiftTemplate);
 router.delete('/templates/:id', authorize('admin', 'hr', 'manager'), deleteShiftTemplate);
 router.post('/templates/:id/apply', authorize('admin', 'hr', 'manager'), applyShiftTemplate);
+router.post('/templates/:id/auto-schedule', authorize('admin', 'hr', 'manager'), generateIntelligentSchedule);
 
 // --- Shift Rotations ---
 router.get('/rotations', authorize('admin', 'hr', 'manager'), getShiftRotations);
@@ -95,5 +101,8 @@ router.post('/rotations/:id/reactivate', authorize('admin', 'hr', 'manager'), re
 
 // --- Shift Reports ---
 router.get('/reports', authorize('admin', 'hr', 'manager', 'finance'), getShiftReports);
+
+// --- Optimization / Recommendations ---
+router.get('/recommendations', authorize('admin', 'hr', 'manager'), getRecommendations);
 
 export default router;

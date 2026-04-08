@@ -20,7 +20,7 @@ const ShiftSwapPage = () => {
     const [swaps, setSwaps] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('pending');
-    const [viewMode, setViewMode] = useState('my'); // 'my' or 'team'
+    const [viewMode, setViewMode] = useState('my'); // 'my', 'team', or 'marketplace'
 
     const { user } = useSelector((state) => state.auth);
     const isManager = ['admin', 'hr', 'manager'].includes(user?.role);
@@ -37,10 +37,18 @@ const ShiftSwapPage = () => {
     const fetchSwaps = async () => {
         try {
             setLoading(true);
-            const res = viewMode === 'team' && isManager
-                ? await shiftService.getShiftSwaps({ status: filter })
-                : await shiftService.getMySwaps({ status: filter });
-            setSwaps(res.data);
+            const res = viewMode === 'marketplace'
+                ? await shiftService.getShiftSwaps({ status: 'pending' }) // Open swaps are pending
+                : viewMode === 'team' && isManager
+                    ? await shiftService.getShiftSwaps({ status: filter })
+                    : await shiftService.getMySwaps({ status: filter });
+
+            // For marketplace, only show those with NO target employee
+            if (viewMode === 'marketplace') {
+                setSwaps(res.data.filter(s => !s.target_employee_id && s.requesting_employee_id !== user.id));
+            } else {
+                setSwaps(res.data);
+            }
         } catch (error) {
             toast.error(t('failedToLoadSwapRequests'));
         } finally {
@@ -71,6 +79,16 @@ const ShiftSwapPage = () => {
         }
     };
 
+    const handleClaim = async (id) => {
+        try {
+            await shiftService.claimShiftSwap(id);
+            toast.success(t('shiftClaimedAwaitingApproval'));
+            fetchSwaps();
+        } catch (error) {
+            toast.error(error.response?.data?.error || t('failedToClaim'));
+        }
+    };
+
     return (
         <div className="p-6 max-w-5xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -95,6 +113,12 @@ const ShiftSwapPage = () => {
                                 className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${viewMode === 'my' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-500 hover:bg-gray-50'}`}
                             >
                                 {t('myRequests')}
+                            </button>
+                            <button
+                                onClick={() => setViewMode('marketplace')}
+                                className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${viewMode === 'marketplace' ? 'bg-indigo-50 text-indigo-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                            >
+                                {t('marketplace')}
                             </button>
                         </div>
                     )}
@@ -193,6 +217,17 @@ const ShiftSwapPage = () => {
                                         {swap.status === 'pending' && (!isManager || viewMode === 'my') && (
                                             <div className="px-4 py-2 rounded-xl text-sm font-bold uppercase tracking-wider shrink-0 bg-yellow-50 text-yellow-700 border border-yellow-200">
                                                 {t('awaitingApproval')}
+                                            </div>
+                                        )}
+
+                                        {viewMode === 'marketplace' && (
+                                            <div className="shrink-0">
+                                                <button
+                                                    onClick={() => handleClaim(swap.id)}
+                                                    className="px-6 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-bold transition flex items-center gap-2 shadow-lg shadow-indigo-100"
+                                                >
+                                                    <Check size={18} /> {t('claimShift')}
+                                                </button>
                                             </div>
                                         )}
 

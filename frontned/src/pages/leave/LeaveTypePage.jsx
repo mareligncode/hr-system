@@ -21,17 +21,20 @@ import {
     Avatar
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    Settings, 
-    Plus, 
-    Calendar, 
-    Users, 
-    CreditCard, 
-    Hash, 
-    ShieldCheck, 
+import {
+    Settings,
+    Plus,
+    Calendar,
+    Users,
+    CreditCard,
+    Hash,
+    ShieldCheck,
     Wand2,
-    Briefcase
+    Briefcase,
+    ShieldAlert,
+    RefreshCw
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useSettings } from '../../context/SettingsContext';
 import leaveService from '../../services/leaveService';
 
@@ -39,6 +42,7 @@ const LeaveTypePage = () => {
     const { t } = useSettings();
     const [leaveTypes, setLeaveTypes] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState(false);
     const [error, setError] = useState(null);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [formData, setFormData] = useState({
@@ -110,6 +114,18 @@ const LeaveTypePage = () => {
         }
     };
 
+    const handleRunAccrual = async () => {
+        try {
+            setActionLoading(true);
+            await leaveService.runAccrual();
+            toast.success(t('accrualSuccess') || 'Leave accrual completed successfully for all employees.');
+        } catch (err) {
+            toast.error('Accrual failed');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     if (loading) return (
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
             <CircularProgress size={50} thickness={4} />
@@ -151,7 +167,26 @@ const LeaveTypePage = () => {
                             {t('configureLeavePolicies') || 'Configure leave policies, allowances, and rules.'}
                         </Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                        <Button
+                            variant="outlined"
+                            color="info"
+                            disabled={actionLoading}
+                            onClick={handleRunAccrual}
+                            startIcon={actionLoading ? <CircularProgress size={18} /> : <RefreshCw size={18} />}
+                            sx={{ borderRadius: 3, fontWeight: 700, paddingX: 3 }}
+                        >
+                            {t('runAccrual') || 'Run Accrual'}
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            color="warning"
+                            onClick={() => window.location.href = '/leave/blackout'}
+                            startIcon={<ShieldAlert size={18} />}
+                            sx={{ borderRadius: 3, fontWeight: 700, paddingX: 3 }}
+                        >
+                            {t('blackoutDates') || 'Blackout Dates'}
+                        </Button>
                         <Button
                             variant="outlined"
                             color="secondary"
@@ -203,12 +238,12 @@ const LeaveTypePage = () => {
                         {leaveTypes.map((type) => (
                             <Grid item xs={12} sm={6} md={4} key={type.id}>
                                 <motion.div variants={cardVariants}>
-                                    <Paper 
+                                    <Paper
                                         elevation={0}
-                                        sx={{ 
-                                            p: 3, 
-                                            borderRadius: 4, 
-                                            border: '1px solid', 
+                                        sx={{
+                                            p: 3,
+                                            borderRadius: 4,
+                                            border: '1px solid',
                                             borderColor: 'divider',
                                             background: 'var(--bg-surface)',
                                             position: 'relative',
@@ -222,18 +257,18 @@ const LeaveTypePage = () => {
                                         }}
                                     >
                                         <Box sx={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', bgcolor: 'primary.main' }} />
-                                        
+
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                                             <Typography variant="h6" fontWeight="900" sx={{ lineHeight: 1.2 }}>
                                                 {type.name}
                                             </Typography>
-                                            <Chip 
-                                                label={type.code} 
-                                                size="small" 
-                                                sx={{ fontWeight: 800, bgcolor: 'primary.soft', color: 'primary.main' }} 
+                                            <Chip
+                                                label={type.code}
+                                                size="small"
+                                                sx={{ fontWeight: 800, bgcolor: 'primary.soft', color: 'primary.main' }}
                                             />
                                         </Box>
-                                        
+
                                         <Divider sx={{ mb: 2, borderStyle: 'dashed' }} />
 
                                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -250,7 +285,7 @@ const LeaveTypePage = () => {
                                                     </Typography>
                                                 </Box>
                                             </Box>
-                                            
+
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                                                 <Avatar sx={{ width: 28, height: 28, bgcolor: type.is_paid ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: type.is_paid ? 'success.main' : 'error.main' }}>
                                                     <CreditCard size={14} />
@@ -264,7 +299,7 @@ const LeaveTypePage = () => {
                                                     </Typography>
                                                 </Box>
                                             </Box>
-                                            
+
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                                                 <Avatar sx={{ width: 28, height: 28, bgcolor: 'action.hover', color: 'text.secondary' }}>
                                                     <Users size={14} />
@@ -290,10 +325,10 @@ const LeaveTypePage = () => {
             {/* Add Policy Dialog */}
             <AnimatePresence>
                 {dialogOpen && (
-                    <Dialog 
-                        open={dialogOpen} 
-                        onClose={() => setDialogOpen(false)} 
-                        maxWidth="sm" 
+                    <Dialog
+                        open={dialogOpen}
+                        onClose={() => setDialogOpen(false)}
+                        maxWidth="sm"
                         fullWidth
                         PaperProps={{
                             sx: { borderRadius: 4, p: 1, background: 'var(--bg-surface)' }
@@ -384,9 +419,9 @@ const LeaveTypePage = () => {
                                 <Button onClick={() => setDialogOpen(false)} sx={{ fontWeight: 700 }}>
                                     {t('cancel')}
                                 </Button>
-                                <Button 
-                                    onClick={handleSubmit} 
-                                    variant="contained" 
+                                <Button
+                                    onClick={handleSubmit}
+                                    variant="contained"
                                     color="primary"
                                     disabled={!formData.name || !formData.code || !formData.days_per_year}
                                     sx={{ borderRadius: 2, fontWeight: 800, px: 3, boxShadow: '0 4px 14px 0 rgba(0,118,255,0.39)' }}
