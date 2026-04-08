@@ -55,6 +55,10 @@ const ShiftAssignment = sequelize.define('ShiftAssignment', {
         },
         comment: 'Tracks assignment lifecycle: scheduled → completed/missed/swapped'
     },
+    no_show_notified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
     created_by: {
         type: DataTypes.INTEGER,
         allowNull: false,

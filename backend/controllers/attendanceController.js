@@ -1,10 +1,12 @@
-import { Attendance, AttendanceCorrection, User, Employee, Department } from '../models/index.js';
+import { Attendance, AttendanceCorrection, AttendanceBreak, User, Employee, Department } from '../models/index.js';
 import { Op } from 'sequelize';
 import sequelize from '../config/database.js';
 import { logActivity } from '../services/auditService.js';
 import ExcelJS from 'exceljs';
 import https from 'https';
 import http from 'http';
+
+import { calculateDistance } from '../utils/geoUtils.js';
 
 const getImageBuffer = (url) => {
     if (!url) return null;
@@ -63,6 +65,33 @@ export const clockIn = async (req, res) => {
         }
 
         const { location, selfie_url, timestamp } = req.body;
+
+        // Geofencing Check
+        const employee = await Employee.findOne({
+            where: { user_id: userId },
+            include: [{ model: Department }]
+        });
+
+        if (employee && employee.Department && employee.Department.is_geofencing_enabled) {
+            const dept = employee.Department;
+            if (!location || !location.lat || !location.lng) {
+                return res.status(400).json({ error: 'Location data is required for clock-in in your department.' });
+            }
+
+            const distance = calculateDistance(
+                location.lat,
+                location.lng,
+                parseFloat(dept.latitude),
+                parseFloat(dept.longitude)
+            );
+
+            if (distance > dept.radius_meters) {
+                return res.status(403).json({
+                    error: `You are too far from your department location (${Math.round(distance)}m). Required radius: ${dept.radius_meters}m.`
+                });
+            }
+        }
+
         const ip_address = req.ip || req.headers['x-forwarded-for'];
         const clockInTime = timestamp ? new Date(timestamp) : new Date();
 
@@ -97,6 +126,31 @@ export const clockOut = async (req, res) => {
         }
 
         const { location, selfie_url, timestamp } = req.body;
+
+        // Geofencing Check for Clock Out
+        const employee = await Employee.findOne({
+            where: { user_id: userId },
+            include: [{ model: Department }]
+        });
+
+        if (employee && employee.Department && employee.Department.is_geofencing_enabled) {
+            const dept = employee.Department;
+            if (location && location.lat && location.lng) {
+                const distance = calculateDistance(
+                    location.lat,
+                    location.lng,
+                    parseFloat(dept.latitude),
+                    parseFloat(dept.longitude)
+                );
+
+                if (distance > dept.radius_meters) {
+                    return res.status(403).json({
+                        error: `You are too far from your department location to clock out (${Math.round(distance)}m). Required radius: ${dept.radius_meters}m.`
+                    });
+                }
+            }
+        }
+
         const clockOutTime = timestamp ? new Date(timestamp) : new Date();
         const hours = calculateHours(attendance.clock_in, clockOutTime);
 
@@ -133,6 +187,7 @@ export const getMyAttendance = async (req, res) => {
 
         const history = await Attendance.findAll({
             where: whereClause,
+            include: [{ model: AttendanceBreak }],
             order: [['clock_in', 'DESC']]
         });
 
@@ -661,5 +716,95 @@ export const exportAttendance = async (req, res) => {
     } catch (error) {
         console.error('Export Error:', error);
         res.status(500).json({ error: 'Failed to export attendance data' });
+    }
+};
+
+// ─── Break Management ────────────────────────────────────────────────────────
+export const startBreak = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { type, notes } = req.body;
+
+        // Must be clocked in
+        const attendance = await Attendance.findOne({
+            where: { user_id: userId, clock_out: null },
+            order: [['clock_in', 'DESC']]
+        });
+
+        if (!attendance) {
+            return res.status(400).json({ error: 'You must be clocked in to start a break.' });
+        }
+
+        // Must not be already on a break
+        const existingBreak = await AttendanceBreak.findOne({
+            where: { attendance_id: attendance.id, end_time: null }
+        });
+
+        if (existingBreak) {
+            return res.status(400).json({ error: 'You are already on a break.' });
+        }
+
+        const attnBreak = await AttendanceBreak.create({
+            attendance_id: attendance.id,
+            type: type || 'lunch',
+            start_time: new Date(),
+            notes: notes || null
+        });
+
+        await logActivity(userId, 'START_BREAK', 'AttendanceBreak', attnBreak.id, null, attnBreak.toJSON(), req);
+
+        res.status(201).json({ message: 'Break started', break: attnBreak });
+    } catch (error) {
+        console.error('Start Break Error:', error);
+        res.status(500).json({ error: 'Failed to start break' });
+    }
+};
+
+export const endBreak = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const attendance = await Attendance.findOne({
+            where: { user_id: userId, clock_out: null },
+            order: [['clock_in', 'DESC']]
+        });
+
+        if (!attendance) {
+            return res.status(400).json({ error: 'No active clock-in session found.' });
+        }
+
+        const attnBreak = await AttendanceBreak.findOne({
+            where: { attendance_id: attendance.id, end_time: null },
+            order: [['start_time', 'DESC']]
+        });
+
+        if (!attnBreak) {
+            return res.status(400).json({ error: 'No active break session found.' });
+        }
+
+        const endTime = new Date();
+        const durationDecimal = (endTime - new Date(attnBreak.start_time)) / (1000 * 60);
+        const durationMinutes = Math.round(durationDecimal);
+
+        await attnBreak.update({
+            end_time: endTime,
+            duration_minutes: durationMinutes
+        });
+
+        // Update total break minutes in parent attendance record
+        const totalBreaks = await AttendanceBreak.sum('duration_minutes', {
+            where: { attendance_id: attendance.id }
+        });
+
+        await attendance.update({
+            total_break_minutes: totalBreaks
+        });
+
+        await logActivity(userId, 'END_BREAK', 'AttendanceBreak', attnBreak.id, null, attnBreak.toJSON(), req);
+
+        res.status(200).json({ message: 'Break ended', break: attnBreak, total_break_minutes: totalBreaks });
+    } catch (error) {
+        console.error('End Break Error:', error);
+        res.status(500).json({ error: 'Failed to end break' });
     }
 };

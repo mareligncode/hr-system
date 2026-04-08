@@ -31,6 +31,10 @@ const Attendance = sequelize.define('Attendance', {
         type: DataTypes.FLOAT,
         defaultValue: 0
     },
+    total_break_minutes: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0
+    },
     status: {
         type: DataTypes.STRING(20),
         defaultValue: 'pending',

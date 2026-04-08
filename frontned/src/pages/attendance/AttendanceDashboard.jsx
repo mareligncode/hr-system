@@ -4,7 +4,7 @@ import {
     Clock, MapPin, Camera, CheckCircle2, XCircle,
     AlertCircle, Calendar, History, Download,
     Wifi, WifiOff, Loader2, X, RotateCcw, Check,
-    TrendingUp, Zap, Shield, MessageSquare
+    TrendingUp, Zap, Shield, MessageSquare, Coffee
 } from 'lucide-react';
 import { format } from 'date-fns';
 import attendanceService from '../../services/attendanceService';
@@ -250,11 +250,9 @@ const ConfirmStep = ({ type, selfie, coords, address, gpsStatus, error, onConfir
     </motion.div>
 );
 
-/* ═══════════════════════ Main Component ══════════════════════════════════ */
 const AttendanceDashboard = () => {
     const { t } = useSettings();
 
-    // Data state
     const [history, setHistory] = useState([]);
     const [summary, setSummary] = useState({ totalHours: 0, totalOvertime: 0, daysPresent: 0 });
     const [activeSession, setActiveSession] = useState(null);
@@ -458,6 +456,33 @@ const AttendanceDashboard = () => {
         }
     };
 
+    /* ── Break Actions ── */
+    const handleStartBreak = async (type = 'lunch') => {
+        setActionLoading(true);
+        try {
+            await attendanceService.startBreak({ type });
+            setSuccess(`✅ ${type.toUpperCase()} break started.`);
+            await fetchData();
+        } catch (err) {
+            setError(err.response?.data?.error || 'Failed to start break');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleEndBreak = async () => {
+        setActionLoading(true);
+        try {
+            await attendanceService.endBreak();
+            setSuccess('✅ Break ended. Back to work!');
+            await fetchData();
+        } catch (err) {
+            setError(err.response?.data?.error || 'Failed to end break');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     /* ── Export ── */
     const handleExport = async () => {
         try {
@@ -592,13 +617,46 @@ const AttendanceDashboard = () => {
                                         {t('clockIn')}
                                     </button>
                                 ) : (
-                                    <button
-                                        onClick={() => startClockAction('out')}
-                                        className="w-full py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all duration-200 bg-rose-500/10 hover:bg-rose-500 border border-rose-500/40 hover:border-rose-500 text-rose-400 hover:text-white hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
-                                    >
-                                        <Shield className="w-4 h-4" />
-                                        {t('clockOut')}
-                                    </button>
+                                    <div className="space-y-3">
+                                        {/* Status Info for breaks */}
+                                        {activeSession.AttendanceBreaks?.some(b => !b.end_time) ? (
+                                            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center mb-2">
+                                                <p className="text-[10px] font-bold uppercase tracking-widest text-amber-500 mb-1">On Break</p>
+                                                <p className="text-xs font-black text-amber-400">
+                                                    {activeSession.AttendanceBreaks.find(b => !b.end_time).type.toUpperCase()} Since {format(new Date(activeSession.AttendanceBreaks.find(b => !b.end_time).start_time), 'hh:mm a')}
+                                                </p>
+                                            </div>
+                                        ) : null}
+
+                                        <div className="flex gap-2">
+                                            {activeSession.AttendanceBreaks?.some(b => !b.end_time) ? (
+                                                <button
+                                                    onClick={handleEndBreak}
+                                                    disabled={actionLoading}
+                                                    className="flex-1 py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all duration-200 bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+                                                >
+                                                    <Check className="w-4 h-4" /> End Break
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleStartBreak('lunch')}
+                                                    disabled={actionLoading}
+                                                    className="flex-1 py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all duration-200 bg-amber-500/10 hover:bg-amber-500 border border-amber-500/40 hover:border-amber-500 text-amber-400 hover:text-white flex items-center justify-center gap-2"
+                                                >
+                                                    <Coffee className="w-4 h-4" /> Take Break
+                                                </button>
+                                            )}
+
+                                            <button
+                                                onClick={() => startClockAction('out')}
+                                                disabled={actionLoading || activeSession.AttendanceBreaks?.some(b => !b.end_time)}
+                                                className={`flex-1 py-4 rounded-2xl text-sm font-black uppercase tracking-widest transition-all duration-200 bg-rose-500/10 hover:bg-rose-500 border border-rose-500/40 hover:border-rose-500 text-rose-400 hover:text-white flex items-center justify-center gap-2 ${activeSession.AttendanceBreaks?.some(b => !b.end_time) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            >
+                                                <Shield className="w-4 h-4" />
+                                                {t('clockOut')}
+                                            </button>
+                                        </div>
+                                    </div>
                                 )}
 
                                 {/* GPS & Camera indicators */}

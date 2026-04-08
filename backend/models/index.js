@@ -11,6 +11,7 @@ import UserRole from './UserRole.js';
 import RolePermission from './RolePermission.js';
 import Attendance from './Attendance.js';
 import AttendanceCorrection from './AttendanceCorrection.js';
+import AttendanceBreak from './AttendanceBreak.js';
 import LeaveType from './LeaveType.js';
 import LeaveRequest from './LeaveRequest.js';
 import ShiftType from './ShiftType.js';
@@ -95,6 +96,9 @@ AttendanceCorrection.belongsTo(User, { foreignKey: 'user_id' });
 AttendanceCorrection.belongsTo(Attendance, { foreignKey: 'attendance_id' });
 Attendance.hasMany(AttendanceCorrection, { foreignKey: 'attendance_id' });
 AttendanceCorrection.belongsTo(User, { as: 'Approver', foreignKey: 'approved_by' });
+
+Attendance.hasMany(AttendanceBreak, { foreignKey: 'attendance_id' });
+AttendanceBreak.belongsTo(Attendance, { foreignKey: 'attendance_id' });
 
 // Leave Management
 User.hasMany(LeaveType, { foreignKey: 'created_by' });
@@ -199,6 +203,7 @@ export {
     RolePermission,
     Attendance,
     AttendanceCorrection,
+    AttendanceBreak,
     LeaveType,
     LeaveRequest,
     ShiftType,
