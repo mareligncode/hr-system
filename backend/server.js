@@ -119,6 +119,8 @@ app.use((err, req, res, next) => {
 });
 
 import { checkAndNotifyExpiries } from './services/notificationService.js';
+import { initCronJobs } from './services/cronService.js';
+
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 setInterval(() => {
     checkAndNotifyExpiries().catch(err => console.error('Scheduled Expiry Check Failed:', err));
@@ -126,6 +128,7 @@ setInterval(() => {
 
 setTimeout(() => {
     checkAndNotifyExpiries().catch(err => console.error('Initial Expiry Check Failed:', err));
+    initCronJobs();
 }, 10000);
 
 const PORT = process.env.PORT || 5000;

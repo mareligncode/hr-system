@@ -25,7 +25,17 @@ const DepartmentsPage = () => {
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'tree'
     const [showAddModal, setShowAddModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [formData, setFormData] = useState({ id: null, name: '', code: '', parent_department_id: null, manager_id: null });
+    const [formData, setFormData] = useState({ 
+        id: null, 
+        name: '', 
+        code: '', 
+        parent_department_id: null, 
+        manager_id: null,
+        latitude: 0,
+        longitude: 0,
+        radius_meters: 100,
+        is_geofencing_enabled: false
+    });
 
     useEffect(() => {
         dispatch(fetchDepartments());
@@ -42,14 +52,21 @@ const DepartmentsPage = () => {
                     name: formData.name,
                     code: formData.code,
                     parent_department_id: formData.parent_department_id,
-                    manager_id: formData.manager_id
+                    manager_id: formData.manager_id,
+                    latitude: formData.latitude,
+                    longitude: formData.longitude,
+                    radius_meters: formData.radius_meters,
+                    is_geofencing_enabled: formData.is_geofencing_enabled
                 }
             }));
         } else {
             await dispatch(createDepartment(formData));
         }
         setShowAddModal(false);
-        setFormData({ id: null, name: '', code: '', parent_department_id: null, manager_id: null });
+        setFormData({ 
+            id: null, name: '', code: '', parent_department_id: null, manager_id: null,
+            latitude: 0, longitude: 0, radius_meters: 100, is_geofencing_enabled: false
+        });
         setIsEditing(false);
         dispatch(fetchDepartmentHierarchy());
     };
@@ -60,16 +77,37 @@ const DepartmentsPage = () => {
             name: dept.name,
             code: dept.code,
             parent_department_id: dept.parent_department_id || null,
-            manager_id: dept.manager_id || null
+            manager_id: dept.manager_id || null,
+            latitude: dept.latitude || 0,
+            longitude: dept.longitude || 0,
+            radius_meters: dept.radius_meters || 100,
+            is_geofencing_enabled: dept.is_geofencing_enabled || false
         });
         setIsEditing(true);
         setShowAddModal(true);
     };
 
     const openCreateModal = () => {
-        setFormData({ id: null, name: '', code: '', parent_department_id: null, manager_id: null });
+        setFormData({ 
+            id: null, name: '', code: '', parent_department_id: null, manager_id: null,
+            latitude: 0, longitude: 0, radius_meters: 100, is_geofencing_enabled: false
+        });
         setIsEditing(false);
         setShowAddModal(true);
+    };
+
+    const getCurrentLocation = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                setFormData(prev => ({
+                    ...prev,
+                    latitude: pos.coords.latitude,
+                    longitude: pos.coords.longitude
+                }));
+            }, (err) => alert("Error getting location: " + err.message));
+        } else {
+            alert("Geolocation not supported");
+        }
     };
 
     const handleDelete = async (id) => {
@@ -250,6 +288,68 @@ const DepartmentsPage = () => {
                                             </option>
                                         ))}
                                 </select>
+                            </div>
+
+                            {/* Geofencing Section */}
+                            <div className="pt-4 border-t border-[var(--border-main)] space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h4 className="text-sm font-bold uppercase tracking-tight">Geofencing</h4>
+                                        <p className="text-[10px] text-[var(--text-muted)]">Restrict attendance to a specific location</p>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={formData.is_geofencing_enabled}
+                                            onChange={(e) => setFormData({ ...formData, is_geofencing_enabled: e.target.checked })}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+
+                                {formData.is_geofencing_enabled && (
+                                    <div className="grid grid-cols-2 gap-3 animate-in fade-in slide-in-from-top-2">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Latitude</label>
+                                            <input
+                                                type="number" step="any"
+                                                value={formData.latitude}
+                                                onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) })}
+                                                className="w-full bg-[var(--bg-base)] border border-[var(--border-main)] rounded-xl px-4 py-2 text-xs font-mono"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Longitude</label>
+                                            <input
+                                                type="number" step="any"
+                                                value={formData.longitude}
+                                                onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) })}
+                                                className="w-full bg-[var(--bg-base)] border border-[var(--border-main)] rounded-xl px-4 py-2 text-xs font-mono"
+                                            />
+                                        </div>
+                                        <div className="col-span-2 flex gap-2">
+                                            <div className="flex-1 space-y-1.5">
+                                                <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Radius (Meters)</label>
+                                                <input
+                                                    type="number"
+                                                    value={formData.radius_meters}
+                                                    onChange={(e) => setFormData({ ...formData, radius_meters: parseInt(e.target.value) })}
+                                                    className="w-full bg-[var(--bg-base)] border border-[var(--border-main)] rounded-xl px-4 py-2 text-xs"
+                                                />
+                                            </div>
+                                            <div className="flex items-end">
+                                                <button 
+                                                    type="button"
+                                                    onClick={getCurrentLocation}
+                                                    className="px-4 py-2 bg-slate-500/10 hover:bg-slate-500/20 text-blue-500 rounded-xl text-xs font-bold border border-blue-500/20 transition-all"
+                                                >
+                                                    Set My Location
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

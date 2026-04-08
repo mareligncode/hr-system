@@ -11,7 +11,9 @@ import {
     getAttendanceSummary,
     getAttendanceReports,
     exportAttendance,
-    getCorrectionRequests
+    getCorrectionRequests,
+    startBreak,
+    endBreak
 } from '../controllers/attendanceController.js';
 import { protect, authorize } from '../middlewares/authMiddleware.js';
 
@@ -27,6 +29,10 @@ router.get('/my', getMyAttendance);
 router.get('/history', getMyAttendance);           // Alias for /my
 router.get('/summary', getAttendanceSummary);
 router.post('/correction', requestCorrection);
+
+// Break Management
+router.post('/break/start', startBreak);
+router.post('/break/end', endBreak);
 
 // ─── Export — employees get own data, managers/hr get team/all ───────────────
 // BUG FIX: was missing 'employee' role — now employees can export own records

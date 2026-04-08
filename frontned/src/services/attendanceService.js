@@ -59,6 +59,16 @@ const attendanceService = {
         return response.data;
     },
 
+    startBreak: async (data) => {
+        const response = await api.post('/attendance/break/start', data);
+        return response.data;
+    },
+
+    endBreak: async () => {
+        const response = await api.post('/attendance/break/end');
+        return response.data;
+    },
+
     getSummary: async () => {
         const response = await api.get('/attendance/summary');
         return response.data;
