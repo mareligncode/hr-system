@@ -11,7 +11,9 @@ import {
     Edit2,
     Trash2,
     XCircle,
-    ArrowRightLeft
+    ArrowRightLeft,
+    Wand2,
+    CheckCircle2
 } from 'lucide-react';
 import {
     format,
@@ -58,6 +60,10 @@ const ShiftCalendarPage = () => {
     const [selectedShift, setSelectedShift] = useState(null);
     const [swapReason, setSwapReason] = useState('');
     const [targetEmployeeId, setTargetEmployeeId] = useState('');
+
+    // Recommendation State
+    const [recommendations, setRecommendations] = useState([]);
+    const [loadingRecs, setLoadingRecs] = useState(false);
 
     const { user } = useSelector((state) => state.auth);
 
@@ -179,6 +185,29 @@ const ShiftCalendarPage = () => {
             fetchAssignments();
         } catch (error) {
             toast.error(error.response?.data?.error || t('failedToDeleteShift'));
+        }
+    };
+
+    const fetchRecommendations = async () => {
+        if (!newAssignment.assignment_date || !newAssignment.shift_type_id) {
+            toast.error('Select a shift type first');
+            return;
+        }
+
+        try {
+            setLoadingRecs(true);
+            const res = await shiftService.getRecommendations({
+                date: newAssignment.assignment_date,
+                shift_type_id: newAssignment.shift_type_id
+            });
+            setRecommendations(res.data);
+            if (res.data.length === 0) {
+                toast.error('No available employees found for this shift');
+            }
+        } catch (error) {
+            toast.error('Failed to get shift recommendations');
+        } finally {
+            setLoadingRecs(false);
         }
     };
 
@@ -456,20 +485,64 @@ const ShiftCalendarPage = () => {
                                     ))}
                                 </select>
                             </div>
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">{t('shiftType')}</label>
-                                <select
-                                    required
-                                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                    value={newAssignment.shift_type_id}
-                                    onChange={(e) => setNewAssignment({ ...newAssignment, shift_type_id: e.target.value })}
-                                >
-                                    <option value="">{t('selectShift')}</option>
-                                    {shiftTypes.map(t => (
-                                        <option key={t.id} value={t.id}>{t.name} ({t.start_time.substring(0, 5)} - {t.end_time.substring(0, 5)})</option>
-                                    ))}
-                                </select>
+                                <div className="flex gap-2">
+                                    <select
+                                        required
+                                        className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                        value={newAssignment.shift_type_id}
+                                        onChange={(e) => {
+                                            setNewAssignment({ ...newAssignment, shift_type_id: e.target.value });
+                                            setRecommendations([]); // Reset recs when shift changes
+                                        }}
+                                    >
+                                        <option value="">{t('selectShift')}</option>
+                                        {shiftTypes.map(t => (
+                                            <option key={t.id} value={t.id}>{t.name} ({t.start_time.substring(0, 5)} - {t.end_time.substring(0, 5)})</option>
+                                        ))}
+                                    </select>
+                                    <button
+                                        type="button"
+                                        onClick={fetchRecommendations}
+                                        disabled={loadingRecs || !newAssignment.shift_type_id}
+                                        className="px-3 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors title='Get AI Recommendation'"
+                                    >
+                                        {loadingRecs ? <div className="animate-spin h-4 w-4 border-2 border-indigo-600 border-t-transparent rounded-full" /> : <Wand2 size={20} />}
+                                    </button>
+                                </div>
                             </div>
+
+                            {recommendations.length > 0 && (
+                                <div className="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
+                                    <div className="flex items-center gap-2 text-xs font-bold text-indigo-600 uppercase tracking-widest mb-3">
+                                        <Wand2 size={12} /> AI Recommendations
+                                    </div>
+                                    <div className="space-y-2">
+                                        {recommendations.slice(0, 3).map(rec => (
+                                            <div
+                                                key={rec.employee_id}
+                                                onClick={() => setNewAssignment({ ...newAssignment, employee_id: rec.employee_id })}
+                                                className={`p-2 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${newAssignment.employee_id === rec.employee_id ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white border-gray-100 hover:border-indigo-300'}`}
+                                            >
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-bold">{rec.name}</span>
+                                                    <span className={`text-[10px] ${newAssignment.employee_id === rec.employee_id ? 'text-indigo-100' : 'text-gray-400'}`}>
+                                                        {rec.weeklyHours}h scheduled this week
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${newAssignment.employee_id === rec.employee_id ? 'bg-white/20' : 'bg-green-50 text-green-600'}`}>
+                                                        {rec.score}% Match
+                                                    </div>
+                                                    {newAssignment.employee_id === rec.employee_id && <CheckCircle2 size={16} />}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">{t('notes')} {t('optional')}</label>
                                 <textarea

@@ -31,6 +31,9 @@ import PayrollItem from './PayrollItem.js';
 import Notification from './Notification.js';
 import NotificationSetting from './NotificationSetting.js';
 import NotificationTemplate from './NotificationTemplate.js';
+import LeaveBlackoutDate from './LeaveBlackoutDate.js';
+import LeaveBalance from './LeaveBalance.js';
+import LeaveEncashment from './LeaveEncashment.js';
 
 // User & Role (Many-to-Many)
 User.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id' });
@@ -111,6 +114,23 @@ LeaveType.hasMany(LeaveRequest, { foreignKey: 'leave_type_id' });
 LeaveRequest.belongsTo(LeaveType, { foreignKey: 'leave_type_id' });
 
 LeaveRequest.belongsTo(User, { as: 'Approver', foreignKey: 'approved_by' });
+
+// Blackout Dates
+Department.hasMany(LeaveBlackoutDate, { foreignKey: 'department_id' });
+LeaveBlackoutDate.belongsTo(Department, { foreignKey: 'department_id' });
+LeaveBlackoutDate.belongsTo(User, { as: 'Creator', foreignKey: 'created_by' });
+
+// Leave Balances & Encashment
+Employee.hasMany(LeaveBalance, { foreignKey: 'employee_id' });
+LeaveBalance.belongsTo(Employee, { foreignKey: 'employee_id' });
+LeaveType.hasMany(LeaveBalance, { foreignKey: 'leave_type_id' });
+LeaveBalance.belongsTo(LeaveType, { foreignKey: 'leave_type_id' });
+
+Employee.hasMany(LeaveEncashment, { foreignKey: 'employee_id' });
+LeaveEncashment.belongsTo(Employee, { foreignKey: 'employee_id' });
+LeaveType.hasMany(LeaveEncashment, { foreignKey: 'leave_type_id' });
+LeaveEncashment.belongsTo(LeaveType, { foreignKey: 'leave_type_id' });
+LeaveEncashment.belongsTo(User, { as: 'Approver', foreignKey: 'approved_by' });
 
 // Shift Management
 Department.hasMany(ShiftType, { foreignKey: 'department_id' });
@@ -222,5 +242,8 @@ export {
     PayrollItem,
     Notification,
     NotificationSetting,
-    NotificationTemplate
+    NotificationTemplate,
+    LeaveBlackoutDate,
+    LeaveBalance,
+    LeaveEncashment
 };

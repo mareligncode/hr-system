@@ -86,8 +86,10 @@ const DashboardLayout = () => {
             items: [
                 { path: '/leave/request', label: t('requestLeave'), icon: <PenSquare className="w-4 h-4" /> },
                 { path: '/leave/history', label: t('myLeave'), icon: <CalendarDays className="w-4 h-4" /> },
+                { path: '/leave/encashments', label: t('leaveEncashment') || 'Leave Encashment', icon: <Coins className="w-4 h-4" /> },
                 { path: '/leave/approvals', label: t('leaveApprovals'), icon: <Scale className="w-4 h-4" />, roles: ['admin', 'hr', 'manager'] },
                 { path: '/leave/types', label: t('leaveTypes'), icon: <Settings2 className="w-4 h-4" />, roles: ['admin', 'hr'] },
+                { path: '/leave/blackout', label: t('blackoutDates') || 'Blackout Dates', icon: <ShieldAlert className="w-4 h-4" />, roles: ['admin', 'hr'] },
             ]
         },
         {

@@ -21,13 +21,13 @@ import {
     Chip
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-    Calendar, 
-    FileText, 
-    Send, 
-    Info, 
-    ArrowLeft, 
-    CheckCircle2, 
+import {
+    Calendar,
+    FileText,
+    Send,
+    Info,
+    ArrowLeft,
+    CheckCircle2,
     AlertCircle,
     Clock,
     Briefcase
@@ -41,6 +41,7 @@ const LeaveRequestPage = () => {
     const { t } = useSettings();
     const navigate = useNavigate();
     const { user } = useSelector((state) => state.auth);
+    const [balances, setBalances] = useState([]);
     const [leaveTypes, setLeaveTypes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -58,7 +59,17 @@ const LeaveRequestPage = () => {
 
     useEffect(() => {
         fetchLeaveTypes();
+        fetchBalances();
     }, []);
+
+    const fetchBalances = async () => {
+        try {
+            const response = await leaveService.getMyLeaveBalances();
+            setBalances(response.data);
+        } catch (err) {
+            console.error('Failed to fetch balances');
+        }
+    };
 
     const fetchLeaveTypes = async () => {
         try {
@@ -132,11 +143,11 @@ const LeaveRequestPage = () => {
             >
                 <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Box>
-                        <Typography 
-                            variant="h3" 
-                            component="h1" 
-                            fontWeight="900" 
-                            sx={{ 
+                        <Typography
+                            variant="h3"
+                            component="h1"
+                            fontWeight="900"
+                            sx={{
                                 letterSpacing: '-0.02em',
                                 mb: 1,
                                 background: 'linear-gradient(45deg, #3b82f6 30%, #9333ea 90%)',
@@ -151,11 +162,11 @@ const LeaveRequestPage = () => {
                         </Typography>
                     </Box>
                     <Tooltip title={t('backToDashboard')}>
-                        <IconButton 
+                        <IconButton
                             onClick={() => navigate('/dashboard')}
-                            sx={{ 
-                                bgcolor: 'action.hover', 
-                                border: '1px solid', 
+                            sx={{
+                                bgcolor: 'action.hover',
+                                border: '1px solid',
                                 borderColor: 'divider',
                                 '&:hover': { bgcolor: 'action.selected' }
                             }}
@@ -170,13 +181,13 @@ const LeaveRequestPage = () => {
                     <Grid item xs={12} lg={4}>
                         <Box sx={{ position: { lg: 'sticky' }, top: 100 }}>
                             {/* Summary Card */}
-                            <Paper 
-                                elevation={0} 
-                                sx={{ 
-                                    p: 3, 
-                                    mb: 3, 
-                                    borderRadius: 4, 
-                                    border: '1px solid', 
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    p: 3,
+                                    mb: 3,
+                                    borderRadius: 4,
+                                    border: '1px solid',
                                     borderColor: 'divider',
                                     background: 'var(--bg-surface-soft)',
                                     backdropFilter: 'blur(10px)'
@@ -184,28 +195,32 @@ const LeaveRequestPage = () => {
                             >
                                 <Typography variant="h6" fontWeight="800" mb={3} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                                     <Briefcase size={20} className="text-blue-500" />
-                                    {t('availableBalances') || 'Available Balances'}
+                                    {t('myLeaveBalances') || 'My Leave Balances'}
                                 </Typography>
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                    {leaveTypes.map((type, idx) => (
-                                        <motion.div 
-                                            key={type.id}
-                                            initial={{ opacity: 0, x: -20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: idx * 0.1 + 0.3 }}
-                                        >
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, borderRadius: 2, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
-                                                <Box>
-                                                    <Typography variant="subtitle2" fontWeight="700">{type.name}</Typography>
-                                                    <Typography variant="caption" color="text.secondary">{type.is_paid ? t('paid') : t('unpaid')}</Typography>
+                                    {(balances.length > 0 ? balances : leaveTypes).map((item, idx) => {
+                                        const type = item.LeaveType || item;
+                                        const balance = item.balance !== undefined ? item.balance : type.days_per_year;
+                                        return (
+                                            <motion.div
+                                                key={type.id}
+                                                initial={{ opacity: 0, x: -20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: idx * 0.1 + 0.3 }}
+                                            >
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, borderRadius: 2, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
+                                                    <Box>
+                                                        <Typography variant="subtitle2" fontWeight="700">{type.name}</Typography>
+                                                        <Typography variant="caption" color="text.secondary">{type.is_paid ? t('paid') : t('unpaid')}</Typography>
+                                                    </Box>
+                                                    <Typography variant="h6" fontWeight="900" color="primary.main">
+                                                        {balance} <Typography component="span" variant="caption" color="text.secondary">Days</Typography>
+                                                    </Typography>
                                                 </Box>
-                                                <Typography variant="h6" fontWeight="900" color="primary.main">
-                                                    {type.days_per_year} <Typography component="span" variant="caption" color="text.secondary">/yr</Typography>
-                                                </Typography>
-                                            </Box>
-                                        </motion.div>
-                                    ))}
-                                    {leaveTypes.length === 0 && (
+                                            </motion.div>
+                                        );
+                                    })}
+                                    {balances.length === 0 && leaveTypes.length === 0 && (
                                         <Box sx={{ textAlign: 'center', py: 2 }}>
                                             <Info className="text-muted-foreground mb-2" size={32} />
                                             <Typography variant="body2" color="text.secondary">
@@ -216,12 +231,12 @@ const LeaveRequestPage = () => {
                                 </Box>
                             </Paper>
 
-                            <Paper 
-                                elevation={0} 
-                                sx={{ 
-                                    p: 3, 
-                                    borderRadius: 4, 
-                                    border: '1px solid', 
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    p: 3,
+                                    borderRadius: 4,
+                                    border: '1px solid',
                                     borderColor: 'divider',
                                     bgcolor: 'primary.main',
                                     color: 'white',
@@ -242,12 +257,12 @@ const LeaveRequestPage = () => {
 
                     {/* Right Column: Request Form */}
                     <Grid item xs={12} lg={8}>
-                        <Paper 
-                            elevation={0} 
-                            sx={{ 
-                                p: { xs: 3, md: 5 }, 
-                                borderRadius: 5, 
-                                border: '1px solid', 
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                p: { xs: 3, md: 5 },
+                                borderRadius: 5,
+                                border: '1px solid',
                                 borderColor: 'divider',
                                 background: 'var(--bg-surface)',
                                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.1)'
@@ -260,8 +275,8 @@ const LeaveRequestPage = () => {
                                         animate={{ opacity: 1, height: 'auto' }}
                                         exit={{ opacity: 0, height: 0 }}
                                     >
-                                        <Alert 
-                                            severity="success" 
+                                        <Alert
+                                            severity="success"
                                             icon={<CheckCircle2 />}
                                             sx={{ mb: 4, borderRadius: 3, fontWeight: 600, border: '1px solid', borderColor: 'success.light' }}
                                         >
@@ -275,8 +290,8 @@ const LeaveRequestPage = () => {
                                         animate={{ opacity: 1, height: 'auto' }}
                                         exit={{ opacity: 0, height: 0 }}
                                     >
-                                        <Alert 
-                                            severity="error" 
+                                        <Alert
+                                            severity="error"
                                             icon={<AlertCircle />}
                                             sx={{ mb: 4, borderRadius: 3, fontWeight: 600, border: '1px solid', borderColor: 'error.light' }}
                                         >
@@ -294,11 +309,11 @@ const LeaveRequestPage = () => {
                                                 {t('leaveTypeSelection') || 'Select Leave Category'}
                                             </Typography>
                                         </Box>
-                                        <FormControl 
-                                            fullWidth 
-                                            required 
+                                        <FormControl
+                                            fullWidth
+                                            required
                                             variant="outlined"
-                                            sx={{ 
+                                            sx={{
                                                 '& .MuiOutlinedInput-root': {
                                                     borderRadius: 3,
                                                     bgcolor: 'background.paper',
@@ -352,7 +367,7 @@ const LeaveRequestPage = () => {
                                             name="start_date"
                                             value={formData.start_date}
                                             onChange={handleChange}
-                                            InputProps={{ 
+                                            InputProps={{
                                                 startAdornment: <Calendar size={18} className="mr-2 text-muted-foreground" style={{ marginRight: '10px' }} />,
                                                 sx: { borderRadius: 3, bgcolor: 'background.paper' }
                                             }}
@@ -372,7 +387,7 @@ const LeaveRequestPage = () => {
                                             name="end_date"
                                             value={formData.end_date}
                                             onChange={handleChange}
-                                            InputProps={{ 
+                                            InputProps={{
                                                 startAdornment: <Calendar size={18} className="mr-2 text-muted-foreground" style={{ marginRight: '10px' }} />,
                                                 sx: { borderRadius: 3, bgcolor: 'background.paper' }
                                             }}
@@ -395,7 +410,7 @@ const LeaveRequestPage = () => {
                                             onChange={handleChange}
                                             placeholder={t('reasonPlaceholder') || 'Please describe the reason for your leave request...'}
                                             required
-                                            InputProps={{ 
+                                            InputProps={{
                                                 startAdornment: <FileText size={18} className="mr-2 text-muted-foreground mt-1" style={{ marginRight: '10px', marginTop: '10px', alignSelf: 'flex-start' }} />,
                                                 sx: { borderRadius: 4, bgcolor: 'background.paper' }
                                             }}
@@ -412,10 +427,10 @@ const LeaveRequestPage = () => {
                                                 fullWidth
                                                 disabled={submitting || leaveTypes.length === 0}
                                                 startIcon={submitting ? <CircularProgress size={20} color="inherit" /> : <Send size={20} />}
-                                                sx={{ 
-                                                    py: 2.5, 
-                                                    borderRadius: 4, 
-                                                    fontSize: '1.1rem', 
+                                                sx={{
+                                                    py: 2.5,
+                                                    borderRadius: 4,
+                                                    fontSize: '1.1rem',
                                                     fontWeight: '900',
                                                     textTransform: 'none',
                                                     boxShadow: '0 10px 20px -5px rgba(59, 130, 246, 0.4)',

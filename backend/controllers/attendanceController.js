@@ -193,7 +193,8 @@ export const getMyAttendance = async (req, res) => {
 
         res.status(200).json(history);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch attendance history' });
+        console.error('Get My Attendance Error:', error);
+        res.status(500).json({ error: 'Failed to fetch attendance history', details: error.message });
     }
 };
 
@@ -356,9 +357,22 @@ export const getAttendanceSummary = async (req, res) => {
             where: { user_id: userId, clock_in: { [Op.gte]: startOfWeek } }
         });
 
-        const totalHours = attendance.reduce((sum, a) => sum + (a.work_hours || 0), 0);
-        const totalOvertime = attendance.reduce((sum, a) => sum + (a.overtime_hours || 0), 0);
-        const daysPresent = new Set(attendance.map(a => new Date(a.clock_in).toISOString().split('T')[0])).size;
+        const totalHours = attendance.reduce((sum, a) => sum + (parseFloat(a.work_hours) || 0), 0);
+        const totalOvertime = attendance.reduce((sum, a) => sum + (parseFloat(a.overtime_hours) || 0), 0);
+
+        const daysPresent = new Set(
+            attendance
+                .filter(a => a.clock_in)
+                .map(a => {
+                    try {
+                        const d = new Date(a.clock_in);
+                        return d instanceof Date && !isNaN(d) ? d.toISOString().split('T')[0] : null;
+                    } catch (e) {
+                        return null;
+                    }
+                })
+                .filter(d => d !== null)
+        ).size;
 
         res.status(200).json({
             totalHours: totalHours.toFixed(1),
@@ -367,7 +381,8 @@ export const getAttendanceSummary = async (req, res) => {
             thisWeek: attendance
         });
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch summary' });
+        console.error('Get Attendance Summary Error:', error);
+        res.status(500).json({ error: 'Failed to fetch summary', details: error.message });
     }
 };
 

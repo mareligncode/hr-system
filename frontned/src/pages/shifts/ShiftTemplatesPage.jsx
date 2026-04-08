@@ -9,7 +9,9 @@ import {
     Save,
     Trash2,
     Edit2,
-    Info
+    Info,
+    Wand2,
+    Zap
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import shiftService from '../../services/shiftService';
@@ -198,6 +200,22 @@ const ShiftTemplatesPage = () => {
             setIsApplyModalOpen(false);
         } catch (error) {
             toast.error(error.response?.data?.error || t('failedToApplyTemplate'));
+        }
+    };
+
+    const handleAutoSchedule = async (e) => {
+        e.preventDefault();
+        try {
+            const payload = {
+                start_date: applyDates.start_date,
+                end_date: applyDates.end_date
+            };
+
+            await shiftService.autoSchedule(selectedTemplate.id, payload);
+            toast.success(t('intelligentScheduleGenerated'));
+            setIsApplyModalOpen(false);
+        } catch (error) {
+            toast.error(error.response?.data?.error || t('failedToAutoSchedule'));
         }
     };
 
@@ -415,9 +433,19 @@ const ShiftTemplatesPage = () => {
                                     </select>
                                 </div>
                             )}
-                            <div className="pt-4 flex gap-3">
-                                <button type="button" onClick={() => setIsApplyModalOpen(false)} className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg font-medium">{t('cancel')}</button>
-                                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium shadow-md shadow-blue-100">{t('confirmApply')}</button>
+                            <div className="pt-4 flex flex-col gap-3">
+                                <div className="flex gap-3">
+                                    <button type="button" onClick={() => setIsApplyModalOpen(false)} className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg font-medium">{t('cancel')}</button>
+                                    <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium shadow-md shadow-blue-100">{t('confirmApply')}</button>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleAutoSchedule}
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all group"
+                                >
+                                    <Wand2 size={18} className="group-hover:rotate-12 transition-transform" />
+                                    {t('generateIntelligentSchedule')}
+                                </button>
                             </div>
                         </form>
                     </div>

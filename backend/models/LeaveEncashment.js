@@ -1,13 +1,13 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
 
-const ShiftSwapRequest = sequelize.define('ShiftSwapRequest', {
+const LeaveEncashment = sequelize.define('LeaveEncashment', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
-    requesting_employee_id: {
+    employee_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
@@ -15,36 +15,35 @@ const ShiftSwapRequest = sequelize.define('ShiftSwapRequest', {
             key: 'user_id'
         }
     },
-    target_employee_id: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        references: {
-            model: 'employees',
-            key: 'user_id'
-        }
-    },
-    shift_assignment_id: {
+    leave_type_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: 'shift_assignments',
+            model: 'leave_types',
             key: 'id'
         }
     },
-    requested_date: {
+    request_date: {
         type: DataTypes.DATEONLY,
+        allowNull: false,
+        defaultValue: DataTypes.NOW
+    },
+    days_to_encash: {
+        type: DataTypes.DECIMAL(5, 2),
         allowNull: false
     },
-    reason: {
-        type: DataTypes.TEXT,
-        allowNull: true
+    amount_per_day: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false
+    },
+    total_amount: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false
     },
     status: {
-        type: DataTypes.STRING(20),
-        defaultValue: 'pending',
-        validate: {
-            isIn: [['pending', 'approved', 'rejected', 'cancelled']]
-        }
+        type: DataTypes.ENUM('pending', 'approved', 'rejected', 'paid'),
+        allowNull: false,
+        defaultValue: 'pending'
     },
     approved_by: {
         type: DataTypes.INTEGER,
@@ -61,12 +60,15 @@ const ShiftSwapRequest = sequelize.define('ShiftSwapRequest', {
     rejection_reason: {
         type: DataTypes.TEXT,
         allowNull: true
+    },
+    comments: {
+        type: DataTypes.TEXT,
+        allowNull: true
     }
 }, {
-    tableName: 'shift_swap_requests',
+    tableName: 'leave_encashments',
     timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at'
+    underscored: true
 });
 
-export default ShiftSwapRequest;
+export default LeaveEncashment;
