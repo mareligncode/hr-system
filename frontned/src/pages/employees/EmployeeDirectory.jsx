@@ -104,22 +104,22 @@ const EmployeeDirectory = () => {
     return (
         <div className="space-y-8 pb-20">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-[var(--text-main)] transition-colors">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-main)] transition-colors">
                         {t('employeeDirectory')}
                     </h1>
-                    <p className="text-[var(--text-soft)] mt-1">
+                    <p className="text-xs sm:text-sm text-[var(--text-soft)] mt-1">
                         {t('employeeDirectoryDescription')}
                     </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                     {hasPermission('manage_employees') && (
                         <Button
                             onClick={exportToCSV}
                             variant="secondary"
-                            className="bg-white hover:bg-gray-50 text-gray-700 border-gray-200"
+                            className="bg-white hover:bg-gray-50 text-gray-700 border-gray-200 h-11 sm:h-auto text-xs sm:text-sm"
                         >
                             <Download className="w-4 h-4 mr-2" />
                             {t('exportCsv')}
@@ -128,7 +128,7 @@ const EmployeeDirectory = () => {
                     {hasPermission('manage_employees') && (
                         <Link
                             to="/employees/create"
-                            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-semibold shadow-xl shadow-blue-500/20 transition-all active:scale-95 whitespace-nowrap"
+                            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl sm:rounded-2xl font-semibold shadow-xl shadow-blue-500/20 transition-all active:scale-95 whitespace-nowrap text-xs sm:text-sm h-11 sm:h-auto"
                         >
                             <Plus className="w-5 h-5" />
                             {t('addEmployee')}
@@ -138,7 +138,7 @@ const EmployeeDirectory = () => {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <StatCard label={t('totalEmployees')} value={pagination.total} icon={Users} color="blue" />
                 <StatCard label={t('activeStatus')} value={employees.filter(e => e.employment_status === 'active').length} icon={ShieldCheck} color="emerald" />
                 <StatCard label={t('departments')} value={new Set(employees.map(e => e.department_id)).size} icon={Building2} color="purple" />
@@ -159,14 +159,14 @@ const EmployeeDirectory = () => {
                         />
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-                        <div className="flex bg-[var(--bg-surface-soft)] p-1.5 rounded-2xl border border-[var(--border-main)] overflow-x-auto no-scrollbar">
+                    <div className="flex flex-col sm:flex-row xl:flex-row items-stretch sm:items-center gap-4">
+                        <div className="flex bg-[var(--bg-surface-soft)] p-1 rounded-xl sm:rounded-2xl border border-[var(--border-main)] overflow-x-auto no-scrollbar scroll-smooth">
                             {['all', 'active', 'on_leave', 'terminated'].map((f) => (
                                 <button
                                     key={f}
                                     onClick={() => handleFilterChange(f)}
-                                    className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${activeFilter === f
-                                        ? 'bg-white text-gray-900 shadow-lg'
+                                    className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black transition-all whitespace-nowrap uppercase tracking-tighter ${activeFilter === f
+                                        ? 'bg-blue-600 text-white shadow-lg'
                                         : 'text-[var(--text-soft)] hover:text-[var(--text-main)]'
                                         }`}
                                 >
@@ -178,8 +178,8 @@ const EmployeeDirectory = () => {
                         <select
                             value={selectedDept}
                             onChange={handleDeptChange}
-                            className="bg-[var(--bg-input)] border border-[var(--border-input)] rounded-2xl py-4 px-6 text-sm font-bold text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none bg-no-repeat bg-[right_1.5rem_center]"
-                            style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'currentColor\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\' /%3E%3C/svg%3E")', backgroundSize: '1.2rem' }}
+                            className="bg-[var(--bg-input)] border border-[var(--border-input)] rounded-xl sm:rounded-2xl py-3 sm:py-4 px-4 sm:px-6 text-xs sm:text-sm font-bold text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none bg-no-repeat bg-[right_1rem_center]"
+                            style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'currentColor\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\' /%3E%3C/svg%3E")', backgroundSize: '1rem' }}
                         >
                             <option value="">{t('allDepartments')}</option>
                             {departments.map(dept => (
@@ -187,7 +187,7 @@ const EmployeeDirectory = () => {
                             ))}
                         </select>
 
-                        <div className="flex bg-[var(--bg-surface-soft)] p-1.5 rounded-2xl border border-[var(--border-main)] ml-auto">
+                        <div className="hidden sm:flex bg-[var(--bg-surface-soft)] p-1.5 rounded-2xl border border-[var(--border-main)] ml-auto">
                             <button
                                 onClick={() => setViewMode('grid')}
                                 className={`p-2 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white text-blue-600 shadow-md' : 'text-[var(--text-soft)] hover:text-[var(--text-main)]'}`}
@@ -291,33 +291,35 @@ const EmployeeDirectory = () => {
             )}
 
             {/* Pagination Controls */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mt-12 bg-[var(--bg-surface)] p-6 rounded-[2rem] border border-[var(--border-main)] shadow-sm">
-                <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-[var(--text-soft)]">{t('rowsPerPage') || 'Rows per page'}:</span>
-                    <select
-                        value={itemsPerPage}
-                        onChange={handleLimitChange}
-                        className="bg-[var(--bg-surface-soft)] border border-[var(--border-main)] rounded-xl py-2 px-4 text-sm font-bold text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none bg-no-repeat bg-[right_1rem_center] pr-10"
-                        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'currentColor\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\' /%3E%3C/svg%3E")', backgroundSize: '1rem' }}
-                    >
-                        {[5, 10, 20, 50].map(val => (
-                            <option key={val} value={val}>{val}</option>
-                        ))}
-                    </select>
-                    <span className="text-xs font-medium text-[var(--text-muted)] ml-2">
-                        {t('showing') || 'Showing'} {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, pagination.total)} {t('of') || 'of'} {pagination.total}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mt-8 sm:mt-12 bg-[var(--bg-surface)] p-5 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-[var(--border-main)] shadow-sm">
+                <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs sm:text-sm font-bold text-[var(--text-soft)]">{t('rows')}:</span>
+                        <select
+                            value={itemsPerPage}
+                            onChange={handleLimitChange}
+                            className="bg-[var(--bg-surface-soft)] border border-[var(--border-main)] rounded-lg py-1.5 px-3 text-xs font-bold text-[var(--text-main)] appearance-none bg-no-repeat bg-[right_0.5rem_center] pr-7"
+                            style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'currentColor\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\' /%3E%3C/svg%3E")', backgroundSize: '0.8rem' }}
+                        >
+                            {[5, 10, 20, 50].map(val => (
+                                <option key={val} value={val}>{val}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[var(--text-muted)]">
+                        {Math.min(currentPage * itemsPerPage, pagination.total)} / {pagination.total}
                     </span>
                 </div>
 
                 {pagination.totalPages > 1 && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
                         <Button
                             variant="secondary"
                             disabled={currentPage === 1}
                             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                            className="px-4 py-2 text-xs font-bold"
+                            className="flex-1 sm:flex-none px-4 py-2 text-[10px] font-black uppercase tracking-widest h-10"
                         >
-                            {t('previous') || 'Previous'}
+                            {t('prev') || 'Prev'}
                         </Button>
 
                         <div className="hidden md:flex items-center gap-1">
@@ -333,8 +335,8 @@ const EmployeeDirectory = () => {
                                             key={pageNum}
                                             onClick={() => setCurrentPage(pageNum)}
                                             className={`w-10 h-10 rounded-xl font-bold text-xs transition-all ${currentPage === pageNum
-                                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
-                                                    : 'text-[var(--text-soft)] hover:bg-[var(--bg-surface-soft)]'
+                                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                                                : 'text-[var(--text-soft)] hover:bg-[var(--bg-surface-soft)]'
                                                 }`}
                                         >
                                             {pageNum}
@@ -354,7 +356,7 @@ const EmployeeDirectory = () => {
                             variant="secondary"
                             disabled={currentPage === pagination.totalPages}
                             onClick={() => setCurrentPage(prev => prev + 1)}
-                            className="px-4 py-2 text-xs font-bold"
+                            className="flex-1 sm:flex-none px-4 py-2 text-[10px] font-black uppercase tracking-widest h-10"
                         >
                             {t('next') || 'Next'}
                         </Button>

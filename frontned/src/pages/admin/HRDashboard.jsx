@@ -36,61 +36,61 @@ const HRDashboard = () => {
     );
 
     return (
-        <div className="space-y-8 pb-20">
-            <div className="flex justify-between items-center">
+        <div className="space-y-6 sm:space-y-8 pb-20">
+            <div className="flex justify-between items-center px-1">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight">{t('hrDashboard') || 'HR Dashboard'}</h1>
-                    <p className="text-[var(--text-soft)]">{t('hrOverviewDesc') || 'Operational HR metrics and recruitment pipeline'}</p>
+                    <h1 className="text-2xl sm:text-3xl font-black tracking-tight">{t('hrDashboard') || 'HR Dashboard'}</h1>
+                    <p className="text-xs sm:text-sm text-[var(--text-soft)]">{t('hrOverviewDesc') || 'Operational HR metrics and recruitment pipeline'}</p>
                 </div>
             </div>
 
             {/* Metric Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {[
                     { label: t('newHires'), value: data?.metrics?.newHires, icon: UserPlus, color: 'blue' },
                     { label: t('pendingLeaves'), value: data?.metrics?.pendingLeaves, icon: Calendar, color: 'purple' },
                     { label: t('activeJobs'), value: data?.metrics?.activeJobs, icon: Briefcase, color: 'emerald' },
                     { label: t('compliance'), value: data?.metrics?.complianceRate, icon: CheckCircle, color: 'amber' }
                 ].map((card, idx) => (
-                    <div key={idx} className="bg-[var(--bg-surface)] p-6 rounded-3xl border border-[var(--border-main)] shadow-sm">
-                        <div className={`p-3 rounded-2xl bg-${card.color}-500/10 text-${card.color}-500 w-fit mb-4`}>
-                            <card.icon className="w-6 h-6" />
+                    <div key={idx} className="bg-[var(--bg-surface)] p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-[var(--border-main)] shadow-sm">
+                        <div className={`p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-${card.color}-500/10 text-${card.color}-500 w-fit mb-3 sm:mb-4`}>
+                            <card.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                         </div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-1">{card.label}</p>
-                        <h3 className="text-3xl font-black">{card.value}</h3>
+                        <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-1 truncate">{card.label}</p>
+                        <h3 className="text-xl sm:text-3xl font-black">{card.value}</h3>
                     </div>
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                 {/* Hiring Trend */}
-                <div className="bg-[var(--bg-surface)] p-8 rounded-[2rem] border border-[var(--border-main)] shadow-sm">
-                    <h2 className="text-xl font-bold mb-8">{t('hiringTrend') || 'Hiring Trend'}</h2>
-                    <div className="h-[300px] w-full">
+                <div className="bg-[var(--bg-surface)] p-6 sm:p-8 rounded-3xl sm:rounded-[2rem] border border-[var(--border-main)] shadow-sm">
+                    <h2 className="text-lg sm:text-xl font-bold mb-6 sm:mb-8">{t('hiringTrend') || 'Hiring Trend'}</h2>
+                    <div className="h-[250px] sm:h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={data?.hiringTrend}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-main)" />
-                                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
-                                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
+                                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
                                 <Tooltip contentStyle={{ borderRadius: '12px' }} />
-                                <Bar dataKey="hires" fill="#2563eb" radius={[8, 8, 0, 0]} />
+                                <Bar dataKey="hires" fill="#2563eb" radius={[6, 6, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
                 {/* Leave by Type */}
-                <div className="bg-[var(--bg-surface)] p-8 rounded-[2rem] border border-[var(--border-main)] shadow-sm">
-                    <h2 className="text-xl font-bold mb-8">{t('leaveByType') || 'Leave by Type'}</h2>
-                    <div className="h-[300px] w-full">
+                <div className="bg-[var(--bg-surface)] p-6 sm:p-8 rounded-3xl sm:rounded-[2rem] border border-[var(--border-main)] shadow-sm">
+                    <h2 className="text-lg sm:text-xl font-bold mb-6 sm:mb-8">{t('leaveByType') || 'Leave by Type'}</h2>
+                    <div className="h-[250px] sm:h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
                                     data={data?.leaveByType}
                                     cx="50%"
                                     cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={100}
+                                    innerRadius={50}
+                                    outerRadius={80}
                                     paddingAngle={5}
                                     dataKey="count"
                                     nameKey="type"
@@ -100,7 +100,7 @@ const HRDashboard = () => {
                                     ))}
                                 </Pie>
                                 <Tooltip />
-                                <Legend />
+                                <Legend wrapperStyle={{ fontSize: '10px' }} />
                             </PieChart>
                         </ResponsiveContainer>
                     </div>

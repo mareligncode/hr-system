@@ -106,20 +106,21 @@ const LeaveBlackoutPage = () => {
     return (
         <Container maxWidth="lg" sx={{ py: 6 }}>
             <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-                <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ mb: 4, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 3 }}>
                     <Box>
-                        <Typography variant="h3" fontWeight="900" gutterBottom>
+                        <Typography variant="h3" fontWeight="900" sx={{ fontSize: { xs: '2rem', sm: '3rem' }, tracking: '-0.05em' }}>
                             {t('blackoutDates') || 'Blackout Dates'}
                         </Typography>
-                        <Typography variant="body1" color="text.secondary">
+                        <Typography variant="body1" color="text.secondary" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
                             {t('manageBlackoutDescription') || 'Global or department-specific dates where leave is restricted.'}
                         </Typography>
                     </Box>
                     <Button
                         variant="contained"
+                        fullWidth={true}
                         startIcon={<Plus size={20} />}
                         onClick={() => setOpen(true)}
-                        sx={{ borderRadius: 2, px: 3 }}
+                        sx={{ borderRadius: 4, py: 1.5, px: 4, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.75rem', width: { xs: '100%', sm: 'auto' }, shadow: 'none' }}
                     >
                         {t('addBlackout') || 'Add Period'}
                     </Button>
@@ -128,16 +129,16 @@ const LeaveBlackoutPage = () => {
 
             <Grid container spacing={3}>
                 <Grid item xs={12}>
-                    <TableContainer component={Paper} sx={{ borderRadius: 4, border: '1px solid', borderColor: 'divider' }}>
-                        <Table>
+                    <TableContainer component={Paper} sx={{ borderRadius: 4, border: '1px solid', borderColor: 'divider', overflowX: 'auto' }}>
+                        <Table size={window.innerWidth < 640 ? 'small' : 'medium'}>
                             <TableHead sx={{ bgcolor: 'action.hover' }}>
                                 <TableRow>
-                                    <TableCell sx={{ fontWeight: 800 }}>{t('name')}</TableCell>
-                                    <TableCell sx={{ fontWeight: 800 }}>{t('department')}</TableCell>
-                                    <TableCell sx={{ fontWeight: 800 }}>{t('startDate')}</TableCell>
-                                    <TableCell sx={{ fontWeight: 800 }}>{t('endDate')}</TableCell>
-                                    <TableCell sx={{ fontWeight: 800 }}>{t('status')}</TableCell>
-                                    <TableCell align="right" sx={{ fontWeight: 800 }}>{t('actions')}</TableCell>
+                                    <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', tracking: '0.1em' }}>{t('name')}</TableCell>
+                                    <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', tracking: '0.1em' }}>{t('department')}</TableCell>
+                                    <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', tracking: '0.1em' }}>{t('startDate')}</TableCell>
+                                    <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', tracking: '0.1em' }}>{t('endDate')}</TableCell>
+                                    <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', tracking: '0.1em' }}>{t('status')}</TableCell>
+                                    <TableCell align="right" sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', tracking: '0.1em' }}>{t('actions')}</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -154,28 +155,29 @@ const LeaveBlackoutPage = () => {
                                     blackouts.map((b) => (
                                         <TableRow key={b.id} hover>
                                             <TableCell>
-                                                <Typography fontWeight="700">{b.name}</Typography>
-                                                <Typography variant="caption" color="text.secondary">{b.description}</Typography>
+                                                <Typography fontWeight="700" variant="body2">{b.name}</Typography>
+                                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>{b.description}</Typography>
                                             </TableCell>
                                             <TableCell>
                                                 {b.Department ? (
-                                                    <Chip label={b.Department.name} size="small" variant="outlined" />
+                                                    <Chip label={b.Department.name} size="small" variant="outlined" sx={{ fontWeight: 700, fontSize: '0.7rem' }} />
                                                 ) : (
-                                                    <Chip label="All Departments" size="small" color="primary" />
+                                                    <Chip label="All Departments" size="small" color="primary" sx={{ fontWeight: 700, fontSize: '0.7rem' }} />
                                                 )}
                                             </TableCell>
-                                            <TableCell>{b.start_date}</TableCell>
-                                            <TableCell>{b.end_date}</TableCell>
+                                            <TableCell sx={{ fontSize: '0.875rem' }}>{b.start_date}</TableCell>
+                                            <TableCell sx={{ fontSize: '0.875rem' }}>{b.end_date}</TableCell>
                                             <TableCell>
                                                 <Chip
                                                     label={new Date(b.end_date) < new Date() ? 'Expired' : 'Active'}
                                                     color={new Date(b.end_date) < new Date() ? 'default' : 'success'}
                                                     size="small"
+                                                    sx={{ fontWeight: 800, fontSize: '0.65rem' }}
                                                 />
                                             </TableCell>
                                             <TableCell align="right">
-                                                <IconButton onClick={() => handleDelete(b.id)} color="error">
-                                                    <Trash2 size={18} />
+                                                <IconButton onClick={() => handleDelete(b.id)} color="error" size="small">
+                                                    <Trash2 size={16} />
                                                 </IconButton>
                                             </TableCell>
                                         </TableRow>

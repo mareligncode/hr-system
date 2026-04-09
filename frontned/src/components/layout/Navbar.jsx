@@ -5,7 +5,7 @@ import { logoutUser } from '../../store/authSlice.js';
 import { useSettings } from '../../context/SettingsContext.jsx';
 import NotificationDropdown from './NotificationDropdown.jsx';
 
-const Navbar = () => {
+const Navbar = ({ onMenuClick }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { user } = useSelector((state) => state.auth);
@@ -28,39 +28,49 @@ const Navbar = () => {
             {/* Navbar */}
             <header className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b transition-colors duration-300 bg-[var(--bg-navbar)] border-[var(--border-main)] shadow-sm`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
-                    {/* Logo */}
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-900/40">
-                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    {/* Mobile Menu Toggle & Logo */}
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={onMenuClick}
+                            className="lg:hidden p-2 rounded-lg text-[var(--text-soft)] hover:bg-[var(--bg-surface-soft)] transition-colors"
+                        >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
                             </svg>
+                        </button>
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-900/40">
+                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                            </div>
+                            <span className="font-semibold text-sm hidden sm:block text-[var(--text-main)]">
+                                {t('appName')}
+                            </span>
                         </div>
-                        <span className="font-semibold text-sm hidden sm:block text-[var(--text-main)]">
-                            {t('appName')}
-                        </span>
+
+                        {/* Nav */}
+                        <nav className="hidden md:flex items-center gap-1">
+                            <a href="/profile" className="px-3 py-2 text-sm rounded-lg transition-colors text-[var(--text-soft)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-soft)]">
+                                {t('dashboard')}
+                            </a>
+                        </nav>
                     </div>
 
-                    {/* Nav */}
-                    <nav className="hidden md:flex items-center gap-1">
-                        <a href="/profile" className="px-3 py-2 text-sm rounded-lg transition-colors text-[var(--text-soft)] hover:text-[var(--text-main)] hover:bg-[var(--bg-surface-soft)]">
-                            {t('dashboard')}
-                        </a>
-                    </nav>
-
                     {/* Right section */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                         {/* Theme toggle */}
                         <button
                             onClick={toggleTheme}
                             title={isLight ? t('darkMode') : t('lightMode')}
-                            className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors text-[var(--text-soft)] hover:bg-[var(--bg-surface-soft)] hover:text-[var(--text-main)]"
+                            className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-colors text-[var(--text-soft)] hover:bg-[var(--bg-surface-soft)] active:scale-95"
                         >
                             {isLight ? (
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                                 </svg>
                             ) : (
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                                 </svg>
                             )}
@@ -69,8 +79,7 @@ const Navbar = () => {
                         {/* Language toggle */}
                         <button
                             onClick={() => setLanguage(language === 'en' ? 'am' : 'en')}
-                            title={language === 'en' ? 'Switch to አማርኛ' : 'Switch to English'}
-                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors border border-[var(--border-input)] text-[var(--text-main)] hover:bg-[var(--bg-surface-soft)] bg-[var(--bg-surface)]"
+                            className="px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[10px] font-black transition-all border border-[var(--border-input)] text-[var(--text-main)] hover:bg-[var(--bg-surface-soft)] bg-[var(--bg-surface)] active:scale-95 uppercase tracking-widest"
                         >
                             {language === 'en' ? 'አማ' : 'EN'}
                         </button>
@@ -81,9 +90,9 @@ const Navbar = () => {
                         <button
                             onClick={() => setShowSettings(true)}
                             title={t('settings')}
-                            className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors text-[var(--text-soft)] hover:bg-[var(--bg-surface-soft)] hover:text-[var(--text-main)]"
+                            className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-colors text-[var(--text-soft)] hover:bg-[var(--bg-surface-soft)] active:scale-95"
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
@@ -91,18 +100,17 @@ const Navbar = () => {
 
                         {/* User info + avatar */}
                         <div className="flex items-center gap-2 ml-1">
-                            <div className="text-right hidden lg:block">
-                                <p className="text-sm font-bold text-[var(--text-main)] truncate max-w-[120px]">
+                            <div className="text-right hidden xl:block">
+                                <p className="text-sm font-black text-[var(--text-main)] truncate max-w-[120px] uppercase tracking-tighter">
                                     {user?.first_name} {user?.last_name}
                                 </p>
                                 <div className="flex justify-end gap-2 items-center">
-                                    <span className="text-[10px] font-bold text-blue-500 bg-blue-500/10 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                    <span className="text-[9px] font-black text-blue-600 bg-blue-600/10 px-1.5 py-0.5 rounded uppercase tracking-widest">
                                         {t(user?.role)}
                                     </span>
-                                    <p className="text-[10px] text-[var(--text-muted)] truncate max-w-[80px]">{user?.email}</p>
                                 </div>
                             </div>
-                            <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-black shadow-lg shadow-blue-500/30 border-2 border-white/10 overflow-hidden">
+                            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-blue-600 rounded-full flex items-center justify-center text-white text-[10px] sm:text-xs font-black shadow-lg shadow-blue-500/30 border border-white/20 overflow-hidden cursor-pointer active:scale-95" onClick={() => navigate('/profile')}>
                                 {user?.profile_picture_url ? (
                                     <img
                                         src={user.profile_picture_url}
@@ -121,13 +129,13 @@ const Navbar = () => {
                         {/* Logout */}
                         <button
                             onClick={handleLogout}
-                            className="flex items-center justify-center w-9 h-9 rounded-lg transition-colors text-[var(--text-soft)] hover:text-red-500 hover:bg-red-500/10 lg:w-auto lg:px-3 lg:gap-1.5"
+                            className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg transition-colors text-[var(--text-soft)] hover:text-red-500 hover:bg-red-500/10 lg:w-auto lg:px-3 lg:gap-1.5 active:scale-95"
                             title={t('logout')}
                         >
-                            <svg className="w-5 h-5 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                             </svg>
-                            <span className="hidden lg:block text-sm font-medium">{t('logout')}</span>
+                            <span className="hidden xl:block text-xs font-black uppercase tracking-widest">{t('logout')}</span>
                         </button>
                     </div>
                 </div>

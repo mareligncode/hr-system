@@ -34,6 +34,23 @@ import NotificationTemplate from './NotificationTemplate.js';
 import LeaveBlackoutDate from './LeaveBlackoutDate.js';
 import LeaveBalance from './LeaveBalance.js';
 import LeaveEncashment from './LeaveEncashment.js';
+import PerformanceKPI from './PerformanceKPI.js';
+import EmployeeKPIScore from './EmployeeKPIScore.js';
+import PerformanceReview from './PerformanceReview.js';
+import Badge from './Badge.js';
+import EmployeeBadge from './EmployeeBadge.js';
+import DisciplinaryRecord from './DisciplinaryRecord.js';
+import Course from './Course.js';
+import CourseProgress from './CourseProgress.js';
+import QuizQuestion from './QuizQuestion.js';
+import QuizAttempt from './QuizAttempt.js';
+import Asset from './Asset.js';
+import AssetAssignment from './AssetAssignment.js';
+import Uniform from './Uniform.js';
+import Accommodation from './Accommodation.js';
+import WelfareRequest from './WelfareRequest.js';
+import Expense from './Expense.js';
+import TipPool from './TipPool.js';
 
 // User & Role (Many-to-Many)
 User.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id' });
@@ -206,8 +223,69 @@ PayrollItem.belongsTo(User, { foreignKey: 'user_id' });
 User.hasMany(Notification, { foreignKey: 'user_id' });
 Notification.belongsTo(User, { foreignKey: 'user_id' });
 
-User.hasOne(NotificationSetting, { foreignKey: 'user_id' });
 NotificationSetting.belongsTo(User, { foreignKey: 'user_id' });
+
+// Phase 4: Performance & Mastery
+Department.hasMany(PerformanceKPI, { foreignKey: 'department_id' });
+PerformanceKPI.belongsTo(Department, { foreignKey: 'department_id' });
+
+Employee.hasMany(EmployeeKPIScore, { foreignKey: 'employee_id' });
+EmployeeKPIScore.belongsTo(Employee, { foreignKey: 'employee_id' });
+PerformanceKPI.hasMany(EmployeeKPIScore, { foreignKey: 'kpi_id' });
+EmployeeKPIScore.belongsTo(PerformanceKPI, { foreignKey: 'kpi_id' });
+EmployeeKPIScore.belongsTo(User, { as: 'Recorder', foreignKey: 'recorded_by' });
+
+Employee.hasMany(PerformanceReview, { foreignKey: 'employee_id' });
+PerformanceReview.belongsTo(Employee, { foreignKey: 'employee_id' });
+PerformanceReview.belongsTo(User, { as: 'Reviewer', foreignKey: 'reviewer_id' });
+
+Badge.hasMany(EmployeeBadge, { foreignKey: 'badge_id' });
+EmployeeBadge.belongsTo(Badge, { foreignKey: 'badge_id' });
+Employee.hasMany(EmployeeBadge, { foreignKey: 'employee_id' });
+EmployeeBadge.belongsTo(Employee, { foreignKey: 'employee_id' });
+EmployeeBadge.belongsTo(User, { as: 'Nominator', foreignKey: 'nominated_by' });
+
+Employee.hasMany(DisciplinaryRecord, { foreignKey: 'employee_id' });
+DisciplinaryRecord.belongsTo(User, { as: 'Issuer', foreignKey: 'issued_by' });
+
+// Phase 5: LMS (Learning Management System)
+Department.hasMany(Course, { foreignKey: 'department_id' });
+Course.belongsTo(Department, { foreignKey: 'department_id' });
+
+Employee.hasMany(CourseProgress, { foreignKey: 'employee_id' });
+CourseProgress.belongsTo(Employee, { foreignKey: 'employee_id' });
+Course.hasMany(CourseProgress, { foreignKey: 'course_id' });
+CourseProgress.belongsTo(Course, { foreignKey: 'course_id' });
+
+Course.hasMany(QuizQuestion, { foreignKey: 'course_id' });
+QuizQuestion.belongsTo(Course, { foreignKey: 'course_id' });
+
+Employee.hasMany(QuizAttempt, { foreignKey: 'employee_id' });
+QuizAttempt.belongsTo(Employee, { foreignKey: 'employee_id' });
+QuizAttempt.belongsTo(Course, { foreignKey: 'course_id' });
+
+// Phase 6: Workforce Welfare & Assets
+Employee.hasMany(AssetAssignment, { foreignKey: 'employee_id' });
+AssetAssignment.belongsTo(Employee, { foreignKey: 'employee_id' });
+Asset.hasMany(AssetAssignment, { foreignKey: 'asset_id' });
+AssetAssignment.belongsTo(Asset, { foreignKey: 'asset_id' });
+
+Employee.hasMany(WelfareRequest, { foreignKey: 'employee_id' });
+WelfareRequest.belongsTo(Employee, { foreignKey: 'employee_id' });
+User.hasMany(WelfareRequest, { as: 'Handler', foreignKey: 'handled_by' });
+WelfareRequest.belongsTo(User, { as: 'Handler', foreignKey: 'handled_by' });
+
+Accommodation.hasMany(Employee, { foreignKey: 'accommodation_id' });
+Employee.belongsTo(Accommodation, { foreignKey: 'accommodation_id' });
+
+// Phase 7: Financial Integrity
+Employee.hasMany(Expense, { foreignKey: 'employee_id' });
+Expense.belongsTo(Employee, { foreignKey: 'employee_id' });
+Expense.belongsTo(User, { as: 'Approver', foreignKey: 'approved_by' });
+
+Department.hasMany(TipPool, { foreignKey: 'department_id' });
+TipPool.belongsTo(Department, { foreignKey: 'department_id' });
+TipPool.belongsTo(User, { as: 'Distributor', foreignKey: 'distributed_by' });
 
 export {
     User,
@@ -245,5 +323,22 @@ export {
     NotificationTemplate,
     LeaveBlackoutDate,
     LeaveBalance,
-    LeaveEncashment
+    LeaveEncashment,
+    PerformanceKPI,
+    EmployeeKPIScore,
+    PerformanceReview,
+    Badge,
+    EmployeeBadge,
+    DisciplinaryRecord,
+    Course,
+    CourseProgress,
+    QuizQuestion,
+    QuizAttempt,
+    Asset,
+    AssetAssignment,
+    Uniform,
+    Accommodation,
+    WelfareRequest,
+    Expense,
+    TipPool
 };

@@ -191,6 +191,14 @@ const Employee = sequelize.define('Employee', {
         type: DataTypes.STRING(100),
         allowNull: true
     },
+    accommodation_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: 'accommodations',
+            key: 'id'
+        }
+    },
     base_salary: {
         type: DataTypes.DECIMAL(12, 2),
         allowNull: true,

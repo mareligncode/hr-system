@@ -28,6 +28,11 @@ import offerRoutes from './routes/offerRoutes.js';
 import payrollRoutes from './routes/payrollRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
+import performanceRoutes from './routes/performanceRoutes.js';
+import lmsRoutes from './routes/lmsRoutes.js';
+import welfareRoutes from './routes/welfareRoutes.js';
+import recruitmentRoutes from './routes/recruitmentRoutes.js';
+import financialRoutes from './routes/financialRoutes.js';
 
 import { setupSwagger } from './config/swagger.js';
 
@@ -105,6 +110,11 @@ app.use('/api/offers', offerRoutes);
 app.use('/api/payroll', payrollRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/performance', performanceRoutes);
+app.use('/api/lms', lmsRoutes);
+app.use('/api/welfare', welfareRoutes);
+app.use('/api/recruitment', recruitmentRoutes);
+app.use('/api/finance', financialRoutes);
 
 app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'ok', message: 'Server is running' });

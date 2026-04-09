@@ -59,6 +59,28 @@ import PayrollRun from './pages/payroll/PayrollRun.jsx';
 import PayrollReview from './pages/payroll/PayrollReview.jsx';
 import EmployeePayslips from './pages/payroll/EmployeePayslips.jsx';
 
+// Finance & Phase 7 Payroll 
+import PayrollDashboard from './pages/finance/PayrollDashboard.jsx';
+import MyFinancePage from './pages/finance/MyFinancePage.jsx';
+
+// Performance
+import PerformanceDashboard from './pages/performance/PerformanceDashboard.jsx';
+import Feedback360Page from './pages/performance/Feedback360Page.jsx';
+import RecognitionWall from './pages/performance/RecognitionWall.jsx';
+import DisciplinaryPortal from './pages/performance/DisciplinaryPortal.jsx';
+// LMS
+import TrainingCatalog from './pages/performance/TrainingCatalog.jsx';
+import CoursePlayer from './pages/performance/CoursePlayer.jsx';
+import ComplianceDashboard from './pages/performance/ComplianceDashboard.jsx';
+// Welfare & Assets (Phase 6)
+import AssetInventory from './pages/performance/AssetInventory.jsx';
+import AccommodationPortal from './pages/performance/AccommodationPortal.jsx';
+import WelfareSupportPage from './pages/performance/WelfareSupportPage.jsx';
+// Recruitment (Phase 7)
+import JobBoard from './pages/performance/JobBoard.jsx';
+import ApplicantTrackingSystem from './pages/performance/ApplicantTrackingSystem.jsx';
+import InterviewScheduler from './pages/performance/InterviewScheduler.jsx';
+
 // Notifications
 import NotificationCenter from './pages/notifications/NotificationCenter.jsx';
 import NotificationPreferences from './pages/notifications/NotificationPreferences.jsx';
@@ -312,12 +334,49 @@ function App() {
             } />
             <Route path="/payroll/payslips" element={<EmployeePayslips />} />
 
+            {/* Phase 7: Finance & Payroll */}
+            <Route path="/finance/payroll" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'finance']}>
+                <PayrollDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/finance/my" element={<MyFinancePage />} />
+
             {/* Notification Management */}
             <Route path="/notifications" element={<NotificationCenter />} />
             <Route path="/settings/notifications" element={<NotificationPreferences />} />
             <Route path="/admin/notifications/templates" element={
               <ProtectedRoute requiredRoles={['admin', 'hr']}>
                 <NotificationTemplates />
+              </ProtectedRoute>
+            } />
+
+            {/* Performance & Mastery (Phase 4) */}
+            <Route path="/performance" element={<PerformanceDashboard />} />
+            <Route path="/performance/feedback" element={<Feedback360Page />} />
+            <Route path="/performance/recognition" element={<RecognitionWall />} />
+            <Route path="/performance/discipline" element={<DisciplinaryPortal />} />
+
+            {/* LMS & Compliance (Phase 5) */}
+            <Route path="/training" element={<TrainingCatalog />} />
+            <Route path="/training/play/:id" element={<CoursePlayer />} />
+            <Route path="/compliance" element={<ComplianceDashboard />} />
+
+            {/* Welfare & Assets (Phase 6) */}
+            <Route path="/assets" element={<AssetInventory />} />
+            <Route path="/accommodation" element={<AccommodationPortal />} />
+            <Route path="/welfare" element={<WelfareSupportPage />} />
+
+            {/* Recruitment (Phase 7) */}
+            <Route path="/jobs" element={<JobBoard />} />
+            <Route path="/recruitment/ats" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr']}>
+                <ApplicantTrackingSystem />
+              </ProtectedRoute>
+            } />
+            <Route path="/recruitment/interviews" element={
+              <ProtectedRoute requiredRoles={['admin', 'hr', 'manager']}>
+                <InterviewScheduler />
               </ProtectedRoute>
             } />
 

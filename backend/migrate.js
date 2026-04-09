@@ -5,28 +5,37 @@ async function migrate() {
         await sequelize.authenticate();
         console.log('Connected to DB');
 
+        const queryInterface = sequelize.getQueryInterface();
+
         // Check and add columns to departments
-        const [deptTable] = await sequelize.query("SHOW COLUMNS FROM departments LIKE 'latitude'");
-        if (deptTable.length === 0) {
+        const deptCols = await queryInterface.describeTable('departments').catch(() => ({}));
+        if (!deptCols.latitude) {
             console.log('Adding geofence columns to departments...');
-            await sequelize.query("ALTER TABLE departments ADD COLUMN latitude DECIMAL(10, 8) DEFAULT 0.0");
-            await sequelize.query("ALTER TABLE departments ADD COLUMN longitude DECIMAL(11, 8) DEFAULT 0.0");
-            await sequelize.query("ALTER TABLE departments ADD COLUMN radius_meters INTEGER DEFAULT 100");
-            await sequelize.query("ALTER TABLE departments ADD COLUMN is_geofencing_enabled BOOLEAN DEFAULT FALSE");
+            await queryInterface.addColumn('departments', 'latitude', { type: sequelize.Sequelize.DECIMAL(10, 8), defaultValue: 0.0 });
+            await queryInterface.addColumn('departments', 'longitude', { type: sequelize.Sequelize.DECIMAL(11, 8), defaultValue: 0.0 });
+            await queryInterface.addColumn('departments', 'radius_meters', { type: sequelize.Sequelize.INTEGER, defaultValue: 100 });
+            await queryInterface.addColumn('departments', 'is_geofencing_enabled', { type: sequelize.Sequelize.BOOLEAN, defaultValue: false });
         }
 
         // Check and add columns to attendance
-        const [attnTable] = await sequelize.query("SHOW COLUMNS FROM attendance LIKE 'total_break_minutes'");
-        if (attnTable.length === 0) {
+        const attnCols = await queryInterface.describeTable('attendance').catch(() => ({}));
+        if (!attnCols.total_break_minutes) {
             console.log('Adding total_break_minutes to attendance...');
-            await sequelize.query("ALTER TABLE attendance ADD COLUMN total_break_minutes INTEGER DEFAULT 0");
+            await queryInterface.addColumn('attendance', 'total_break_minutes', { type: sequelize.Sequelize.INTEGER, defaultValue: 0 });
         }
 
         // Check and add columns to shift_assignments
-        const [shiftTable] = await sequelize.query("SHOW COLUMNS FROM shift_assignments LIKE 'no_show_notified'");
-        if (shiftTable.length === 0) {
+        const shiftCols = await queryInterface.describeTable('shift_assignments').catch(() => ({}));
+        if (!shiftCols.no_show_notified) {
             console.log('Adding no_show_notified to shift_assignments...');
-            await sequelize.query("ALTER TABLE shift_assignments ADD COLUMN no_show_notified BOOLEAN DEFAULT FALSE");
+            await queryInterface.addColumn('shift_assignments', 'no_show_notified', { type: sequelize.Sequelize.BOOLEAN, defaultValue: false });
+        }
+
+        // Check and add columns to employees
+        const empCols = await queryInterface.describeTable('employees').catch(() => ({}));
+        if (!empCols.accommodation_id) {
+            console.log('Adding accommodation_id to employees...');
+            await queryInterface.addColumn('employees', 'accommodation_id', { type: sequelize.Sequelize.INTEGER, allowNull: true });
         }
 
         console.log('Migration completed successfully');
