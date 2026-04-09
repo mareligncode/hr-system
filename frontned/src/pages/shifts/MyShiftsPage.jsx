@@ -89,9 +89,9 @@ const MyShiftsPage = () => {
 
     return (
         <div className="p-4 md:p-6 lg:p-8 max-w-4xl mx-auto">
-            <header className="mb-8">
-                <h1 className="text-2xl font-bold font-display text-gray-900">{t('myWorkSchedule')}</h1>
-                <p className="text-gray-500">{t('yourAssignedShiftsAndRotations')} ({shifts.length} {t('totalShiftsFound')})</p>
+            <header className="mb-8 text-center sm:text-left">
+                <h1 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tighter">{t('myWorkSchedule')}</h1>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">{t('yourAssignedShiftsAndRotations')} ({shifts.length} {t('totalShiftsFound')})</p>
             </header>
 
             <div className="space-y-6">
@@ -99,25 +99,25 @@ const MyShiftsPage = () => {
                     displayShifts.map((shift) => (
                         <div
                             key={shift.id}
-                            className={`bg-white rounded-2xl shadow-sm border ${isToday(new Date(shift.assignment_date)) ? 'border-blue-200 ring-4 ring-blue-50' : 'border-gray-100'} p-5 relative overflow-hidden`}
+                            className={`bg-white rounded-[2rem] shadow-sm border ${isToday(new Date(shift.assignment_date)) ? 'border-blue-200 ring-4 ring-blue-50' : 'border-[var(--border-main)]'} p-6 relative overflow-hidden transition-all hover:shadow-md`}
                         >
                             {shift.assignment_date === todayStr && (
-                                <div className="absolute top-0 right-0 bg-blue-600 text-white px-3 py-1 rounded-bl-xl text-[10px] font-bold uppercase tracking-wider">
+                                <div className="absolute top-0 right-0 bg-blue-600 text-white px-4 py-1.5 rounded-bl-2xl text-[10px] font-black uppercase tracking-widest">
                                     {t('today')}
                                 </div>
                             )}
 
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <div className="flex items-center gap-4">
-                                    <div className={`p-4 rounded-xl flex flex-col items-center justify-center min-w-[70px] ${shift.assignment_date === todayStr ? 'bg-blue-600 text-white' : 'bg-gray-50 text-gray-600'}`}>
-                                        <span className="text-xs uppercase font-bold">{format(parseISO(shift.assignment_date), 'EEE')}</span>
-                                        <span className="text-2xl font-black">{format(parseISO(shift.assignment_date), 'd')}</span>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                                <div className="flex items-center gap-5">
+                                    <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex flex-col items-center justify-center transition-all ${shift.assignment_date === todayStr ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-gray-100 text-gray-600'}`}>
+                                        <span className="text-[10px] uppercase font-black tracking-widest opacity-80">{format(parseISO(shift.assignment_date), 'EEE')}</span>
+                                        <span className="text-2xl sm:text-3xl font-black">{format(parseISO(shift.assignment_date), 'd')}</span>
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-lg text-gray-900">{shift.ShiftType.name}</h3>
-                                        <div className="flex items-center gap-2 text-gray-500 mt-1">
-                                            <Clock size={16} />
-                                            <span className="text-sm font-medium">{shift.ShiftType.start_time.substring(0, 5)} - {shift.ShiftType.end_time.substring(0, 5)}</span>
+                                        <h3 className="font-black text-xl text-gray-900 uppercase tracking-tighter">{shift.ShiftType.name}</h3>
+                                        <div className="flex items-center gap-2 text-[var(--text-soft)] mt-1.5 font-bold text-sm">
+                                            <Clock size={16} className="text-blue-500" />
+                                            <span>{shift.ShiftType.start_time.substring(0, 5)} - {shift.ShiftType.end_time.substring(0, 5)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -125,24 +125,24 @@ const MyShiftsPage = () => {
                                 <div className="flex items-center gap-3">
                                     <button
                                         onClick={() => { setSelectedShift(shift); setIsSwapModalOpen(true); }}
-                                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 transition font-semibold"
+                                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-[var(--bg-surface-soft)] text-[var(--text-main)] hover:bg-blue-50 hover:text-blue-600 transition-all font-black text-xs uppercase tracking-widest border border-transparent hover:border-blue-100"
                                     >
-                                        <ArrowRightLeft size={18} />
+                                        <ArrowRightLeft size={16} />
                                         {t('requestSwap')}
                                     </button>
-                                    <button className="p-2 text-gray-400 hover:text-gray-600">
-                                        <ChevronRight size={24} />
+                                    <button className="hidden sm:flex p-3 text-[var(--text-muted)] hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
+                                        <ChevronRight size={20} />
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="mt-4 pt-4 border-t border-gray-50 flex items-center gap-6">
-                                <div className="flex items-center gap-2 text-xs text-gray-400">
-                                    <MapPin size={14} />
+                            <div className="mt-6 pt-6 border-t border-[var(--border-main)]/50 flex flex-wrap items-center gap-4 sm:gap-8">
+                                <div className="flex items-center gap-2.5 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] bg-[var(--bg-surface-soft)]/50 px-3 py-1.5 rounded-full">
+                                    <MapPin size={14} className="text-rose-500" />
                                     <span>{t('mainHallLevel2')}</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-xs text-gray-400">
-                                    <AlertCircle size={14} />
+                                <div className="flex items-center gap-2.5 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] bg-[var(--bg-surface-soft)]/50 px-3 py-1.5 rounded-full">
+                                    <AlertCircle size={14} className="text-amber-500" />
                                     <span>{t('minutesBreak', { minutes: shift.ShiftType.break_duration_minutes })}</span>
                                 </div>
                             </div>

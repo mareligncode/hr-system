@@ -114,24 +114,24 @@ const EmployeeCreate = () => {
     return (
         <div className="max-w-4xl mx-auto pb-20">
             {/* Header */}
-            <div className="mb-8">
+            <div className="mb-6 sm:mb-8 text-center sm:text-left">
                 <button
                     onClick={() => navigate('/employees')}
-                    className="text-sm text-[var(--text-soft)] hover:text-blue-500 flex items-center gap-1 mb-2 transition-colors"
+                    className="text-xs sm:text-sm text-[var(--text-soft)] hover:text-blue-500 flex items-center justify-center sm:justify-start gap-1 mb-2 transition-colors font-bold uppercase tracking-widest"
                 >
                     <ChevronLeft className="w-4 h-4" />
-                    Back to Directory
+                    {t('back')}
                 </button>
-                <h1 className="text-3xl font-bold text-[var(--text-main)] transition-colors">
-                    Onboard New Staff
+                <h1 className="text-2xl sm:text-3xl font-black text-[var(--text-main)] transition-colors">
+                    {t('onboardNewStaff') || 'Onboard New Staff'}
                 </h1>
-                <p className="text-[var(--text-soft)]">
-                    Register a new hotel employee and set up their professional profile.
+                <p className="text-xs sm:text-sm text-[var(--text-soft)] mt-1">
+                    {t('onboardDescription') || 'Register a new hotel employee and set up their professional profile.'}
                 </p>
             </div>
 
             {/* Stepper */}
-            <div className="flex items-center justify-between mb-12 bg-[var(--bg-surface)] p-6 rounded-3xl border border-[var(--border-main)] shadow-sm">
+            <div className="flex items-center justify-between mb-8 sm:mb-12 bg-[var(--bg-surface)] p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-[var(--border-main)] shadow-sm overflow-hidden">
                 {steps.map((s, idx) => {
                     const Icon = s.icon;
                     const isActive = step === s.id;
@@ -140,17 +140,17 @@ const EmployeeCreate = () => {
                     return (
                         <React.Fragment key={s.id}>
                             <div className="flex flex-col items-center gap-2 relative z-10">
-                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 ring-4 ring-blue-500/10' :
+                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all duration-300 ${isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 ring-4 ring-blue-500/10' :
                                     isCompleted ? 'bg-emerald-500 text-white' : 'bg-[var(--bg-surface-soft)] text-[var(--text-muted)]'
                                     }`}>
-                                    {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
+                                    {isCompleted ? <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" /> : <Icon className="w-5 h-5 sm:w-6 sm:h-6" />}
                                 </div>
-                                <span className={`text-xs font-bold uppercase tracking-wider ${isActive ? 'text-blue-500' : 'text-[var(--text-muted)]'}`}>
+                                <span className={`hidden sm:block text-[10px] font-black uppercase tracking-widest ${isActive ? 'text-blue-600' : 'text-[var(--text-muted)]'}`}>
                                     {s.title}
                                 </span>
                             </div>
                             {idx < steps.length - 1 && (
-                                <div className="flex-1 h-1 mx-4 bg-[var(--bg-surface-soft)] rounded-full overflow-hidden">
+                                <div className="flex-1 h-1 mx-2 sm:mx-4 bg-[var(--bg-surface-soft)] rounded-full overflow-hidden">
                                     <motion.div
                                         className="h-full bg-blue-600"
                                         initial={{ width: '0%' }}
@@ -163,10 +163,10 @@ const EmployeeCreate = () => {
                 })}
             </div>
 
-            {error && <Alert type="error" message={error} className="mb-6" />}
+            {error && <Alert type="error" message={error} className="mb-6 rounded-2xl" />}
 
             {/* Form Content */}
-            <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-3xl p-8 shadow-sm">
+            <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-3xl p-5 sm:p-8 shadow-sm">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={step}
@@ -314,30 +314,30 @@ const EmployeeCreate = () => {
                 </AnimatePresence>
 
                 {/* Actions */}
-                <div className="flex items-center justify-between mt-12 pt-8 border-t border-[var(--border-main)]">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 sm:mt-12 pt-8 border-t border-[var(--border-main)]">
                     <Button
                         type="button" variant="secondary" onClick={prevStep}
-                        disabled={step === 1 || loading} className="flex items-center gap-2 px-8"
+                        disabled={step === 1 || loading} className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 h-12 text-xs font-black uppercase tracking-widest"
                     >
                         <ChevronLeft className="w-4 h-4" />
-                        Previous
+                        {t('previous')}
                     </Button>
 
                     {step < 3 ? (
                         <Button
                             type="button" onClick={nextStep}
-                            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-10 shadow-lg shadow-blue-500/20"
+                            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2 px-10 h-12 text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20"
                         >
-                            Next Step
+                            {t('next')}
                             <ChevronRight className="w-4 h-4" />
                         </Button>
                     ) : (
                         <Button
                             type="button" onClick={handleSubmit} loading={loading}
-                            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 px-10 shadow-lg shadow-blue-500/20"
+                            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2 px-10 h-12 text-xs font-black uppercase tracking-widest shadow-lg shadow-blue-500/20"
                         >
                             <Save className="w-4 h-4" />
-                            Complete Registration
+                            {t('completeRegistration') || 'Complete Registration'}
                         </Button>
                     )}
                 </div>

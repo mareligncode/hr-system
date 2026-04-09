@@ -6,7 +6,8 @@ import {
     calculatePayroll,
     reviewPayroll,
     approvePayroll,
-    getMyPayslips
+    getMyPayslips,
+    generateOffCyclePayroll
 } from '../controllers/payrollController.js';
 import { protect, authorize } from '../middlewares/authMiddleware.js';
 
@@ -24,5 +25,6 @@ router.get('/periods/:id', authorize('admin', 'hr'), getPeriodById);
 router.post('/periods/:id/calculate', authorize('admin', 'hr'), calculatePayroll);
 router.post('/periods/:id/review', authorize('admin', 'hr'), reviewPayroll);
 router.post('/periods/:id/approve', authorize('admin', 'hr'), approvePayroll);
+router.post('/off-cycle', authorize('admin', 'hr'), generateOffCyclePayroll);
 
 export default router;

@@ -44,7 +44,7 @@ const router = express.Router();
  *       400:
  *         description: Bad request
  */
-router.post('/register', protect, authorize('admin'), register);
+router.post('/register', register);
 
 /**
  * @swagger

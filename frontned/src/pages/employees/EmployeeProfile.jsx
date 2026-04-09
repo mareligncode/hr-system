@@ -285,18 +285,18 @@ const EmployeeProfile = () => {
     return (
         <div className="space-y-8 pb-20">
             {/* Action Bar */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <button
                     onClick={() => navigate('/employees')}
-                    className="flex items-center gap-2 text-[var(--text-soft)] hover:text-blue-500 transition-colors font-medium"
+                    className="flex items-center gap-2 text-[var(--text-soft)] hover:text-blue-500 transition-colors font-bold text-xs uppercase tracking-widest"
                 >
-                    <ChevronLeft className="w-5 h-5" />
+                    <ChevronLeft className="w-4 h-4" />
                     {t('backToStaff')}
                 </button>
-                <div className="flex gap-3">
+                <div className="flex gap-2 w-full sm:w-auto">
                     {(hasPermission('manage_employees') || isOwnProfile) && (
-                        <Button variant="secondary" className="flex items-center gap-2">
-                            <Edit className="w-4 h-4" />
+                        <Button variant="secondary" className="flex-1 sm:flex-none flex items-center justify-center gap-2 h-10 px-4 text-xs font-black uppercase tracking-tighter">
+                            <Edit className="w-3.5 h-3.5" />
                             {t('editProfile')}
                         </Button>
                     )}
@@ -304,19 +304,19 @@ const EmployeeProfile = () => {
                         emp.employment_status === 'inactive' ? (
                             <Button
                                 variant="success"
-                                className="flex items-center gap-2"
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 h-10 px-4 text-xs font-black uppercase tracking-tighter"
                                 onClick={handleActivate}
                             >
-                                <CheckCircle2 className="w-4 h-4" />
+                                <CheckCircle2 className="w-3.5 h-3.5" />
                                 {t('activate')}
                             </Button>
                         ) : (
                             <Button
                                 variant="danger"
-                                className="flex items-center gap-2"
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 h-10 px-4 text-xs font-black uppercase tracking-tighter"
                                 onClick={handleDeactivate}
                             >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-3.5 h-3.5" />
                                 {t('deactivate')}
                             </Button>
                         )
@@ -325,14 +325,14 @@ const EmployeeProfile = () => {
             </div>
 
             {/* Profile Header Card */}
-            <div className="bg-[var(--bg-surface)] rounded-3xl border border-[var(--border-main)] overflow-hidden shadow-sm">
-                <div className="h-32 bg-gradient-to-r from-blue-600 to-indigo-600 relative">
+            <div className="bg-[var(--bg-surface)] rounded-[2.5rem] border border-[var(--border-main)] overflow-hidden shadow-sm">
+                <div className="h-24 sm:h-32 bg-gradient-to-r from-blue-600 to-indigo-600 relative">
                     <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
                 </div>
-                <div className="px-8 pb-8">
-                    <div className="relative -mt-16 mb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
-                        <div className="flex flex-col md:flex-row items-center md:items-end gap-6 text-center md:text-left">
-                            <div className="w-32 h-32 rounded-3xl bg-[var(--bg-surface)] p-1 border-4 border-[var(--bg-surface)] shadow-2xl relative">
+                <div className="px-5 sm:px-8 pb-8">
+                    <div className="relative -mt-12 sm:-mt-16 mb-6 flex flex-col items-center sm:items-end justify-center sm:justify-between gap-4 sm:gap-6">
+                        <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6 text-center sm:text-left">
+                            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl bg-[var(--bg-surface)] p-1 border-4 border-[var(--bg-surface)] shadow-2xl relative">
                                 <div className="w-full h-full rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 flex items-center justify-center overflow-hidden">
                                     {(emp.User?.profile_picture_url && !imgError) ? (
                                         <img
@@ -345,43 +345,43 @@ const EmployeeProfile = () => {
                                         <User className="w-8 h-8 text-blue-500" />
                                     )}
                                 </div>
-                                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 border-4 border-[var(--bg-surface)] rounded-full flex items-center justify-center shadow-lg">
-                                    <CheckCircle className="w-4 h-4 text-white" />
+                                <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-500 border-4 border-[var(--bg-surface)] rounded-full flex items-center justify-center shadow-lg">
+                                    <CheckCircle className="w-3.5 h-3.5 text-white" />
                                 </div>
                             </div>
-                            <div className="pb-2">
-                                <h1 className="text-3xl font-bold text-[var(--text-main)] transition-colors">
+                            <div className="pb-1 sm:pb-2">
+                                <h1 className="text-xl sm:text-3xl font-black text-[var(--text-main)] transition-colors">
                                     {emp.User?.first_name} {emp.User?.last_name}
                                 </h1>
-                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-2 text-[var(--text-soft)]">
-                                    <span className="flex items-center gap-1.5 bg-blue-500/10 text-blue-500 px-3 py-1 rounded-full text-xs font-bold border border-blue-500/20">
-                                        <Briefcase className="w-3.5 h-3.5" />
+                                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2">
+                                    <span className="flex items-center gap-1.5 bg-blue-500/10 text-blue-600 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-tighter border border-blue-500/20">
+                                        <Briefcase className="w-3 h-3" />
                                         {emp.Position?.title}
                                     </span>
-                                    <span className="flex items-center gap-1.5 bg-slate-500/10 px-3 py-1 rounded-full text-xs font-bold border border-slate-500/20">
-                                        <Building2 className="w-3.5 h-3.5" />
+                                    <span className="flex items-center gap-1.5 bg-slate-500/10 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-tighter border border-slate-500/20">
+                                        <Building2 className="w-3 h-3" />
                                         {emp.Department?.name}
                                     </span>
-                                    <span className="flex items-center gap-1.5 bg-indigo-500/10 text-indigo-500 px-3 py-1 rounded-full text-xs font-bold border border-indigo-500/20">
-                                        ID: {emp.employee_number}
+                                    <span className="flex items-center gap-1.5 bg-indigo-500/10 text-indigo-500 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-tighter border border-indigo-500/20">
+                                        #{emp.employee_number}
                                     </span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-6 border-t border-[var(--border-main)]/50">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-6 border-t border-[var(--border-main)]/50">
                         <StatBox label={t('employment')} value={t(emp.employment_status + 'Status')} icon={ShieldCheck} color="text-emerald-500" />
                         <StatBox label={t('joiningDate')} value={new Date(emp.hire_date).toLocaleDateString()} icon={Calendar} color="text-blue-500" />
-                        <StatBox label={t('reportingTo')} value={emp.Manager?.first_name ? `${emp.Manager.first_name} ${emp.Manager.last_name}` : 'N/A'} icon={Users} color="text-amber-500" />
+                        <StatBox label={t('reportingTo')} value={emp.Manager?.first_name ? `${emp.Manager.first_name}` : 'N/A'} icon={Users} color="text-amber-500" />
                         <StatBox label={t('workPhone')} value={emp.work_phone || 'N/A'} icon={Phone} color="text-purple-500" />
                     </div>
                 </div>
             </div>
 
             {/* Main Content Tabs */}
-            <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-3xl overflow-hidden shadow-sm">
-                <div className="flex border-b border-[var(--border-main)] bg-[var(--bg-surface-soft)]/30">
+            <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-[2rem] overflow-hidden shadow-sm">
+                <div className="flex border-b border-[var(--border-main)] bg-[var(--bg-surface-soft)]/30 overflow-x-auto no-scrollbar scroll-smooth">
                     {tabs.map((tab) => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.id;
@@ -389,15 +389,15 @@ const EmployeeProfile = () => {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex-1 md:flex-none px-8 py-5 text-sm font-bold flex items-center justify-center gap-2 transition-all relative ${isActive ? 'text-blue-500' : 'text-[var(--text-muted)] hover:text-[var(--text-soft)]'
+                                className={`flex-1 sm:flex-none px-6 sm:px-8 py-4 sm:py-5 text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all relative whitespace-nowrap ${isActive ? 'text-blue-600 bg-white shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-soft)]'
                                     }`}
                             >
-                                <Icon className="w-4 h-4" />
+                                <Icon className="w-3.5 h-3.5" />
                                 {tab.label}
                                 {isActive && (
                                     <motion.div
                                         layoutId="activeTabProfile"
-                                        className="absolute bottom-0 left-0 right-0 h-1 bg-blue-500 rounded-t-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+                                        className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-t-full shadow-[0_0_10px_rgba(59,130,246,0.3)]"
                                     />
                                 )}
                             </button>
@@ -405,7 +405,7 @@ const EmployeeProfile = () => {
                     })}
                 </div>
 
-                <div className="p-8">
+                <div className="p-5 sm:p-8">
                     <AnimatePresence mode="wait">
                         {activeTab === 'overview' && (
                             <motion.div
@@ -415,90 +415,74 @@ const EmployeeProfile = () => {
                                 exit={{ opacity: 0, y: -10 }}
                                 className="space-y-12"
                             >
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
                                     {/* Personal Column */}
                                     <section>
-                                        <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
-                                                <User className="w-5 h-5" />
+                                        <h3 className="text-lg sm:text-xl font-black mb-6 flex items-center gap-3 uppercase tracking-tighter">
+                                            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600">
+                                                <User className="w-4 h-4 sm:w-5 sm:h-5" />
                                             </div>
-                                            {t('personalInformation')}
+                                            {t('personalInfo')}
                                         </h3>
-                                        <div className="space-y-6">
-                                            <div className="flex justify-between items-center py-4 border-b border-[var(--border-main)]/30">
-                                                <span className="text-[var(--text-soft)] font-medium">{t('firstName')} & {t('lastName')}</span>
-                                                <span className="font-semibold">{emp.User?.first_name} {emp.User?.last_name}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center py-4 border-b border-[var(--border-main)]/30">
-                                                <span className="text-[var(--text-soft)] font-medium">Email Address</span>
-                                                <span className="font-semibold">{emp.User?.email}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center py-4 border-b border-[var(--border-main)]/30">
-                                                <span className="text-[var(--text-soft)] font-medium">Gender</span>
-                                                <span className="font-semibold capitalize">{emp.gender || 'Not specified'}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center py-4 border-b border-[var(--border-main)]/30">
-                                                <span className="text-[var(--text-soft)] font-medium">Marital Status</span>
-                                                <span className="font-semibold capitalize">{emp.marital_status || 'Not specified'}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center py-4 border-b border-[var(--border-main)]/30">
-                                                <span className="text-[var(--text-soft)] font-medium">Home Address</span>
-                                                <span className="font-semibold text-right max-w-[200px] truncate">{emp.address_line1}, {emp.city}</span>
-                                            </div>
+                                        <div className="space-y-4">
+                                            {[
+                                                { label: t('name'), value: `${emp.User?.first_name} ${emp.User?.last_name}` },
+                                                { label: t('email'), value: emp.User?.email },
+                                                { label: t('gender'), value: emp.gender },
+                                                { label: t('maritalStatus'), value: emp.marital_status },
+                                                { label: t('address'), value: `${emp.address_line1}, ${emp.city}`, full: true }
+                                            ].map((item, idx) => (
+                                                <div key={idx} className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 border-b border-[var(--border-main)]/30 gap-1 sm:gap-4">
+                                                    <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[var(--text-muted)]">{item.label}</span>
+                                                    <span className={`text-sm font-bold text-[var(--text-main)] ${item.full ? 'sm:max-w-[250px] truncate' : ''}`}>{item.value || 'N/A'}</span>
+                                                </div>
+                                            ))}
                                         </div>
                                     </section>
 
                                     {/* Work Column */}
                                     <section>
-                                        <h3 className="text-xl font-bold mb-6 flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
-                                                <Briefcase className="w-5 h-5" />
+                                        <h3 className="text-lg sm:text-xl font-black mb-6 flex items-center gap-3 uppercase tracking-tighter">
+                                            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-600">
+                                                <Briefcase className="w-4 h-4 sm:w-5 sm:h-5" />
                                             </div>
                                             {t('professionalProfile')}
                                         </h3>
-                                        <div className="space-y-6">
-                                            <div className="flex justify-between items-center py-4 border-b border-[var(--border-main)]/30">
-                                                <span className="text-[var(--text-soft)] font-medium">Department</span>
-                                                <span className="font-semibold">{emp.Department?.name}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center py-4 border-b border-[var(--border-main)]/30">
-                                                <span className="text-[var(--text-soft)] font-medium">Position</span>
-                                                <span className="font-semibold">{emp.Position?.title}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center py-4 border-b border-[var(--border-main)]/30">
-                                                <span className="text-[var(--text-soft)] font-medium">Contract Type</span>
-                                                <span className="font-semibold capitalize">{emp.contract_type}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center py-4 border-b border-[var(--border-main)]/30">
-                                                <span className="text-[var(--text-soft)] font-medium">Work Email</span>
-                                                <span className="font-semibold">{emp.work_email || 'N/A'}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center py-4 border-b border-[var(--border-main)]/30">
-                                                <span className="text-[var(--text-soft)] font-medium">Managed By</span>
-                                                <span className="font-semibold">{emp.Manager?.first_name ? `${emp.Manager.first_name} ${emp.Manager.last_name}` : 'N/A'}</span>
-                                            </div>
+                                        <div className="space-y-4">
+                                            {[
+                                                { label: t('department'), value: emp.Department?.name },
+                                                { label: t('position'), value: emp.Position?.title },
+                                                { label: t('contractType'), value: emp.contract_type },
+                                                { label: t('workEmail'), value: emp.work_email },
+                                                { label: t('manager'), value: emp.Manager?.first_name ? `${emp.Manager.first_name} ${emp.Manager.last_name}` : 'N/A' }
+                                            ].map((item, idx) => (
+                                                <div key={idx} className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-3 border-b border-[var(--border-main)]/30 gap-1 sm:gap-4">
+                                                    <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-[var(--text-muted)]">{item.label}</span>
+                                                    <span className="text-sm font-bold text-[var(--text-main)] capitalize">{item.value || 'N/A'}</span>
+                                                </div>
+                                            ))}
                                         </div>
                                     </section>
                                 </div>
 
                                 {/* Emergency Section */}
-                                <section className="bg-[var(--bg-surface-soft)]/50 p-8 rounded-3xl border border-[var(--border-main)]/50">
-                                    <h3 className="text-lg font-bold mb-6 flex items-center gap-3">
+                                <section className="bg-[var(--bg-surface-soft)]/50 p-6 sm:p-8 rounded-[2rem] border border-[var(--border-main)]/50">
+                                    <h3 className="text-md sm:text-lg font-black mb-6 flex items-center gap-3 uppercase tracking-tighter">
                                         <AlertCircle className="w-5 h-5 text-rose-500" />
-                                        {t('emergencyContactDetails')}
+                                        {t('emergencyContact')}
                                     </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                                         <div className="space-y-1">
-                                            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">{t('firstName')}</p>
-                                            <p className="font-bold text-[var(--text-main)] transition-colors">{emp.emergency_contact_name || t('notProvided')}</p>
+                                            <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{t('name')}</p>
+                                            <p className="font-bold text-sm text-[var(--text-main)] transition-colors">{emp.emergency_contact_name || t('notProvided')}</p>
                                         </div>
                                         <div className="space-y-1">
-                                            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">{t('relationship')}</p>
-                                            <p className="font-bold text-[var(--text-main)] transition-colors">{emp.emergency_contact_relation || 'N/A'}</p>
+                                            <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{t('relation')}</p>
+                                            <p className="font-bold text-sm text-[var(--text-main)] transition-colors">{emp.emergency_contact_relation || 'N/A'}</p>
                                         </div>
-                                        <div className="space-y-1">
-                                            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-widest">{t('phone')}</p>
-                                            <p className="font-bold text-[var(--text-main)] transition-colors">{emp.emergency_contact_phone || 'N/A'}</p>
+                                        <div className="space-y-1 col-span-2 lg:col-span-1">
+                                            <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{t('phone')}</p>
+                                            <p className="font-bold text-sm text-[var(--text-main)] transition-colors">{emp.emergency_contact_phone || 'N/A'}</p>
                                         </div>
                                     </div>
                                 </section>

@@ -114,21 +114,22 @@ const LeaveEncashmentPage = () => {
     return (
         <Container maxWidth="lg" sx={{ py: 6 }}>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ mb: 4, display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 3 }}>
                     <Box>
-                        <Typography variant="h3" fontWeight="900">
+                        <Typography variant="h3" fontWeight="900" sx={{ fontSize: { xs: '2rem', sm: '3rem' }, tracking: '-0.05em' }}>
                             {t('leaveEncashment') || 'Leave Encashment'}
                         </Typography>
-                        <Typography color="text.secondary">
+                        <Typography color="text.secondary" variant="body2" sx={{ mt: 1 }}>
                             {t('encashmentDesc') || 'Sell back your unused vacation days at year-end.'}
                         </Typography>
                     </Box>
                     {!isHRorAdmin && (
                         <Button
                             variant="contained"
+                            fullWidth={true}
                             startIcon={<Plus size={20} />}
                             onClick={() => setOpen(true)}
-                            sx={{ borderRadius: 2 }}
+                            sx={{ borderRadius: 4, py: 1.5, px: 4, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: '0.75rem', width: { xs: '100%', sm: 'auto' } }}
                         >
                             {t('requestEncashment') || 'New Request'}
                         </Button>
@@ -153,16 +154,16 @@ const LeaveEncashmentPage = () => {
                     </Box>
                 )}
 
-                <TableContainer component={Paper} sx={{ borderRadius: 4, border: '1px solid', borderColor: 'divider' }}>
-                    <Table>
+                <TableContainer component={Paper} sx={{ borderRadius: 4, border: '1px solid', borderColor: 'divider', overflowX: 'auto' }}>
+                    <Table size={window.innerWidth < 640 ? 'small' : 'medium'}>
                         <TableHead sx={{ bgcolor: 'action.hover' }}>
                             <TableRow>
-                                {isHRorAdmin && <TableCell sx={{ fontWeight: 800 }}>{t('employee')}</TableCell>}
-                                <TableCell sx={{ fontWeight: 800 }}>{t('leaveType')}</TableCell>
-                                <TableCell sx={{ fontWeight: 800 }}>{t('days')}</TableCell>
-                                <TableCell sx={{ fontWeight: 800 }}>{t('totalAmount')}</TableCell>
-                                <TableCell sx={{ fontWeight: 800 }}>{t('status')}</TableCell>
-                                {isHRorAdmin && <TableCell align="right" sx={{ fontWeight: 800 }}>{t('actions')}</TableCell>}
+                                {isHRorAdmin && <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', tracking: '0.1em' }}>{t('employee')}</TableCell>}
+                                <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', tracking: '0.1em' }}>{t('leaveType')}</TableCell>
+                                <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', tracking: '0.1em' }}>{t('days')}</TableCell>
+                                <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', tracking: '0.1em' }}>{t('totalAmount')}</TableCell>
+                                <TableCell sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', tracking: '0.1em' }}>{t('status')}</TableCell>
+                                {isHRorAdmin && <TableCell align="right" sx={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', tracking: '0.1em' }}>{t('actions')}</TableCell>}
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -179,32 +180,32 @@ const LeaveEncashmentPage = () => {
                                     return (
                                         <TableRow key={r.id} hover>
                                             {isHRorAdmin && (
-                                                <TableCell sx={{ fontWeight: 600 }}>
+                                                <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
                                                     {r.Employee?.User?.first_name} {r.Employee?.User?.last_name}
                                                 </TableCell>
                                             )}
-                                            <TableCell>{r.LeaveType?.name}</TableCell>
-                                            <TableCell sx={{ fontWeight: 800 }}>{r.days_to_encash}</TableCell>
-                                            <TableCell sx={{ color: 'success.main', fontWeight: 800 }}>${r.total_amount}</TableCell>
+                                            <TableCell sx={{ fontSize: '0.875rem' }}>{r.LeaveType?.name}</TableCell>
+                                            <TableCell sx={{ fontWeight: 800, fontSize: '0.875rem' }}>{r.days_to_encash}</TableCell>
+                                            <TableCell sx={{ color: 'success.main', fontWeight: 800, fontSize: '0.875rem' }}>${r.total_amount}</TableCell>
                                             <TableCell>
                                                 <Chip
                                                     label={r.status.toUpperCase()}
                                                     color={style.color}
                                                     icon={style.icon}
                                                     size="small"
-                                                    sx={{ fontWeight: 800 }}
+                                                    sx={{ fontWeight: 800, fontSize: '0.65rem' }}
                                                 />
                                             </TableCell>
                                             {isHRorAdmin && (
                                                 <TableCell align="right">
                                                     {r.status === 'pending' && (
-                                                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                                                            <Button size="small" variant="contained" color="success" onClick={() => handleApprove(r.id, 'approved')}>Approve</Button>
-                                                            <Button size="small" variant="outlined" color="error" onClick={() => handleApprove(r.id, 'rejected')}>Reject</Button>
+                                                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                                                            <Button size="small" variant="contained" color="success" onClick={() => handleApprove(r.id, 'approved')} sx={{ fontWeight: 900, borderRadius: 2 }}>Approve</Button>
+                                                            <Button size="small" variant="outlined" color="error" onClick={() => handleApprove(r.id, 'rejected')} sx={{ fontWeight: 900, borderRadius: 2 }}>Reject</Button>
                                                         </Box>
                                                     )}
                                                     {r.status === 'approved' && (
-                                                        <Button size="small" variant="contained" color="info" onClick={() => handleApprove(r.id, 'paid')}>Mark Paid</Button>
+                                                        <Button size="small" variant="contained" color="info" onClick={() => handleApprove(r.id, 'paid')} sx={{ fontWeight: 900, borderRadius: 2 }}>Mark Paid</Button>
                                                     )}
                                                 </TableCell>
                                             )}

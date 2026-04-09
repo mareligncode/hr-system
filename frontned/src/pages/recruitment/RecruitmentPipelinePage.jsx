@@ -109,34 +109,34 @@ const RecruitmentPipelinePage = () => {
     };
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 max-w-[1800px] mx-auto min-h-screen bg-[var(--bg-base)]">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+        <div className="p-3 sm:p-6 lg:p-8 max-w-[1800px] mx-auto min-h-screen bg-[var(--bg-base)]">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6 mb-6 sm:mb-8">
                 <div>
-                    <h1 className="text-3xl font-black text-[var(--text-main)] mb-2 flex items-center gap-3">
-                        <LayoutDashboard className="w-8 h-8 text-blue-500" />
+                    <h1 className="text-2xl sm:text-3xl font-black text-[var(--text-main)] mb-1 sm:mb-2 flex items-center gap-3">
+                        <LayoutDashboard className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" />
                         {t('recruitmentPipeline')}
                     </h1>
-                    <p className="text-[var(--text-soft)] text-lg">
+                    <p className="text-[var(--text-soft)] text-sm sm:text-lg">
                         {t('monitorCandidatesPipeline')}
                     </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4">
-                    <div className="relative min-w-[300px]">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] w-5 h-5" />
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+                    <div className="relative flex-grow sm:min-w-[300px]">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] w-4 h-4 sm:w-5 sm:h-5" />
                         <input
                             type="text"
                             placeholder={t('searchCandidatesPlaceholder') || "Search candidates..."}
-                            className="w-full pl-12 pr-4 py-3 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
+                            className="w-full pl-11 pr-4 py-2.5 sm:py-3 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
 
-                    <div className="relative min-w-[200px]">
-                        <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] w-5 h-5" />
+                    <div className="relative sm:min-w-[200px]">
+                        <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)] w-4 h-4 sm:w-5 sm:h-5" />
                         <select
-                            className="w-full pl-12 pr-10 py-3 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none appearance-none font-medium cursor-pointer"
+                            className="w-full pl-11 pr-10 py-2.5 sm:py-3 bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none appearance-none font-medium cursor-pointer text-sm"
                             value={selectedJob}
                             onChange={(e) => setSelectedJob(e.target.value)}
                         >
@@ -155,9 +155,9 @@ const RecruitmentPipelinePage = () => {
                     <p className="text-[var(--text-soft)] font-medium animate-pulse">{t('loadingPipeline') || "Syncing pipeline data..."}</p>
                 </div>
             ) : (
-                <div className="flex gap-6 overflow-x-auto pb-8 snap-x">
+                <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-8 snap-x scrollbar-hide">
                     {STAGES.map((stage) => (
-                        <div key={stage.id} className="flex-shrink-0 w-80 snap-start">
+                        <div key={stage.id} className="flex-shrink-0 w-[280px] sm:w-80 snap-start">
                             <div className={`mb-4 p-4 rounded-2xl ${getStageLightColor(stage.color)} border-l-4 ${getStageColor(stage.color).replace('bg-', 'border-')} shadow-sm backdrop-blur-md`}>
                                 <div className="flex items-center justify-between">
                                     <h3 className="font-black text-sm uppercase tracking-widest text-[var(--text-main)]">

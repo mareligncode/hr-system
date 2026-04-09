@@ -247,13 +247,13 @@ const ShiftCalendarPage = () => {
     const renderWeekHeader = () => {
         const start = startOfWeek(currentDate);
         return (
-            <div className="grid grid-cols-7 border-b border-gray-100 bg-gray-50 rounded-t-xl overflow-hidden">
+            <div className="hidden sm:grid grid-cols-7 border-b border-[var(--border-main)] bg-[var(--bg-surface-soft)]/50 rounded-t-xl overflow-hidden">
                 {[0, 1, 2, 3, 4, 5, 6].map(i => {
                     const date = addDays(start, i);
                     return (
                         <div key={i} className="py-4 text-center">
-                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{format(date, 'EEE')}</span>
-                            <div className={`mt-1 text-lg font-semibold ${isSameDay(date, new Date()) ? 'text-blue-600' : 'text-gray-900'}`}>
+                            <span className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">{format(date, 'EEE')}</span>
+                            <div className={`mt-1 text-lg font-black ${isSameDay(date, new Date()) ? 'text-blue-600' : 'text-[var(--text-main)]'}`}>
                                 {format(date, 'd')}
                             </div>
                         </div>
@@ -268,30 +268,64 @@ const ShiftCalendarPage = () => {
         const days = [0, 1, 2, 3, 4, 5, 6].map(i => addDays(start, i));
 
         return (
-            <div className="grid grid-cols-7 border-l border-gray-100 min-h-[500px]">
+            <div className="flex flex-col sm:grid sm:grid-cols-7 border-l border-[var(--border-main)] min-h-[500px]">
                 {days.map(day => (
                     <div
                         key={day.toISOString()}
-                        className="border-r border-b border-gray-100 p-2 hover:bg-gray-50/50 transition-colors cursor-pointer group"
+                        className="border-r border-b border-[var(--border-main)] p-3 sm:p-2 hover:bg-[var(--bg-surface-soft)]/20 transition-colors cursor-pointer group"
                         onClick={() => handleCellClick(day)}
                     >
+                        {/* Day indicator for mobile */}
+                        <div className="flex sm:hidden items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center ${isSameDay(day, new Date()) ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                                    <span className="text-[8px] font-black uppercase">{format(day, 'EEE')}</span>
+                                    <span className="text-sm font-bold leading-none">{format(day, 'd')}</span>
+                                </div>
+                                <span className="text-xs font-black uppercase tracking-widest text-[var(--text-muted)]">{format(day, 'MMMM')}</span>
+                            </div>
+                            {(user.role === 'admin' || user.role === 'hr' || user.role === 'manager') && (
+                                <button className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                                    <Plus size={16} />
+                                </button>
+                            )}
+                        </div>
+
                         <div className="flex flex-col gap-2 h-full">
                             {assignments.filter(a => {
-                                const aDate = a.assignment_date.split('T')[0]; // Ensure we only have YYYY-MM-DD
+                                const aDate = a.assignment_date.split('T')[0];
                                 const dDate = format(day, 'yyyy-MM-dd');
                                 return aDate === dDate;
                             }).map(assign => (
                                 <div
                                     key={assign.id}
                                     style={{
-                                        backgroundColor: `${assign.ShiftType.color_code}15`,
-                                        borderLeft: `4px solid ${assign.ShiftType.color_code}`
+                                        backgroundColor: `${assign.ShiftType.color_code}10`,
+                                        borderLeft: `3px solid ${assign.ShiftType.color_code}`
                                     }}
-                                    className="p-2 rounded shadow-sm text-xs relative group/item"
+                                    className="p-3 sm:p-2 rounded-xl sm:rounded-lg shadow-sm text-xs relative group/item border border-[var(--border-main)]/30"
                                 >
-                                    <div className="flex justify-between items-start mb-1">
-                                        <div className="font-bold truncate text-gray-800 pr-4">{assign.ShiftType.name}</div>
-                                        <div className="hidden group-hover/item:flex items-center gap-1 bg-white/80 p-0.5 rounded shadow-sm">
+                                    <div className="flex justify-between items-start mb-1.5 sm:mb-1">
+                                        <div className="font-black truncate text-[var(--text-main)] pr-8 sm:pr-4 uppercase tracking-tighter">{assign.ShiftType.name}</div>
+                                        <div className="flex sm:hidden items-center gap-1">
+                                            {(user.role === 'admin' || user.role === 'hr' || user.role === 'manager') && (
+                                                <>
+                                                    <button
+                                                        onClick={(e) => handleEditClick(e, assign)}
+                                                        className="p-1.5 bg-white text-blue-600 rounded-lg shadow-sm border border-gray-100"
+                                                    >
+                                                        <Edit2 size={12} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => handleDeleteAssignment(e, assign.id)}
+                                                        className="p-1.5 bg-white text-red-500 rounded-lg shadow-sm border border-gray-100"
+                                                    >
+                                                        <Trash2 size={12} />
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+                                        <div className="hidden sm:group-hover/item:flex items-center gap-1 bg-white/80 p-0.5 rounded shadow-sm">
                                             {(user.role === 'admin' || user.role === 'hr' || user.role === 'manager') && (
                                                 <>
                                                     <button
@@ -310,29 +344,20 @@ const ShiftCalendarPage = () => {
                                                     </button>
                                                 </>
                                             )}
-                                            {user.role === 'employee' && assign.employee_id === user.id && (
-                                                <button
-                                                    onClick={(e) => handleSwapClick(e, assign)}
-                                                    className="text-orange-500 hover:text-orange-700 transition-colors"
-                                                    title={t('requestSwap')}
-                                                >
-                                                    <ArrowRightLeft size={12} />
-                                                </button>
-                                            )}
                                         </div>
                                     </div>
-                                    <div className="text-gray-600 flex items-center gap-1">
-                                        <UserIcon size={10} />
-                                        <span className="truncate">{assign.Employee?.User?.first_name} {assign.Employee?.User?.last_name}</span>
+                                    <div className="text-[var(--text-soft)] flex items-center gap-1.5 mb-1.5 sm:mb-0">
+                                        <UserIcon size={12} className="sm:size-[10px]" />
+                                        <span className="truncate font-bold text-[10px] uppercase">{assign.Employee?.User?.first_name} {assign.Employee?.User?.last_name}</span>
                                     </div>
-                                    <div className="text-gray-500 mt-1 flex items-center gap-1">
-                                        <Clock size={10} />
-                                        <span>{assign.ShiftType.start_time.substring(0, 5)}</span>
+                                    <div className="text-[var(--text-muted)] flex items-center gap-1.5 bg-[var(--bg-surface)] sm:bg-transparent w-fit px-2 py-1 sm:p-0 rounded-lg sm:rounded-none">
+                                        <Clock size={12} className="sm:size-[10px]" />
+                                        <span className="font-black text-[9px] uppercase tracking-widest">{assign.ShiftType.start_time.substring(0, 5)} - {assign.ShiftType.end_time.substring(0, 5)}</span>
                                     </div>
                                 </div>
                             ))}
                             {(user.role === 'admin' || user.role === 'hr' || user.role === 'manager') && (
-                                <button className="hidden group-hover:flex items-center justify-center py-2 text-blue-600 opacity-50 hover:opacity-100 text-xs gap-1 transition-all">
+                                <button className="hidden sm:group-hover:flex items-center justify-center py-2 text-blue-600 opacity-50 hover:opacity-100 text-xs font-black uppercase tracking-widest gap-1 transition-all">
                                     <Plus size={14} /> {t('assign')}
                                 </button>
                             )}
@@ -352,17 +377,18 @@ const ShiftCalendarPage = () => {
         const days = eachDayOfInterval({ start: startVisible, end: endVisible });
 
         return (
-            <div className="grid grid-cols-7 border-l border-gray-100 min-h-[500px]">
+            <div className="grid grid-cols-7 border-l border-[var(--border-main)] min-h-[500px]">
                 {days.map(day => {
                     const isSelectedMonth = day.getMonth() === currentDate.getMonth();
+                    const isCurrentDay = isSameDay(day, new Date());
                     return (
                         <div
                             key={day.toISOString()}
-                            className={`border-r border-b border-gray-100 p-2 min-h-[120px] hover:bg-gray-50/50 transition-colors cursor-pointer group ${!isSelectedMonth ? 'bg-gray-50/30' : ''}`}
+                            className={`border-r border-b border-[var(--border-main)] p-1.5 sm:p-2 min-h-[80px] sm:min-h-[120px] hover:bg-[var(--bg-surface-soft)]/20 transition-colors cursor-pointer group ${!isSelectedMonth ? 'bg-gray-50/30' : ''}`}
                             onClick={() => handleCellClick(day)}
                         >
                             <div className="flex flex-col gap-1 h-full">
-                                <div className={`text-right text-[10px] font-bold ${isToday(day) ? 'text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full inline-block ml-auto' : isSelectedMonth ? 'text-gray-400' : 'text-gray-200'}`}>
+                                <div className={`text-right text-[9px] sm:text-[10px] font-black uppercase tracking-tighter ${isCurrentDay ? 'text-white bg-blue-600 px-1.5 py-0.5 rounded-lg inline-block ml-auto shadow-md shadow-blue-500/20' : isSelectedMonth ? 'text-[var(--text-main)]' : 'text-gray-200'}`}>
                                     {format(day, 'd')}
                                 </div>
                                 <div className="space-y-1">
@@ -377,10 +403,10 @@ const ShiftCalendarPage = () => {
                                                 backgroundColor: `${assign.ShiftType.color_code}15`,
                                                 borderLeft: `2px solid ${assign.ShiftType.color_code}`
                                             }}
-                                            className="p-1 rounded text-[9px] relative group/item truncate"
+                                            className="p-1 rounded text-[8px] sm:text-[9px] relative group/item truncate font-bold text-[var(--text-main)]"
                                             title={`${assign.ShiftType.name}: ${assign.Employee?.User?.first_name}`}
                                         >
-                                            <span className="font-bold">{assign.ShiftType.name.substring(0, 5)}</span>: {assign.Employee?.User?.first_name.substring(0, 1)}.
+                                            <span className="hidden sm:inline">{assign.ShiftType.name.substring(0, 5)}: </span>{assign.Employee?.User?.first_name.substring(0, 5)}
                                         </div>
                                     ))}
                                 </div>
@@ -394,55 +420,55 @@ const ShiftCalendarPage = () => {
 
     return (
         <div className="p-6 max-w-full">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div className="flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-4 mb-8">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">{t('shiftCalendar')}</h1>
-                    <p className="text-gray-500">{t('manageTeamSchedules')}</p>
+                    <h1 className="text-2xl sm:text-3xl font-black text-gray-900 transition-colors uppercase tracking-tighter">{t('shiftCalendar')}</h1>
+                    <p className="text-xs sm:text-sm text-gray-500">{t('manageTeamSchedules')}</p>
                 </div>
 
-                <div className="flex items-center gap-4 bg-white p-1 rounded-xl shadow-sm border border-gray-200">
-                    <div className="flex items-center border-r border-gray-100 pr-2">
-                        <button onClick={handlePrev} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                            <ChevronLeft size={20} className="text-gray-600" />
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 bg-[var(--bg-surface)] p-2 rounded-[2rem] border border-[var(--border-main)] shadow-sm">
+                    <div className="flex items-center justify-between sm:justify-start border-b sm:border-b-0 sm:border-r border-[var(--border-main)] pb-2 sm:pb-0 sm:pr-2">
+                        <button onClick={handlePrev} className="p-2.5 hover:bg-[var(--bg-surface-soft)] rounded-xl transition-all active:scale-95">
+                            <ChevronLeft size={18} className="text-[var(--text-main)]" />
                         </button>
-                        <span className="px-4 font-semibold text-gray-800 min-w-[150px] text-center">
+                        <span className="px-4 font-bold text-[var(--text-main)] min-w-[140px] text-center text-sm sm:text-base">
                             {view === 'week' ? (
-                                `${format(startOfWeek(currentDate), 'MMM d')} - ${format(endOfWeek(currentDate), 'd, yyyy')}`
+                                <span className="whitespace-nowrap">{format(startOfWeek(currentDate), 'MMM d')} - {format(endOfWeek(currentDate), 'd')}</span>
                             ) : (
                                 format(currentDate, 'MMMM yyyy')
                             )}
                         </span>
-                        <button onClick={handleNext} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                            <ChevronRight size={20} className="text-gray-600" />
+                        <button onClick={handleNext} className="p-2.5 hover:bg-[var(--bg-surface-soft)] rounded-xl transition-all active:scale-95">
+                            <ChevronRight size={18} className="text-[var(--text-main)]" />
                         </button>
                     </div>
 
-                    <div className="flex gap-1 p-1">
+                    <div className="flex gap-1 p-1 bg-[var(--bg-surface-soft)] rounded-2xl flex-1">
                         <button
                             onClick={() => setView('week')}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${view === 'week' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50'}`}
+                            className={`flex-1 px-4 py-2 rounded-xl text-xs font-black transition-all uppercase tracking-widest ${view === 'week' ? 'bg-white text-blue-600 shadow-md' : 'text-[var(--text-soft)] hover:text-[var(--text-main)]'}`}
                         >
                             {t('week')}
                         </button>
                         <button
                             onClick={() => setView('month')}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${view === 'month' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50'}`}
+                            className={`flex-1 px-4 py-2 rounded-xl text-xs font-black transition-all uppercase tracking-widest ${view === 'month' ? 'bg-white text-blue-600 shadow-md' : 'text-[var(--text-soft)] hover:text-[var(--text-main)]'}`}
                         >
                             {t('month')}
                         </button>
                     </div>
 
-                    <div className="flex items-center gap-2 border-l border-gray-100 pl-4 pr-1">
-                        <Users size={16} className="text-gray-400" />
+                    <div className="flex items-center gap-2 sm:border-l border-[var(--border-main)] sm:pl-4 pr-1">
+                        <Users size={14} className="text-[var(--text-muted)]" />
                         <select
-                            className="bg-transparent text-sm font-semibold border-none focus:ring-0 outline-none text-gray-700 min-w-[150px] cursor-pointer"
+                            className="bg-transparent text-xs font-black border-none focus:ring-0 outline-none text-[var(--text-main)] min-w-[120px] cursor-pointer uppercase tracking-tighter"
                             value={selectedEmployeeId}
                             onChange={(e) => setSelectedEmployeeId(e.target.value)}
                         >
                             <option value="">{t('allEmployees')}</option>
                             {employees.map(emp => (
                                 <option key={emp.user_id} value={emp.user_id}>
-                                    {emp.User?.first_name} {emp.User?.last_name}
+                                    {emp.User?.first_name}
                                 </option>
                             ))}
                         </select>

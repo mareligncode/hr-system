@@ -115,15 +115,15 @@ const Dashboard = () => {
     );
 
     return (
-        <div className="space-y-8 pb-20">
+        <div className="space-y-6 sm:space-y-8 pb-20">
             {/* Welcome Header */}
-            <div className="bg-[var(--bg-surface)] p-8 rounded-[2.5rem] border border-[var(--border-main)] shadow-sm relative overflow-hidden">
+            <div className="bg-[var(--bg-surface)] p-6 sm:p-8 rounded-3xl sm:rounded-[2.5rem] border border-[var(--border-main)] shadow-sm relative overflow-hidden">
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
-                        <h1 className="text-3xl font-black tracking-tight mb-2">
+                        <h1 className="text-2xl sm:text-3xl font-black tracking-tight mb-2">
                             {t('welcomeBack')}, {user?.first_name}!
                         </h1>
-                        <p className="text-[var(--text-soft)] text-sm max-w-md">
+                        <p className="text-[var(--text-soft)] text-xs sm:text-sm max-w-md">
                             {isEmployee
                                 ? t('dashboardWelcomeEmployee')
                                 : t('dashboardWelcome')}
@@ -131,23 +131,23 @@ const Dashboard = () => {
                     </div>
 
                     {employeeData && (
-                        <div className="flex flex-wrap gap-4">
-                            <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-2xl flex items-center gap-3 min-w-[200px]">
-                                <div className="p-2 bg-blue-500 rounded-lg text-white">
-                                    <Building2 className="w-5 h-5" />
+                        <div className="flex flex-wrap gap-3 sm:gap-4">
+                            <div className="bg-blue-500/10 border border-blue-500/20 p-3 sm:p-4 rounded-xl sm:rounded-2xl flex items-center gap-2 sm:gap-3 flex-grow sm:flex-none sm:min-w-[200px]">
+                                <div className="p-1.5 sm:p-2 bg-blue-500 rounded-lg text-white">
+                                    <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-blue-500">{t('department')}</p>
-                                    <p className="font-bold text-[var(--text-main)] transition-colors">{employeeData.organization?.department?.name || 'N/A'}</p>
+                                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-blue-500">{t('department')}</p>
+                                    <p className="text-xs sm:text-sm font-bold text-[var(--text-main)] transition-colors">{employeeData.organization?.department?.name || 'N/A'}</p>
                                 </div>
                             </div>
-                            <div className="bg-purple-500/10 border border-purple-500/20 p-4 rounded-2xl flex items-center gap-3 min-w-[200px]">
-                                <div className="p-2 bg-purple-500 rounded-lg text-white">
-                                    <Award className="w-5 h-5" />
+                            <div className="bg-purple-500/10 border border-purple-500/20 p-3 sm:p-4 rounded-xl sm:rounded-2xl flex items-center gap-2 sm:gap-3 flex-grow sm:flex-none sm:min-w-[200px]">
+                                <div className="p-1.5 sm:p-2 bg-purple-500 rounded-lg text-white">
+                                    <Award className="w-4 h-4 sm:w-5 sm:h-5" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-purple-500">{t('position')}</p>
-                                    <p className="font-bold text-[var(--text-main)] transition-colors">{employeeData.organization?.position?.title || 'N/A'}</p>
+                                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-purple-500">{t('position')}</p>
+                                    <p className="text-xs sm:text-sm font-bold text-[var(--text-main)] transition-colors">{employeeData.organization?.position?.title || 'N/A'}</p>
                                 </div>
                             </div>
                         </div>
@@ -164,36 +164,36 @@ const Dashboard = () => {
                     {/* Left Column: Stats & Quick Actions */}
                     <div className="lg:col-span-1 space-y-8">
                         {/* Record Stats */}
-                        <div className="bg-[var(--bg-surface)] p-6 rounded-[2rem] border border-[var(--border-main)] shadow-sm">
-                            <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+                        <div className="bg-[var(--bg-surface)] p-5 sm:p-6 rounded-3xl sm:rounded-[2rem] border border-[var(--border-main)] shadow-sm">
+                            <h3 className="text-base sm:text-lg font-bold mb-6 flex items-center gap-2">
                                 <FileText className="w-5 h-5 text-blue-500" />
                                 {t('personalRecords')}
                             </h3>
                             <div className="space-y-4">
-                                <div className="flex items-center justify-between p-4 bg-[var(--bg-surface-soft)] rounded-2xl border border-[var(--border-main)]/50">
+                                <div className="flex items-center justify-between p-3 sm:p-4 bg-[var(--bg-surface-soft)] rounded-xl sm:rounded-2xl border border-[var(--border-main)]/50">
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('documents')}</p>
-                                        <p className="text-xl font-black">{employeeData.stats.totalDocuments}</p>
+                                        <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('documents')}</p>
+                                        <p className="text-lg sm:text-xl font-black">{employeeData.stats.totalDocuments}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[10px] font-bold text-emerald-500">{employeeData.stats.verifiedDocuments} {t('verified')}</p>
-                                        <p className="text-[10px] font-bold text-rose-500">{employeeData.stats.expiringDocuments} {t('expiringSoon')}</p>
+                                        <p className="text-[9px] sm:text-[10px] font-bold text-emerald-500">{employeeData.stats.verifiedDocuments} {t('verified')}</p>
+                                        <p className="text-[9px] sm:text-[10px] font-bold text-rose-500">{employeeData.stats.expiringDocuments} {t('expiringSoon')}</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between p-4 bg-[var(--bg-surface-soft)] rounded-2xl border border-[var(--border-main)]/50">
+                                <div className="flex items-center justify-between p-3 sm:p-4 bg-[var(--bg-surface-soft)] rounded-xl sm:rounded-2xl border border-[var(--border-main)]/50">
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('certifications')}</p>
-                                        <p className="text-xl font-black">{employeeData.stats.totalCertifications}</p>
+                                        <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('certifications')}</p>
+                                        <p className="text-lg sm:text-xl font-black">{employeeData.stats.totalCertifications}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[10px] font-bold text-emerald-500">{employeeData.stats.verifiedCertifications} {t('verified')}</p>
-                                        <p className="text-[10px] font-bold text-amber-500">{employeeData.stats.expiringCertifications} {t('expiringSoon')}</p>
+                                        <p className="text-[9px] sm:text-[10px] font-bold text-emerald-500">{employeeData.stats.verifiedCertifications} {t('verified')}</p>
+                                        <p className="text-[9px] sm:text-[10px] font-bold text-amber-500">{employeeData.stats.expiringCertifications} {t('expiringSoon')}</p>
                                     </div>
                                 </div>
                             </div>
                             <Button
                                 variant="secondary"
-                                className="w-full mt-6 py-4 rounded-2xl text-xs font-black uppercase tracking-widest border-[var(--border-main)]"
+                                className="w-full mt-6 py-3.5 sm:py-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-widest border-[var(--border-main)]"
                                 onClick={() => navigate(`/profile/${user.id}`)}
                             >
                                 {t('manageRecords')} <ChevronRight className="w-4 h-4 ml-2" />
@@ -201,23 +201,23 @@ const Dashboard = () => {
                         </div>
 
                         {/* Org Manager Card */}
-                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-8 rounded-[2rem] text-white shadow-xl relative overflow-hidden">
+                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 sm:p-8 rounded-3xl sm:rounded-[2rem] text-white shadow-xl relative overflow-hidden">
                             <div className="relative z-10">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">{t('reportingTo')}</p>
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20">
-                                        <Users className="w-6 h-6 text-blue-400" />
+                                <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">{t('reportingTo')}</p>
+                                <div className="flex items-center gap-3 sm:gap-4">
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/10 flex items-center justify-center border border-white/20">
+                                        <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" />
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-lg">
+                                        <h4 className="font-bold text-base sm:text-lg">
                                             {employeeData.organization.manager
                                                 ? `${employeeData.organization.manager.first_name} ${employeeData.organization.manager.last_name}`
                                                 : t('noDirectManager')}
                                         </h4>
-                                        <p className="text-slate-400 text-sm">{employeeData.organization.manager?.email || "N/A"}</p>
+                                        <p className="text-slate-400 text-xs sm:text-sm">{employeeData.organization.manager?.email || "N/A"}</p>
                                     </div>
                                 </div>
-                                <button className="mt-8 text-xs font-black uppercase tracking-widest text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-2">
+                                <button className="mt-6 sm:mt-8 text-[10px] sm:text-xs font-black uppercase tracking-widest text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-2">
                                     {t('contactManager')} <ArrowUpRight className="w-4 h-4" />
                                 </button>
                             </div>
@@ -245,31 +245,31 @@ const Dashboard = () => {
                         </div>
 
                         {/* Employment Timeline & Details */}
-                        <div className="bg-[var(--bg-surface)] p-8 rounded-[2rem] border border-[var(--border-main)] shadow-sm">
-                            <div className="flex items-center gap-3 mb-8">
-                                <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500">
+                        <div className="bg-[var(--bg-surface)] p-6 sm:p-8 rounded-3xl sm:rounded-[2rem] border border-[var(--border-main)] shadow-sm">
+                            <div className="flex items-center gap-3 mb-6 sm:mb-8">
+                                <div className="p-2 sm:p-2.5 rounded-xl bg-amber-500/10 text-amber-500">
                                     <Calendar className="w-5 h-5" />
                                 </div>
-                                <h2 className="text-xl font-bold">{t('employmentDetails')}</h2>
+                                <h2 className="text-lg sm:text-xl font-bold">{t('employmentDetails')}</h2>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="grid grid-cols-2 gap-6 sm:gap-8">
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('hireDate')}</p>
-                                    <p className="font-bold text-lg">{format(new Date(employeeData.profile.hire_date), 'MMMM d, yyyy')}</p>
+                                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('hireDate')}</p>
+                                    <p className="font-bold text-sm sm:text-lg">{format(new Date(employeeData.profile.hire_date), 'MMM d, yyyy')}</p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('contractType')}</p>
-                                    <p className="font-bold text-lg capitalize">{employeeData.profile.contract_type}</p>
+                                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('contractType')}</p>
+                                    <p className="font-bold text-sm sm:text-lg capitalize">{employeeData.profile.contract_type}</p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('empNumber')}</p>
-                                    <p className="font-bold text-lg">{employeeData.profile.employee_number}</p>
+                                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('empNumber')}</p>
+                                    <p className="font-bold text-sm sm:text-lg">{employeeData.profile.employee_number}</p>
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('employeeStatus')}</p>
+                                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('employeeStatus')}</p>
                                     <div className="flex items-center gap-2 mt-1">
-                                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                        <p className="font-bold text-emerald-500 uppercase text-xs tracking-widest">{employeeData.profile.employment_status}</p>
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                        <p className="font-bold text-emerald-500 uppercase text-[9px] sm:text-xs tracking-widest">{employeeData.profile.employment_status}</p>
                                     </div>
                                 </div>
                             </div>
@@ -278,50 +278,50 @@ const Dashboard = () => {
                 </div>
             )}
             {/* Role-Based Quick Actions */}
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
                 <Button
                     variant="outline"
-                    className="flex flex-col items-center gap-2 p-6 rounded-3xl border-[var(--border-main)] hover:bg-blue-500/5 hover:border-blue-500/30 group"
+                    className="flex flex-col items-center gap-2 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-[var(--border-main)] hover:bg-blue-500/5 hover:border-blue-500/30 group"
                     onClick={() => navigate('/attendance/my')}
                 >
-                    <Clock className="w-6 h-6 text-blue-500 group-hover:scale-110 transition-transform" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">{t('clockInOut')}</span>
+                    <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 group-hover:scale-110 transition-transform" />
+                    <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center">{t('clockInOut')}</span>
                 </Button>
                 {['admin', 'hr'].includes(user?.role) && (
                     <Button
                         variant="outline"
-                        className="flex flex-col items-center gap-2 p-6 rounded-3xl border-[var(--border-main)] hover:bg-purple-500/5 hover:border-purple-500/30 group"
+                        className="flex flex-col items-center gap-2 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-[var(--border-main)] hover:bg-purple-500/5 hover:border-purple-500/30 group"
                         onClick={() => navigate('/employees/add')}
                     >
-                        <Users className="w-6 h-6 text-purple-500 group-hover:scale-110 transition-transform" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">{t('addEmployee')}</span>
+                        <Users className="w-5 h-5 sm:w-6 sm:h-6 text-purple-500 group-hover:scale-110 transition-transform" />
+                        <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center">{t('addEmployee')}</span>
                     </Button>
                 )}
                 {['admin', 'finance'].includes(user?.role) && (
                     <Button
                         variant="outline"
-                        className="flex flex-col items-center gap-2 p-6 rounded-3xl border-[var(--border-main)] hover:bg-emerald-500/5 hover:border-emerald-500/30 group"
+                        className="flex flex-col items-center gap-2 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-[var(--border-main)] hover:bg-emerald-500/5 hover:border-emerald-500/30 group"
                         onClick={() => navigate('/payroll/periods')}
                     >
-                        <FileText className="w-6 h-6 text-emerald-500 group-hover:scale-110 transition-transform" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">{t('processPayroll')}</span>
+                        <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500 group-hover:scale-110 transition-transform" />
+                        <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center">{t('processPayroll')}</span>
                     </Button>
                 )}
                 <Button
                     variant="outline"
-                    className="flex flex-col items-center gap-2 p-6 rounded-3xl border-[var(--border-main)] hover:bg-amber-500/5 hover:border-amber-500/30 group"
+                    className="flex flex-col items-center gap-2 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-[var(--border-main)] hover:bg-amber-500/5 hover:border-amber-500/30 group"
                     onClick={() => navigate('/leave/request')}
                 >
-                    <Calendar className="w-6 h-6 text-amber-500 group-hover:scale-110 transition-transform" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">{t('requestLeave')}</span>
+                    <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500 group-hover:scale-110 transition-transform" />
+                    <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center">{t('requestLeave')}</span>
                 </Button>
                 <Button
                     variant="outline"
-                    className="flex flex-col items-center gap-2 p-6 rounded-3xl border-[var(--border-main)] hover:bg-rose-500/5 hover:border-rose-500/30 group"
+                    className="flex flex-col items-center gap-2 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-[var(--border-main)] hover:bg-rose-500/5 hover:border-rose-500/30 group"
                     onClick={() => navigate('/notifications')}
                 >
-                    <Activity className="w-6 h-6 text-rose-500 group-hover:scale-110 transition-transform" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">{t('viewActivity')}</span>
+                    <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-rose-500 group-hover:scale-110 transition-transform" />
+                    <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center">{t('viewActivity')}</span>
                 </Button>
             </div>
 
@@ -330,22 +330,22 @@ const Dashboard = () => {
                 <>
                     {/* Metrics Grid */}
                     {canSeeStats && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                             {statCards.map((card, idx) => (
                                 <motion.div
                                     key={idx}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: idx * 0.1 }}
-                                    className="bg-[var(--bg-surface)] p-6 rounded-3xl border border-[var(--border-main)] hover:border-blue-500/30 transition-all group shadow-sm"
+                                    className="bg-[var(--bg-surface)] p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-[var(--border-main)] hover:border-blue-500/30 transition-all group shadow-sm"
                                 >
-                                    <div className={`p-3 rounded-2xl bg-${card.color}-500/10 text-${card.color}-500 w-fit mb-4 group-hover:scale-110 transition-transform`}>
-                                        <card.icon className="w-6 h-6" />
+                                    <div className={`p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-${card.color}-500/10 text-${card.color}-500 w-fit mb-3 sm:mb-4 group-hover:scale-110 transition-transform`}>
+                                        <card.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                                     </div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-1">{card.label}</p>
-                                    <div className="flex items-end gap-2">
-                                        <h3 className="text-3xl font-black">{card.value}</h3>
-                                        <span className="text-[10px] text-emerald-500 font-bold mb-1.5 flex items-center">
+                                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] mb-1 truncate">{card.label}</p>
+                                    <div className="flex flex-col sm:flex-row sm:items-end gap-1 sm:gap-2">
+                                        <h3 className="text-xl sm:text-3xl font-black">{card.value}</h3>
+                                        <span className="text-[8px] sm:text-[10px] text-emerald-500 font-bold mb-1 flex items-center">
                                             <ArrowUpRight className="w-3 h-3 mr-0.5" /> {card.trend}
                                         </span>
                                     </div>
@@ -355,14 +355,14 @@ const Dashboard = () => {
                     )}
 
                     {/* Advanced Analytics Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                         {/* Workforce Composition Chart */}
-                        <div className="bg-[var(--bg-surface)] p-8 rounded-[2.5rem] border border-[var(--border-main)] shadow-sm">
-                            <h2 className="text-xl font-bold mb-8 flex items-center gap-3">
+                        <div className="bg-[var(--bg-surface)] p-6 sm:p-8 rounded-3xl sm:rounded-[2.5rem] border border-[var(--border-main)] shadow-sm">
+                            <h2 className="text-lg sm:text-xl font-bold mb-6 sm:mb-8 flex items-center gap-3">
                                 <Users className="w-5 h-5 text-blue-500" />
                                 {t('departmentDistribution')}
                             </h2>
-                            <div className="h-[300px] w-full">
+                            <div className="h-[250px] sm:h-[300px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <Pie
@@ -371,8 +371,8 @@ const Dashboard = () => {
                                             nameKey="name"
                                             cx="50%"
                                             cy="50%"
-                                            innerRadius={60}
-                                            outerRadius={100}
+                                            innerRadius={50}
+                                            outerRadius={80}
                                             paddingAngle={5}
                                         >
                                             {(stats?.departmentDistribution || []).map((entry, index) => (
@@ -382,19 +382,19 @@ const Dashboard = () => {
                                         <Tooltip
                                             contentStyle={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-main)', borderRadius: '1rem' }}
                                         />
-                                        <Legend verticalAlign="bottom" height={36} />
+                                        <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '10px' }} />
                                     </PieChart>
                                 </ResponsiveContainer>
                             </div>
                         </div>
 
                         {/* Attendance Trends Chart */}
-                        <div className="bg-[var(--bg-surface)] p-8 rounded-[2.5rem] border border-[var(--border-main)] shadow-sm">
-                            <h2 className="text-xl font-bold mb-8 flex items-center gap-3">
+                        <div className="bg-[var(--bg-surface)] p-6 sm:p-8 rounded-3xl sm:rounded-[2.5rem] border border-[var(--border-main)] shadow-sm">
+                            <h2 className="text-lg sm:text-xl font-bold mb-6 sm:mb-8 flex items-center gap-3">
                                 <Activity className="w-5 h-5 text-emerald-500" />
                                 {t('attendancePulse')}
                             </h2>
-                            <div className="h-[300px] w-full">
+                            <div className="h-[250px] sm:h-[300px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={stats?.attendanceTrends || []}>
                                         <defs>
@@ -417,22 +417,22 @@ const Dashboard = () => {
 
                         {/* Payroll Trends Chart - only for finance/admin */}
                         {['admin', 'finance'].includes(user?.role) && (
-                            <div className="bg-[var(--bg-surface)] p-8 rounded-[2.5rem] border border-[var(--border-main)] shadow-sm">
-                                <h2 className="text-xl font-bold mb-8 flex items-center gap-3">
+                            <div className="bg-[var(--bg-surface)] p-6 sm:p-8 rounded-3xl sm:rounded-[2.5rem] border border-[var(--border-main)] shadow-sm">
+                                <h2 className="text-lg sm:text-xl font-bold mb-6 sm:mb-8 flex items-center gap-3">
                                     <FileText className="w-5 h-5 text-purple-500" />
                                     {t('payrollFlow')}
                                 </h2>
-                                <div className="h-[300px] w-full">
+                                <div className="h-[250px] sm:h-[300px] w-full">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <BarChart data={stats?.payrollTrends || []}>
                                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-main)" />
-                                            <XAxis dataKey="description" stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
+                                            <XAxis dataKey="description" stroke="var(--text-muted)" fontSize={8} tickLine={false} axisLine={false} />
                                             <YAxis stroke="var(--text-muted)" fontSize={10} tickLine={false} axisLine={false} />
                                             <Tooltip
                                                 cursor={{ fill: 'rgba(139, 92, 246, 0.05)' }}
                                                 contentStyle={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-main)', borderRadius: '1rem' }}
                                             />
-                                            <Bar dataKey="total_payroll" fill="#8b5cf6" radius={[6, 6, 0, 0]} barSize={40} />
+                                            <Bar dataKey="total_payroll" fill="#8b5cf6" radius={[6, 6, 0, 0]} barSize={30} />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
@@ -440,12 +440,12 @@ const Dashboard = () => {
                         )}
 
                         {/* Employee Growth Chart */}
-                        <div className="bg-[var(--bg-surface)] p-8 rounded-[2.5rem] border border-[var(--border-main)] shadow-sm">
-                            <h2 className="text-xl font-bold mb-8 flex items-center gap-3">
+                        <div className="bg-[var(--bg-surface)] p-6 sm:p-8 rounded-3xl sm:rounded-[2.5rem] border border-[var(--border-main)] shadow-sm">
+                            <h2 className="text-lg sm:text-xl font-bold mb-6 sm:mb-8 flex items-center gap-3">
                                 <Building2 className="w-5 h-5 text-amber-500" />
                                 {t('workforceGrowth')}
                             </h2>
-                            <div className="h-[300px] w-full">
+                            <div className="h-[250px] sm:h-[300px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={stats?.employeeGrowth || []}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-main)" />
@@ -454,7 +454,7 @@ const Dashboard = () => {
                                         <Tooltip
                                             contentStyle={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-main)', borderRadius: '1rem' }}
                                         />
-                                        <Bar dataKey="hires" fill="#f59e0b" radius={[6, 6, 0, 0]} barSize={40} />
+                                        <Bar dataKey="hires" fill="#f59e0b" radius={[6, 6, 0, 0]} barSize={30} />
                                     </BarChart>
                                 </ResponsiveContainer>
                             </div>
@@ -466,15 +466,15 @@ const Dashboard = () => {
                             {/* Expiring Alerts */}
                             {canSeeAlerts && (
                                 <div className="lg:col-span-2 space-y-6">
-                                    <div className="bg-[var(--bg-surface)] rounded-[2rem] border border-[var(--border-main)] shadow-sm overflow-hidden min-h-[400px]">
-                                        <div className="p-8 border-b border-[var(--border-main)] flex items-center justify-between">
+                                    <div className="bg-[var(--bg-surface)] rounded-3xl sm:rounded-[2rem] border border-[var(--border-main)] shadow-sm overflow-hidden min-h-[350px] sm:min-h-[400px]">
+                                        <div className="p-6 sm:p-8 border-b border-[var(--border-main)] flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500">
+                                                <div className="p-2 sm:p-2.5 rounded-xl bg-rose-500/10 text-rose-500">
                                                     <AlertTriangle className="w-5 h-5" />
                                                 </div>
-                                                <h2 className="text-xl font-bold">{t('complianceAlerts')}</h2>
+                                                <h2 className="text-lg sm:text-xl font-bold">{t('complianceAlerts')}</h2>
                                             </div>
-                                            <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                                            <span className="px-2.5 py-1 bg-rose-50 text-rose-600 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
                                                 {expiring.documents.length + expiring.certifications.length} {t('critical')}
                                             </span>
                                         </div>

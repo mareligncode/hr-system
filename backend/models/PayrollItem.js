@@ -43,9 +43,37 @@ const PayrollItem = sequelize.define('PayrollItem', {
         type: DataTypes.DECIMAL(12, 2),
         defaultValue: 0
     },
+    tax_deduction: {
+        type: DataTypes.DECIMAL(12, 2),
+        defaultValue: 0
+    },
+    tip_amount: {
+        type: DataTypes.DECIMAL(12, 2),
+        defaultValue: 0
+    },
+    expenses_reimbursed: {
+        type: DataTypes.DECIMAL(12, 2),
+        defaultValue: 0
+    },
+    other_deductions: {
+        type: DataTypes.DECIMAL(12, 2),
+        defaultValue: 0
+    },
     net_pay: {
         type: DataTypes.DECIMAL(12, 2),
         defaultValue: 0
+    },
+    payment_currency: {
+        type: DataTypes.STRING(3),
+        defaultValue: 'USD'
+    },
+    exchange_rate: {
+        type: DataTypes.DECIMAL(10, 4),
+        defaultValue: 1.0000
+    },
+    is_off_cycle: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
     },
     status: {
         type: DataTypes.ENUM('draft', 'reviewed', 'approved'),

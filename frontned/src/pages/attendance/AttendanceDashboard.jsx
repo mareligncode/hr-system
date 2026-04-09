@@ -112,7 +112,7 @@ const WebcamModal = ({ onCapture, onClose }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto"
         >
             <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
@@ -121,12 +121,12 @@ const WebcamModal = ({ onCapture, onClose }) => {
                 className="bg-[var(--bg-surface)] rounded-3xl border border-[var(--border-main)] shadow-2xl w-full max-w-md overflow-hidden"
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-[var(--border-main)]">
+                <div className="flex items-center justify-between p-5 sm:p-6 border-b border-[var(--border-main)]">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
+                        <div className="p-1.5 sm:p-2 rounded-xl bg-blue-500/10 text-blue-500">
                             <Camera className="w-5 h-5" />
                         </div>
-                        <h3 className="font-black text-lg uppercase tracking-tight">Selfie Verification</h3>
+                        <h3 className="font-black text-base sm:text-lg uppercase tracking-tight">Selfie Verification</h3>
                     </div>
                     <button onClick={onClose} className="p-2 rounded-xl hover:bg-[var(--bg-surface-soft)] transition-colors text-[var(--text-muted)]">
                         <X className="w-5 h-5" />
@@ -511,12 +511,12 @@ const AttendanceDashboard = () => {
     /* ══════════════════════════ RENDER ══════════════════════════════════ */
     return (
         <>
-            <div className="max-w-6xl mx-auto space-y-8 pb-20">
+            <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-20">
                 {/* ── Header ── */}
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 px-1">
                     <div>
-                        <h1 className="text-3xl font-black tracking-tight mb-1 uppercase">{t('attendance')}</h1>
-                        <p className="text-[var(--text-soft)]">{format(now, 'EEEE, MMMM do')}</p>
+                        <h1 className="text-2xl sm:text-3xl font-black tracking-tight mb-1 uppercase">{t('attendance')}</h1>
+                        <p className="text-xs sm:text-sm text-[var(--text-soft)]">{format(now, 'EEEE, MMMM do')}</p>
                     </div>
                     <GpsBadge
                         status={gpsStatus}
@@ -576,32 +576,32 @@ const AttendanceDashboard = () => {
                                 </div>
                             )}
 
-                            <div className="relative z-10 p-8">
+                            <div className="relative z-10 p-6 sm:p-8">
                                 {/* Live digital clock */}
                                 <div className="mb-6">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)] mb-2">Current Time</p>
-                                    <div className={`text-5xl font-black tabular-nums tracking-tight ${isClockedIn ? 'text-emerald-400' : 'text-[var(--text-primary)]'}`}>
+                                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[var(--text-muted)] mb-2">Current Time</p>
+                                    <div className={`text-3xl sm:text-5xl font-black tabular-nums tracking-tight ${isClockedIn ? 'text-emerald-400' : 'text-[var(--text-primary)]'}`}>
                                         {format(now, 'hh:mm:ss a')}
                                     </div>
                                 </div>
 
                                 {/* Status icon */}
-                                <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 ${isClockedIn ? 'bg-emerald-500/10' : 'bg-blue-500/10'}`}>
-                                    <Clock className={`w-8 h-8 ${isClockedIn ? 'text-emerald-500' : 'text-blue-500'}`} />
+                                <div className={`w-14 h-14 sm:w-16 sm:h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 ${isClockedIn ? 'bg-emerald-500/10' : 'bg-blue-500/10'}`}>
+                                    <Clock className={`w-7 h-7 sm:w-8 sm:h-8 ${isClockedIn ? 'text-emerald-500' : 'text-blue-500'}`} />
                                 </div>
 
-                                <h2 className="text-xl font-black uppercase tracking-tight mb-5">
+                                <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight mb-5">
                                     {isClockedIn ? t('clockedIn') : t('notClockedIn')}
                                 </h2>
 
                                 {/* Elapsed timer */}
                                 {isClockedIn && (
                                     <div className="mb-6 px-4 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-500/70 mb-1">Elapsed Time</p>
-                                        <p className="text-2xl font-black tabular-nums text-emerald-400 tracking-tight">
+                                        <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-emerald-500/70 mb-1">Elapsed Time</p>
+                                        <p className="text-xl sm:text-2xl font-black tabular-nums text-emerald-400 tracking-tight">
                                             {formatElapsed(elapsedSec)}
                                         </p>
-                                        <p className="text-[10px] text-emerald-500/60 mt-1">
+                                        <p className="text-[9px] sm:text-[10px] text-emerald-500/60 mt-1">
                                             Since {format(new Date(activeSession.clock_in), 'hh:mm a')}
                                         </p>
                                     </div>
@@ -678,24 +678,24 @@ const AttendanceDashboard = () => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="bg-[var(--bg-surface)] p-6 rounded-[2rem] border border-[var(--border-main)] shadow-sm"
+                            className="bg-[var(--bg-surface)] p-5 sm:p-6 rounded-[2rem] border border-[var(--border-main)] shadow-sm"
                         >
-                            <h3 className="font-bold mb-5 flex items-center gap-2 uppercase tracking-tight">
+                            <h3 className="font-bold mb-5 flex items-center gap-2 uppercase tracking-tight text-sm sm:text-base">
                                 <Calendar className="w-5 h-5 text-purple-500" />
                                 {t('weeklySummary')}
                             </h3>
-                            <div className="space-y-3">
+                            <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
                                 {[
                                     { label: t('hoursWorked'), value: `${summary.totalHours}h`, color: 'text-blue-500', icon: <Clock className="w-4 h-4" /> },
                                     { label: 'Overtime', value: `${summary.totalOvertime}h`, color: 'text-amber-500', icon: <TrendingUp className="w-4 h-4" /> },
-                                    { label: 'Days Present', value: summary.daysPresent, color: 'text-emerald-500', icon: <CheckCircle2 className="w-4 h-4" /> },
-                                ].map((stat) => (
-                                    <div key={stat.label} className="p-4 bg-[var(--bg-surface-soft)] rounded-2xl border border-[var(--border-main)]/50 flex items-center justify-between">
-                                        <div className="flex items-center gap-2.5">
+                                    { label: 'Present', value: summary.daysPresent, color: 'text-emerald-500', icon: <CheckCircle2 className="w-4 h-4" />, fullWidth: true },
+                                ].map((stat, i) => (
+                                    <div key={stat.label} className={`p-3 sm:p-4 bg-[var(--bg-surface-soft)] rounded-xl sm:rounded-2xl border border-[var(--border-main)]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-1 ${stat.fullWidth ? 'col-span-2 lg:col-span-1' : ''}`}>
+                                        <div className="flex items-center gap-2">
                                             <span className={`opacity-60 ${stat.color}`}>{stat.icon}</span>
-                                            <span className="text-xs font-bold text-[var(--text-muted)] uppercase">{stat.label}</span>
+                                            <span className="text-[9px] sm:text-xs font-bold text-[var(--text-muted)] uppercase truncate">{stat.label}</span>
                                         </div>
-                                        <span className={`text-xl font-black ${stat.color}`}>{stat.value}</span>
+                                        <span className={`text-lg sm:text-xl font-black ${stat.color}`}>{stat.value}</span>
                                     </div>
                                 ))}
                             </div>
@@ -717,18 +717,20 @@ const AttendanceDashboard = () => {
                                     </div>
                                     <h2 className="text-xl font-black uppercase tracking-tight">{t('attendanceHistory')}</h2>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 ml-auto">
                                     <button
                                         onClick={handleExport}
-                                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-[var(--border-main)] hover:bg-[var(--bg-surface-soft)] transition-colors text-[var(--text-soft)]"
+                                        className="flex items-center justify-center w-10 sm:w-auto sm:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-[var(--border-main)] hover:bg-[var(--bg-surface-soft)] transition-colors text-[var(--text-soft)]"
+                                        title={t('export')}
                                     >
-                                        <Download className="w-3.5 h-3.5" /> {t('export')}
+                                        <Download className="w-3.5 h-3.5" /> <span className="hidden sm:inline ml-1.5">{t('export')}</span>
                                     </button>
                                     <button
                                         onClick={() => { setSelectedAttendanceId(null); setShowCorrection(true); }}
-                                        className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-[var(--border-main)] hover:bg-[var(--bg-surface-soft)] transition-colors text-[var(--text-soft)]"
+                                        className="flex items-center justify-center w-10 sm:w-auto sm:px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-[var(--border-main)] hover:bg-[var(--bg-surface-soft)] transition-colors text-[var(--text-soft)]"
+                                        title={t('requestCorrection')}
                                     >
-                                        <AlertCircle className="w-3.5 h-3.5" /> {t('requestCorrection')}
+                                        <AlertCircle className="w-3.5 h-3.5" /> <span className="hidden sm:inline ml-1.5">{t('requestCorrection')}</span>
                                     </button>
                                 </div>
                             </div>
@@ -754,22 +756,21 @@ const AttendanceDashboard = () => {
                                             >
                                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                                     {/* Date + status */}
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-14 h-14 rounded-2xl bg-[var(--bg-surface-soft)] border border-[var(--border-main)] flex flex-col items-center justify-center flex-shrink-0">
-                                                            <span className="text-[9px] font-black text-blue-500 uppercase">{format(new Date(row.clock_in), 'MMM')}</span>
-                                                            <span className="text-lg font-black leading-tight">{format(new Date(row.clock_in), 'dd')}</span>
-                                                            <span className="text-[9px] text-[var(--text-muted)]">{format(new Date(row.clock_in), 'EEE')}</span>
+                                                    <div className="flex items-center gap-3 sm:gap-4">
+                                                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-[var(--bg-surface-soft)] border border-[var(--border-main)] flex flex-col items-center justify-center flex-shrink-0">
+                                                            <span className="text-[8px] sm:text-[9px] font-black text-blue-500 uppercase">{format(new Date(row.clock_in), 'MMM')}</span>
+                                                            <span className="text-base sm:text-lg font-black leading-tight">{format(new Date(row.clock_in), 'dd')}</span>
                                                         </div>
-                                                        <div>
-                                                            <div className="flex items-center gap-2 mb-1">
-                                                                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isActive ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400'}`} />
-                                                                <span className="font-bold text-sm">{isActive ? 'In Progress' : t('clockedOut')}</span>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-2 mb-0.5">
+                                                                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isActive ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400'}`} />
+                                                                <span className="font-bold text-xs sm:text-sm truncate">{isActive ? 'In Progress' : t('clockedOut')}</span>
                                                             </div>
-                                                            <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest flex items-center gap-3">
-                                                                <span>IN: {format(new Date(row.clock_in), 'hh:mm a')}</span>
-                                                                {row.clock_out && <><span>→</span><span>OUT: {format(new Date(row.clock_out), 'hh:mm a')}</span></>}
+                                                            <div className="text-[9px] sm:text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest flex flex-wrap items-center gap-x-3 gap-y-1">
+                                                                <span className="flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> {format(new Date(row.clock_in), 'hh:mm a')}</span>
+                                                                {row.clock_out && <span className="opacity-50">→ {format(new Date(row.clock_out), 'hh:mm a')}</span>}
                                                                 {row.location_in && (
-                                                                    <span className="flex items-center gap-1 text-blue-500 normal-case lowercase tracking-normal">
+                                                                    <span className="flex items-center gap-1 text-blue-500 normal-case lowercase tracking-normal truncate max-w-[150px]">
                                                                         <MapPin className="w-2 h-2" />
                                                                         {typeof row.location_in === 'object' ? row.location_in.address : row.location_in}
                                                                     </span>
@@ -779,13 +780,13 @@ const AttendanceDashboard = () => {
                                                     </div>
 
                                                     {/* Hours + progress + status badge */}
-                                                    <div className="flex items-center gap-6 sm:min-w-[200px]">
+                                                    <div className="flex items-center gap-4 sm:gap-6 sm:min-w-[240px]">
                                                         <div className="flex-1">
-                                                            <div className="flex justify-between text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1.5">
+                                                            <div className="flex justify-between text-[9px] sm:text-[10px] font-bold uppercase text-[var(--text-muted)] mb-1">
                                                                 <span>{t('hoursWorked')}</span>
                                                                 <span className="font-black text-[var(--text-primary)]">{hours}h</span>
                                                             </div>
-                                                            <div className="h-1.5 rounded-full bg-[var(--bg-surface-soft)] overflow-hidden">
+                                                            <div className="h-1 rounded-full bg-[var(--bg-surface-soft)] overflow-hidden">
                                                                 <div
                                                                     className="h-full rounded-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-700"
                                                                     style={{ width: `${pct}%` }}
@@ -793,7 +794,7 @@ const AttendanceDashboard = () => {
                                                             </div>
                                                         </div>
                                                         <div
-                                                            className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0 ${row.status === 'approved' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
+                                                            className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest border cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0 ${row.status === 'approved' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
                                                                 row.status === 'rejected' ? 'bg-rose-500/10    text-rose-400    border-rose-500/30' :
                                                                     'bg-amber-500/10   text-amber-400   border-amber-500/30'
                                                                 }`}
