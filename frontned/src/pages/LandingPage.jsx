@@ -15,14 +15,14 @@ const LandingPage = () => {
         {
             image: r2unisonImg,
             accent: t('landing_slide1_accent') || "Precision in Staff Harmony",
-            title: <>{t('landing_slide1_title_part1') || "Experience"} <span className="text-lp-secondary-fixed-dim">{t('landing_slide1_title_part2') || "Institutional Unison"}</span> {t('landing_slide1_title_part3') || "in HR"}</>,
+            // title: <>{t('landing_slide1_title_part1') || "Experience"} <span className="text-lp-secondary-fixed-dim">{t('landing_slide1_title_part2') || "Institutional Unison"}</span> {t('landing_slide1_title_part3') || "in HR"}</>,
             description: t('landing_slide1_desc') || "The global benchmark for human capital management. Orchestrate your entire hospitality workforce with elite precision and 5-star digital infrastructure.",
             cta1: t('getStarted') || "Get Started",
             cta2: t('exploreFeatures') || "Explore Features"
         },
         {
             image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAX3AQ6xsQ-pib0GVHEjma9OJRR4wIl8s_awnvJmuvi0aOftcc8euTgEO_wFsFuMfKezr668DmtgIpF9afeqi2gJYCS0XFBB9ZrTVEvynkz3WA2jajJEe3uNiRQQ_EFxKZ-5-4fM3UYfOxA-7I2V_Qj12o02xVfX2WngTlJMppRhgFnQbKvgGAXhfrg497TYn0sdA-f9Pdobstpvd8ElBZR12JTD0BZHYPyCLa2b7Xy8wOw3O96d45QtO33uYEw6mSHr278hK16QMo",
-            accent: t('landing_slide2_accent') || "Excellence in Hospitality HR",
+            // accent: t('landing_slide2_accent') || "Excellence in Hospitality HR",
             title: <>{t('landing_slide2_title_part1') || "Elevate Your Hotel Workforce with"} <span className="text-lp-secondary-fixed-dim">{t('landing_slide2_title_part2') || "World-Class HR"}</span></>,
             description: t('landing_slide2_desc') || "Seamless management, global standards, and unparalleled efficiency for the hospitality industry. Crafted for the world's most prestigious hotels.",
             cta1: t('signIn'),
@@ -30,7 +30,7 @@ const LandingPage = () => {
         },
         {
             image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCG5I0lR5xWfowi3vyCB_hJ-_VG5mUdHV9chEY1WJie3sN8RajeX7t3wszyBGhjIO8KkX1q591iKVOKoClgA7DpvjRh1-Sw68qJefY_C61GyhvlqE6AJUVSy8hZnxK9v4cg5dkHtGcSxFLh5YoYysLsYgLNedQMAooGS94dimxjxDFC70jsot2jK5hXDj1tLDxWVXBTzrZA-ZaHZRZOZOnlAuHa2w8PXlontM88VVPo8Q_VvEu6bbx2VV8uVzrG2wpgNv4b-F-NnwQ",
-            accent: t('landing_slide3_accent') || "Advanced Talent Management",
+            // accent: t('landing_slide3_accent') || "Advanced Talent Management",
             title: <>{t('landing_slide3_title_part1') || "Sophisticated"} <span className="text-lp-secondary-fixed-dim">{t('landing_slide3_title_part2') || "Talent Analytics"}</span> {t('landing_slide3_title_part3') || "& Performance"}</>,
             description: t('landing_slide3_desc') || "Gain deep insights into your staff potential with AI-driven KPIs tailored for high-touch luxury service environments. Operational excellence refined.",
             cta1: t('demoNow') || "Demo Now",

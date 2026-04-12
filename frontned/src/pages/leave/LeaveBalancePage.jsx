@@ -164,7 +164,25 @@ const LeaveBalancePage = () => {
                                         <Avatar sx={{ bgcolor: styles.bg, color: styles.color }}>{styles.icon}</Avatar>
                                         <Box>
                                             <Typography variant="subtitle2" fontWeight="800">{req.LeaveType?.name}</Typography>
-                                            <Typography variant="caption" color="text.secondary">{req.start_date} to {req.end_date} • {req.days_requested} Days</Typography>
+                                            <Typography variant="caption" color="text.secondary" display="block">{req.start_date} to {req.end_date} • {req.days_requested} Days</Typography>
+                                            {(req.rejection_reason || req.comments) && (
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{
+                                                        mt: 0.5,
+                                                        display: 'block',
+                                                        fontStyle: 'italic',
+                                                        color: req.status === 'rejected' ? 'error.main' : 'text.secondary',
+                                                        bgcolor: 'action.hover',
+                                                        p: 0.5,
+                                                        borderRadius: 1,
+                                                        borderLeft: '3px solid',
+                                                        borderColor: req.status === 'rejected' ? 'error.main' : 'primary.main'
+                                                    }}
+                                                >
+                                                    <strong>{req.status === 'rejected' ? t('reason') : t('comments')}:</strong> {req.rejection_reason || req.comments}
+                                                </Typography>
+                                            )}
                                         </Box>
                                     </Box>
                                     <Chip label={req.status} size="small" color={styles.color} variant="outlined" sx={{ fontWeight: 800, borderRadius: 1.5, textTransform: 'uppercase' }} />
