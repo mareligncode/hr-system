@@ -1,13 +1,119 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontned</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Hotel HR Management System - Streamlining HR operations for the hospitality industry" />
+  <title>Hotel HR System</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            base: 'var(--bg-base)',
+            card: 'var(--bg-card)',
+            input: 'var(--bg-input)',
+            navbar: 'var(--bg-navbar)',
+            bdr: 'var(--border)',
+            binput: 'var(--border-input)',
+            primary: 'var(--text-primary)',
+            secondary: 'var(--text-secondary)',
+            muted: 'var(--text-muted)',
+            axent: 'var(--accent)',
+            axenthv: 'var(--accent-hover)',
+            hotel: {
+              gold: '#D4AF37',
+              dark: '#0F172A',
+              navy: '#1E3A8A',
+            },
+            // Landing Page Colors
+            "lp-surface": "#f8f9fa",
+            "lp-surface-container-high": "#e7e8e9",
+            "lp-tertiary-fixed-dim": "#b8c8da",
+            "lp-surface-variant": "#e1e3e4",
+            "lp-on-secondary": "#ffffff",
+            "lp-surface-bright": "#f8f9fa",
+            "lp-on-primary-fixed-variant": "#2a4386",
+            "lp-secondary-container": "#fed488",
+            "lp-on-primary-fixed": "#00174a",
+            "lp-background": "#f8f9fa",
+            "lp-surface-container-lowest": "#ffffff",
+            "lp-secondary-fixed-dim": "#e9c176",
+            "lp-primary-fixed-dim": "#b3c5ff",
+            "lp-error": "#ba1a1a",
+            "lp-outline-variant": "#c5c6d2",
+            "lp-primary-fixed": "#dbe1ff",
+            "lp-secondary": "#775a19",
+            "lp-on-primary": "#ffffff",
+            "lp-on-background": "#191c1d",
+            "lp-tertiary-container": "#1a2a37",
+            "lp-on-tertiary-container": "#8191a2",
+            "lp-on-secondary-fixed-variant": "#5d4201",
+            "lp-surface-container": "#edeeef",
+            "lp-on-secondary-container": "#785a1a",
+            "lp-surface-container-highest": "#e1e3e4",
+            "lp-on-secondary-fixed": "#261900",
+            "lp-surface-container-low": "#f3f4f5",
+            "lp-on-surface-variant": "#444650",
+            "lp-outline": "#757682",
+            "lp-tertiary": "#051522",
+            "lp-secondary-fixed": "#ffdea5",
+            "lp-on-tertiary-fixed-variant": "#394857",
+            "lp-on-surface": "#191c1d",
+            "lp-inverse-surface": "#2e3132",
+            "lp-inverse-on-surface": "#f0f1f2",
+            "lp-tertiary-fixed": "#d4e4f6",
+            "lp-primary-container": "#002366",
+            "lp-on-primary-container": "#758dd5",
+            "lp-error-container": "#ffdad6",
+            "lp-on-error-container": "#93000a",
+            "lp-surface-dim": "#d9dadb",
+            "lp-inverse-primary": "#b3c5ff",
+            "lp-on-tertiary": "#ffffff",
+            "lp-surface-tint": "#435b9f",
+            "lp-on-error": "#ffffff",
+            "lp-primary": "#00113a",
+            "lp-on-tertiary-fixed": "#0d1d2a"
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            headline: ["Montserrat", "Plus Jakarta Sans", "sans-serif"],
+            body: ["Lato", "Manrope", "sans-serif"],
+            label: ["Montserrat", "Manrope", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&family=Lato:wght@300;400;700&family=Plus+Jakarta+Sans:wght@400;700&family=Manrope:wght@400;600;700&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+</head>
+
+<body class="font-sans antialiased">
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>

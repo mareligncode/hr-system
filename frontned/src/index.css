@@ -1,0 +1,101 @@
+/* Global styles with light/dark theme support */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+/* ============================================
+   DARK MODE (default)
+   ============================================ */
+:root,
+html.dark-mode {
+  --bg-base: #030712;
+  --bg-surface: #111827;
+  --bg-surface-soft: #1f2937;
+  --bg-input: #1e293b;
+  --bg-navbar: rgba(15, 23, 42, 0.85);
+  --border-main: #1f2937;
+  --border-input: #374151;
+  --text-main: #f9fafb;
+  --text-primary: #f9fafb;
+  --text-soft: #9ca3af;
+  --text-muted: #64748b;
+  --accent: #2563eb;
+  --accent-hover: #3b82f6;
+  --accent-soft: rgba(37, 99, 235, 0.15);
+}
+
+/* ============================================
+   LIGHT MODE
+   ============================================ */
+html.light-mode {
+  --bg-base: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-soft: #f1f5f9;
+  --bg-input: #f8fafc;
+  --bg-navbar: rgba(255, 255, 255, 0.92);
+  --border-main: #e2e8f0;
+  --border-input: #cbd5e1;
+  --text-main: #0f172a;
+  --text-primary: #0f172a;
+  --text-soft: #475569;
+  --text-muted: #94a3b8;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-soft: rgba(37, 99, 235, 0.1);
+}
+
+/* Apply CSS variables to body */
+body {
+  background-color: var(--bg-base);
+  color: var(--text-main);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Global Form Elements Reset */
+input, textarea, select {
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  border-color: var(--border-input);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-base);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-input);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Input autofill override */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px var(--bg-input) inset;
+  -webkit-text-fill-color: var(--text-primary);
+  transition: background-color 5000s ease-in-out 0s;
+}
