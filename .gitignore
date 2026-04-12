@@ -3,3 +3,4 @@ phase.md
 docker-compose stop
 docker-compose up -d
 phase2.md
+proposal.md

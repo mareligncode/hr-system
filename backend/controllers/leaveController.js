@@ -121,6 +121,11 @@ export const requestLeave = async (req, res) => {
             return res.status(400).json({ error: `Insufficient leave balance. Available: ${balance.balance} days.` });
         }
 
+        // Generate a unique Request Number
+        const datePart = new Date().toISOString().split('T')[0].replace(/-/g, '');
+        const randomPart = Math.floor(1000 + Math.random() * 9000);
+        const requestNumber = `LR-${datePart}-${randomPart}`;
+
         const leaveRequest = await LeaveRequest.create({
             employee_id: userId,
             leave_type_id,
