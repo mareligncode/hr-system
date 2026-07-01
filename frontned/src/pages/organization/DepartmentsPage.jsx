@@ -25,11 +25,11 @@ const DepartmentsPage = () => {
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'tree'
     const [showAddModal, setShowAddModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [formData, setFormData] = useState({ 
-        id: null, 
-        name: '', 
-        code: '', 
-        parent_department_id: null, 
+    const [formData, setFormData] = useState({
+        id: null,
+        name: '',
+        code: '',
+        parent_department_id: null,
         manager_id: null,
         latitude: 0,
         longitude: 0,
@@ -63,7 +63,7 @@ const DepartmentsPage = () => {
             await dispatch(createDepartment(formData));
         }
         setShowAddModal(false);
-        setFormData({ 
+        setFormData({
             id: null, name: '', code: '', parent_department_id: null, manager_id: null,
             latitude: 0, longitude: 0, radius_meters: 100, is_geofencing_enabled: false
         });
@@ -88,7 +88,7 @@ const DepartmentsPage = () => {
     };
 
     const openCreateModal = () => {
-        setFormData({ 
+        setFormData({
             id: null, name: '', code: '', parent_department_id: null, manager_id: null,
             latitude: 0, longitude: 0, radius_meters: 100, is_geofencing_enabled: false
         });
@@ -169,13 +169,19 @@ const DepartmentsPage = () => {
                                 onClick={() => setViewMode('list')}
                                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${viewMode === 'list' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-[var(--text-soft)] hover:text-[var(--text-main)]'}`}
                             >
-                                {t('list')}
+                                {t('grid') || 'Grid'}
+                            </button>
+                            <button
+                                onClick={() => setViewMode('table')}
+                                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${viewMode === 'table' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-[var(--text-soft)] hover:text-[var(--text-main)]'}`}
+                            >
+                                {t('list') || 'List'}
                             </button>
                             <button
                                 onClick={() => setViewMode('tree')}
                                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${viewMode === 'tree' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'text-[var(--text-soft)] hover:text-[var(--text-main)]'}`}
                             >
-                                {t('tree')}
+                                {t('tree') || 'Tree'}
                             </button>
                         </div>
                     )}
@@ -224,6 +230,57 @@ const DepartmentsPage = () => {
                             </div>
                         </div>
                     ))}
+                </div>
+            ) : viewMode === 'table' ? (
+                <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-2xl overflow-hidden shadow-sm">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-[var(--border-main)] bg-[var(--bg-surface-soft)]/50">
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('name')}</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('code')}</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">{t('manager')}</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] text-center">{t('employees')}</th>
+                                    <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] text-right">{t('actions')}</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[var(--border-main)]/50">
+                                {displayDepartments.map((dept) => (
+                                    <tr key={dept.id} className="hover:bg-[var(--bg-surface-soft)]/30 transition-colors group">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center text-blue-500">
+                                                    <Building2 className="w-4 h-4" />
+                                                </div>
+                                                <span className="font-bold text-sm">{dept.name}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 font-mono text-xs font-bold text-blue-500 bg-blue-500/5 rounded-lg inline-block my-3 ml-6 uppercase">{dept.code}</td>
+                                        <td className="px-6 py-4 text-sm font-medium">
+                                            {dept.Manager ? `${dept.Manager.first_name} ${dept.Manager.last_name}` : <span className="text-[var(--text-muted)]">N/A</span>}
+                                        </td>
+                                        <td className="px-6 py-4 text-center">
+                                            <span className="px-2.5 py-1 bg-blue-500/10 text-blue-500 rounded-full text-xs font-black">
+                                                {dept.employee_count}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            {canManage && (
+                                                <div className="flex justify-end gap-2">
+                                                    <button onClick={() => openEditModal(dept)} className="p-2 hover:bg-blue-500/10 text-blue-500 rounded-lg transition-colors">
+                                                        <Edit className="w-4 h-4" />
+                                                    </button>
+                                                    <button onClick={() => handleDelete(dept.id)} className="p-2 hover:bg-red-500/10 text-red-500 rounded-lg transition-colors">
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             ) : (
                 <div className="bg-[var(--bg-surface)] p-8 rounded-2xl border border-[var(--border-main)] shadow-sm">
@@ -298,8 +355,8 @@ const DepartmentsPage = () => {
                                         <p className="text-[10px] text-[var(--text-muted)]">Restrict attendance to a specific location</p>
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
-                                        <input 
-                                            type="checkbox" 
+                                        <input
+                                            type="checkbox"
                                             checked={formData.is_geofencing_enabled}
                                             onChange={(e) => setFormData({ ...formData, is_geofencing_enabled: e.target.checked })}
                                             className="sr-only peer"
@@ -339,7 +396,7 @@ const DepartmentsPage = () => {
                                                 />
                                             </div>
                                             <div className="flex items-end">
-                                                <button 
+                                                <button
                                                     type="button"
                                                     onClick={getCurrentLocation}
                                                     className="px-4 py-2 bg-slate-500/10 hover:bg-slate-500/20 text-blue-500 rounded-xl text-xs font-bold border border-blue-500/20 transition-all"

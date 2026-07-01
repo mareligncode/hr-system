@@ -291,7 +291,7 @@ const Dashboard = () => {
                     <Button
                         variant="outline"
                         className="flex flex-col items-center gap-2 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-[var(--border-main)] hover:bg-purple-500/5 hover:border-purple-500/30 group"
-                        onClick={() => navigate('/employees/add')}
+                        onClick={() => navigate('/employees/create')}
                     >
                         <Users className="w-5 h-5 sm:w-6 sm:h-6 text-purple-500 group-hover:scale-110 transition-transform" />
                         <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-center">{t('addEmployee')}</span>

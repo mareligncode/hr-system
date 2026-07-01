@@ -77,7 +77,14 @@ const InterviewRoomPage = () => {
                     ],
                 },
                 configOverwrite: {
-                    disableDeepLinking: true
+                    disableDeepLinking: true,
+                    startWithAudioMuted: true,
+                    startWithVideoMuted: true,
+                    prejoinPageEnabled: false,
+                    enableWelcomePage: false,
+                    noiseSuppression: {
+                        enabled: true
+                    }
                 }
             };
 
@@ -207,6 +214,16 @@ const InterviewRoomPage = () => {
                         <p className="text-[10px] text-[var(--text-muted)] text-center mt-4">
                             Feedback can be finalized on the candidate profile page.
                         </p>
+
+                        <div className="mt-8 p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl">
+                            <h4 className="flex items-center gap-2 text-[10px] font-black uppercase text-blue-500 mb-2">
+                                <ShieldCheck className="w-3 h-3" />
+                                {t('proTip') || "Pro-Tip"}
+                            </h4>
+                            <p className="text-[11px] text-[var(--text-soft)] leading-relaxed">
+                                {t('headphoneTip') || "To avoid audio feedback and background noise, we recommend all participants use headphones during the interview."}
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

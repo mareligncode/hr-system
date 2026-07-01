@@ -53,7 +53,8 @@ export const getExecutiveDashboard = async (req, res) => {
                 where: { is_active: true }
             }],
             group: ['Department.id', 'Department.name'],
-            raw: true
+            raw: true,
+            subQuery: false
         });
 
         res.status(200).json({
@@ -241,7 +242,8 @@ export const getFinanceDashboard = async (req, res) => {
                 payroll_period_id: lastPeriod ? lastPeriod.id : { [Op.is]: null }
             },
             group: ['User->Employee->Department.id', 'User->Employee->Department.name'],
-            raw: true
+            raw: true,
+            subQuery: false
         });
 
         const laborCostByDept = laborCostByDeptRaw.map(item => ({
@@ -268,7 +270,8 @@ export const getFinanceDashboard = async (req, res) => {
             }],
             group: ['PayrollPeriod.id', 'PayrollPeriod.end_date'],
             order: [[sequelize.col('PayrollPeriod.end_date'), 'ASC']],
-            raw: true
+            raw: true,
+            subQuery: false
         });
 
         const payrollHistory = payrollHistoryRaw.map(item => ({
@@ -298,7 +301,8 @@ export const getFinanceDashboard = async (req, res) => {
             group: ['User->Employee->Department.id', 'User->Employee->Department.name'],
             order: [[sequelize.fn('SUM', sequelize.col('overtime_hours')), 'DESC']],
             limit: 5,
-            raw: true
+            raw: true,
+            subQuery: false
         });
 
         res.status(200).json({

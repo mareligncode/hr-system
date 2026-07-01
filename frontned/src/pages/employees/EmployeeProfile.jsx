@@ -371,7 +371,16 @@ const EmployeeProfile = () => {
                     </div>
 
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-6 border-t border-[var(--border-main)]/50">
-                        <StatBox label={t('employment')} value={t(emp.employment_status + 'Status')} icon={ShieldCheck} color="text-emerald-500" />
+                        <StatBox
+                            label={t('employment')}
+                            value={t(emp.employment_status + 'Status')}
+                            icon={ShieldCheck}
+                            color={
+                                emp.employment_status === 'active' ? 'text-emerald-500' :
+                                    emp.employment_status === 'on_leave' ? 'text-amber-500' :
+                                        'text-rose-500'
+                            }
+                        />
                         <StatBox label={t('joiningDate')} value={new Date(emp.hire_date).toLocaleDateString()} icon={Calendar} color="text-blue-500" />
                         <StatBox label={t('reportingTo')} value={emp.Manager?.first_name ? `${emp.Manager.first_name}` : 'N/A'} icon={Users} color="text-amber-500" />
                         <StatBox label={t('workPhone')} value={emp.work_phone || 'N/A'} icon={Phone} color="text-purple-500" />
