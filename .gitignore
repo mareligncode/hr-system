@@ -1,6 +1,35 @@
+# ─── Secrets — NEVER commit these ────────────────────────────────────────────
+.env
+.env.local
+.env.production
+backend/.env
+frontned/.env
+
+# ─── Dependencies ─────────────────────────────────────────────────────────────
+node_modules/
+backend/node_modules/
+frontned/node_modules/
+
+# ─── Build outputs ────────────────────────────────────────────────────────────
+frontned/dist/
+backend/dist/
+
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+logs/
+
+# ─── OS & editor junk ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ─── Docker ───────────────────────────────────────────────────────────────────
+# Keep docker-compose files in git — they have no secrets (secrets come from .env)
+
+# ─── Uploads (large binary files belong in Cloudinary, not git) ───────────────
+backend/uploads/
+
+# ─── Misc ─────────────────────────────────────────────────────────────────────
 image.png
-phase.md
-docker-compose stop
-docker-compose up -d
-phase2.md
-proposal.md

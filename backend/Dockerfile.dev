@@ -1,0 +1,19 @@
+
+FROM node:20-alpine
+
+# Install dumb-init for proper signal handling even in dev
+RUN apk add --no-cache dumb-init
+
+WORKDIR /app
+
+COPY package*.json ./
+
+# Install ALL dependencies including devDependencies (nodemon, jest, etc.)
+RUN npm install
+
+COPY . .
+
+EXPOSE 5000
+
+# nodemon is started via docker-compose command override
+CMD ["dumb-init", "npx", "nodemon", "server.js"]

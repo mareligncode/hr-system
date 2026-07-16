@@ -1,16 +1,20 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
+import express from 'express';
+import cors from 'cors';
 import helmet from 'helmet';
+import pinoHttp from 'pino-http';
+
+import logger from './utils/logger.js';
+import { requestId } from './middlewares/requestId.js';
 import { connectDB } from './config/database.js';
-import { apiLimiter } from './middlewares/rateLimiter.js';
+import sequelize from './config/database.js';
+import { apiLimiter, authLimiter } from './middlewares/rateLimiter.js';
 import './models/index.js';
 
+// ─── Route imports ────────────────────────────────────────────────────────────
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import departmentRoutes from './routes/departmentRoutes.js';
 import positionRoutes from './routes/positionRoutes.js';
-
 import employeeRoutes from './routes/employeeRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import certificationRoutes from './routes/certificationRoutes.js';
@@ -35,60 +39,100 @@ import recruitmentRoutes from './routes/recruitmentRoutes.js';
 import financialRoutes from './routes/financialRoutes.js';
 
 import { setupSwagger } from './config/swagger.js';
+import { checkAndNotifyExpiries } from './services/notificationService.js';
+import { initCronJobs } from './services/cronService.js';
 
-dotenv.config();
+if (process.env.DOCKER !== 'true') {
+    const { default: dotenv } = await import('dotenv');
+    dotenv.config();
+}
 
 const app = express();
 
-// setup swagger
-setupSwagger(app);
+app.use(requestId);
 
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-            "img-src": ["'self'", "data:", "http://localhost:5000", "https://*.cloudinary.com"], // Keep Cloudinary for old links if any, but add localhost
-            "connect-src": ["'self'"],
-            "frame-src": ["'self'"],
-            "object-src": ["'self'"],
+// ─── HTTP request logging via pino-http ───────────────────────────────────────
+app.use(
+    pinoHttp({
+        logger,
+        // Assign the req.id we already set so log lines are correlated
+        genReqId: (req) => req.id,
+        // Skip health-check noise in production logs
+        autoLogging: {
+            ignore: (req) =>
+                process.env.NODE_ENV === 'production' &&
+                req.url === '/api/health',
         },
-    },
-    crossOriginEmbedderPolicy: false,
-    crossOriginResourcePolicy: { policy: "cross-origin" },
-}));
+        customLogLevel: (_req, res, err) => {
+            if (err || res.statusCode >= 500) return 'error';
+            if (res.statusCode >= 400) return 'warn';
+            return 'info';
+        },
+    }),
+);
 
-connectDB();
+// ─── Security headers ─────────────────────────────────────────────────────────
+app.use(
+    helmet({
+        contentSecurityPolicy: {
+            directives: {
+                ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+                'img-src': ["'self'", 'data:', 'https://*.cloudinary.com'],
+                'connect-src': ["'self'"],
+                'frame-src': ["'self'"],
+                'object-src': ["'none'"],
+            },
+        },
+        crossOriginEmbedderPolicy: false,
+        crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+);
 
-const allowedOrigins = [
-    process.env.FRONTEND_URL,
-    'http://localhost:5000',
-    'http://127.0.0.1:5000',
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:3000',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:5174',
-].filter(Boolean);
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || process.env.FRONTEND_URL || '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
 
-app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error(`CORS: Origin '${origin}' not allowed`));
-        }
-    },
-    credentials: true,
-}));
+if (process.env.NODE_ENV !== 'production') {
+    allowedOrigins.push(
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://localhost:3000',
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:5174',
+    );
+}
 
-// Serve static files from uploads directory
+app.use(
+    cors({
+        origin: (origin, callback) => {
+            // Allow non-browser requests (Postman, server-to-server, health checks)
+            if (!origin) return callback(null, true);
+            if (allowedOrigins.includes(origin)) return callback(null, true);
+            logger.warn({ origin }, 'CORS: blocked request from disallowed origin');
+            callback(new Error(`CORS: origin '${origin}' not allowed`));
+        },
+        credentials: true,
+    }),
+);
+
+// ─── Body parsers ─────────────────────────────────────────────────────────────
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// ─── Static files ─────────────────────────────────────────────────────────────
 app.use('/uploads', express.static('uploads'));
 
+// ─── Rate limiting ────────────────────────────────────────────────────────────
+// Auth routes get the strict limiter (5 req / hour per IP).
+// All other API routes get the general limiter (100 req / 15 min per IP).
+app.use('/api/auth', authLimiter);
+app.use('/api', apiLimiter);
 
+// ─── Swagger docs ─────────────────────────────────────────────────────────────
+setupSwagger(app);
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
+// ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/departments', departmentRoutes);
@@ -116,34 +160,105 @@ app.use('/api/welfare', welfareRoutes);
 app.use('/api/recruitment', recruitmentRoutes);
 app.use('/api/finance', financialRoutes);
 
-app.get('/api/health', (req, res) => {
-    res.status(200).json({ status: 'ok', message: 'Server is running' });
+// ─── Health check ─────────────────────────────────────────────────────────────
+// Returns 200 when both the server and the database are reachable.
+// Returns 503 if the DB is down so load balancers can remove the instance.
+app.get('/api/health', async (_req, res) => {
+    try {
+        await sequelize.authenticate();
+        res.status(200).json({
+            status: 'ok',
+            db: 'connected',
+            uptime: Math.floor(process.uptime()),
+            timestamp: new Date().toISOString(),
+            env: process.env.NODE_ENV || 'development',
+        });
+    } catch (err) {
+        logger.error({ err }, 'Health check: database unreachable');
+        res.status(503).json({
+            status: 'error',
+            db: 'disconnected',
+            message: 'Database connection failed',
+            timestamp: new Date().toISOString(),
+        });
+    }
 });
 
-app.use((err, req, res, next) => {
-    console.error('Global Error Handler:', err.stack);
-    res.status(err.status || 500).json({
-        error: err.message || 'Internal Server Error',
-        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+// ─── 404 handler ──────────────────────────────────────────────────────────────
+app.use((_req, res) => {
+    res.status(404).json({ success: false, message: 'Route not found' });
+});
+
+// ─── Global error handler ─────────────────────────────────────────────────────
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, _next) => {
+    const status = err.status || err.statusCode || 500;
+    logger.error({ err, requestId: req.id }, 'Unhandled error');
+    res.status(status).json({
+        success: false,
+        message: err.message || 'Internal Server Error',
+        requestId: req.id,
+        // Stack trace only in development — never expose in production
+        ...(process.env.NODE_ENV !== 'production' && { stack: err.stack }),
     });
 });
 
-import { checkAndNotifyExpiries } from './services/notificationService.js';
-import { initCronJobs } from './services/cronService.js';
+// ─── Start server ─────────────────────────────────────────────────────────────
+const PORT = Number(process.env.PORT) || 5000;
 
-const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
-setInterval(() => {
-    checkAndNotifyExpiries().catch(err => console.error('Scheduled Expiry Check Failed:', err));
-}, TWENTY_FOUR_HOURS);
+await connectDB();
 
-setTimeout(() => {
-    checkAndNotifyExpiries().catch(err => console.error('Initial Expiry Check Failed:', err));
-    initCronJobs();
-}, 10000);
-
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+const server = app.listen(PORT, () => {
+    logger.info(`Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
 });
 
+// ─── Background jobs (run once after 10s warm-up) ────────────────────────────
+setTimeout(() => {
+    checkAndNotifyExpiries().catch((err) =>
+        logger.error({ err }, 'Initial expiry check failed'),
+    );
+    initCronJobs();
+}, 10_000);
+
+// Re-run expiry check every 24 hours
+const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+setInterval(() => {
+    checkAndNotifyExpiries().catch((err) =>
+        logger.error({ err }, 'Scheduled expiry check failed'),
+    );
+}, TWENTY_FOUR_HOURS);
+
+// ─── Graceful shutdown ────────────────────────────────────────────────────────
+// Docker / Kubernetes send SIGTERM before killing the container.
+// We stop accepting new requests, finish in-flight ones, then close the DB pool.
+const shutdown = async (signal) => {
+    logger.info(`${signal} received — shutting down gracefully`);
+
+    server.close(async () => {
+        logger.info('HTTP server closed');
+        try {
+            await sequelize.close();
+            logger.info('Database pool closed');
+        } catch (err) {
+            logger.error({ err }, 'Error closing database pool');
+        }
+        process.exit(0);
+    });
+
+    // Force exit after 15s if graceful shutdown hangs
+    setTimeout(() => {
+        logger.error('Graceful shutdown timed out — forcing exit');
+        process.exit(1);
+    }, 15_000);
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
+// Catch unhandled promise rejections — log and exit so the process restarts
+process.on('unhandledRejection', (reason) => {
+    logger.error({ reason }, 'Unhandled promise rejection');
+    process.exit(1);
+});
+
+export default app;
