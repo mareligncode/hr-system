@@ -147,7 +147,7 @@ const ProfilePage = () => {
     };
 
     const handlePasswordChange = (e) => {
-        e.preventDefault();
+        if (e && e.preventDefault) e.preventDefault();
         setPasswordError('');
         dispatch(clearErrors());
         if (passwordForm.new_password !== passwordForm.confirm_password) {
@@ -299,7 +299,7 @@ const ProfilePage = () => {
                                             <h2 className="text-xl sm:text-2xl font-black tracking-tight">{tabs.find(t => t.id === activeTab).label}</h2>
                                             <p className="text-[var(--text-muted)] text-xs sm:text-sm mt-1">{t(`${activeTab}Description`)}</p>
                                         </div>
-                                        {isEditing && (
+                                        {isEditing && activeTab !== 'security' && (
                                             <div className="flex gap-3 w-full sm:w-auto">
                                                 <Button type="button" variant="secondary" onClick={() => setIsEditing(false)} className="flex-1 sm:flex-none rounded-xl px-4 sm:px-6 h-11 sm:h-12 text-sm">
                                                     {t('cancel')}
@@ -412,10 +412,10 @@ const ProfilePage = () => {
                                                     onChange={e => setProfileForm({ ...profileForm, date_of_birth: e.target.value })}
                                                     className="rounded-xl sm:rounded-2xl"
                                                 />
-                                                <div className="space-y-2">
+                                                <div className="space-y-1.5">
                                                     <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] px-1">{t('gender')}</label>
                                                     <select
-                                                        className="w-full bg-[var(--bg-surface-soft)] border border-[var(--border-main)] rounded-xl sm:rounded-2xl p-3.5 sm:p-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50 appearance-none"
+                                                        className="w-full bg-[var(--bg-surface-soft)] border border-[var(--border-main)] rounded-xl p-3.5 text-sm font-medium text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 disabled:opacity-70 disabled:cursor-not-allowed appearance-none transition-all"
                                                         value={profileForm.gender}
                                                         disabled={!isEditing}
                                                         onChange={e => setProfileForm({ ...profileForm, gender: e.target.value })}
@@ -446,10 +446,10 @@ const ProfilePage = () => {
                                                         {t('identificationInfo')}
                                                     </h3>
                                                 </div>
-                                                <div className="space-y-2">
+                                                <div className="space-y-1.5">
                                                     <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)] px-1">{t('idType')}</label>
                                                     <select
-                                                        className="w-full bg-[var(--bg-surface-soft)] border border-[var(--border-main)] rounded-xl sm:rounded-2xl p-3.5 sm:p-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50 appearance-none"
+                                                        className="w-full bg-[var(--bg-surface-soft)] border border-[var(--border-main)] rounded-xl p-3.5 text-sm font-medium text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 disabled:opacity-70 disabled:cursor-not-allowed appearance-none transition-all"
                                                         value={profileForm.id_type}
                                                         disabled={!isEditing}
                                                         onChange={e => setProfileForm({ ...profileForm, id_type: e.target.value })}
@@ -628,7 +628,7 @@ const ProfilePage = () => {
                                             </div>
                                         )}
 
-                                        {/* Security Tab */}
+                                        {/* Security Tab — has its own separate form, outside the profile form */}
                                         {activeTab === 'security' && (
                                             <div className="max-w-md mx-auto py-2 sm:py-4">
                                                 <div className="flex items-center gap-4 mb-6 sm:mb-8 p-5 sm:p-6 bg-blue-500/5 rounded-2xl sm:rounded-3xl border border-blue-500/20">
@@ -639,7 +639,7 @@ const ProfilePage = () => {
                                                     </div>
                                                 </div>
 
-                                                <form onSubmit={handlePasswordChange} className="space-y-4 sm:space-y-6">
+                                                <div className="space-y-4 sm:space-y-6">
                                                     <Input
                                                         label={t('currentPassword')}
                                                         type="password"
@@ -661,10 +661,15 @@ const ProfilePage = () => {
                                                         onChange={e => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
                                                         className="rounded-xl sm:rounded-2xl"
                                                     />
-                                                    <Button type="submit" loading={loading} className="w-full rounded-xl sm:rounded-2xl py-3.5 sm:py-4 shadow-xl shadow-blue-600/20 text-sm font-bold">
+                                                    <Button
+                                                        type="button"
+                                                        onClick={handlePasswordChange}
+                                                        loading={loading}
+                                                        className="w-full rounded-xl sm:rounded-2xl py-3.5 sm:py-4 shadow-xl shadow-blue-600/20 text-sm font-bold"
+                                                    >
                                                         {t('updatePassword')}
                                                     </Button>
-                                                </form>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
