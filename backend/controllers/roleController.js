@@ -106,8 +106,12 @@ export const assignRoleToUser = async (req, res) => {
 export const unassignRoleFromUser = async (req, res) => {
     try {
         const { userId, roleId } = req.body;
-        const assignment = await UserRole.findOne({ where: { user_id: userId, role_id: roleId } });
 
+        if (!userId || !roleId) {
+            return res.status(400).json({ error: 'userId and roleId are required' });
+        }
+
+        const assignment = await UserRole.findOne({ where: { user_id: userId, role_id: roleId } });
         if (!assignment) return res.status(404).json({ error: 'Role assignment not found' });
 
         await assignment.destroy();
@@ -115,9 +119,10 @@ export const unassignRoleFromUser = async (req, res) => {
         res.status(200).json({ message: 'Role unassigned successfully' });
     } catch (error) {
         console.error('Unassign Role Error:', error);
-        res.status(400).json({
+        res.status(500).json({
             message: 'Failed to unassign role',
-            error: error.message
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 };

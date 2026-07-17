@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import pinoHttp from 'pino-http';
-
 import logger from './utils/logger.js';
 import { requestId } from './middlewares/requestId.js';
 import { connectDB } from './config/database.js';
@@ -55,9 +54,7 @@ app.use(requestId);
 app.use(
     pinoHttp({
         logger,
-        // Assign the req.id we already set so log lines are correlated
         genReqId: (req) => req.id,
-        // Skip health-check noise in production logs
         autoLogging: {
             ignore: (req) =>
                 process.env.NODE_ENV === 'production' &&
@@ -123,16 +120,12 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // ─── Static files ─────────────────────────────────────────────────────────────
 app.use('/uploads', express.static('uploads'));
 
-// ─── Rate limiting ────────────────────────────────────────────────────────────
-// Auth routes get the strict limiter (5 req / hour per IP).
-// All other API routes get the general limiter (100 req / 15 min per IP).
-app.use('/api/auth', authLimiter);
-app.use('/api', apiLimiter);
+// ─── Rate limiting — disabled for development ─────────────────────────────────
+// Uncomment these lines before going to production
+// app.use('/api/auth', authLimiter);
+// app.use('/api', apiLimiter);
 
-// ─── Swagger docs ─────────────────────────────────────────────────────────────
 setupSwagger(app);
-
-// ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/departments', departmentRoutes);
@@ -160,9 +153,6 @@ app.use('/api/welfare', welfareRoutes);
 app.use('/api/recruitment', recruitmentRoutes);
 app.use('/api/finance', financialRoutes);
 
-// ─── Health check ─────────────────────────────────────────────────────────────
-// Returns 200 when both the server and the database are reachable.
-// Returns 503 if the DB is down so load balancers can remove the instance.
 app.get('/api/health', async (_req, res) => {
     try {
         await sequelize.authenticate();
@@ -212,7 +202,6 @@ const server = app.listen(PORT, () => {
     logger.info(`Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
 });
 
-// ─── Background jobs (run once after 10s warm-up) ────────────────────────────
 setTimeout(() => {
     checkAndNotifyExpiries().catch((err) =>
         logger.error({ err }, 'Initial expiry check failed'),
@@ -227,13 +216,9 @@ setInterval(() => {
         logger.error({ err }, 'Scheduled expiry check failed'),
     );
 }, TWENTY_FOUR_HOURS);
-
 // ─── Graceful shutdown ────────────────────────────────────────────────────────
-// Docker / Kubernetes send SIGTERM before killing the container.
-// We stop accepting new requests, finish in-flight ones, then close the DB pool.
 const shutdown = async (signal) => {
     logger.info(`${signal} received — shutting down gracefully`);
-
     server.close(async () => {
         logger.info('HTTP server closed');
         try {

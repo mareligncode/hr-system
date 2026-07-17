@@ -136,8 +136,8 @@ const OrgChartPage = () => {
                     {/* Vertical Link from parent */}
                     <div className="absolute -top-10 left-1/2 w-0.5 h-10 bg-slate-400/30 -translate-x-1/2" />
 
-                    {node.subDepartments.map((child, index) => (
-                        <div key={`child-${child.id}-${index}`} className="relative">
+                    {node.subDepartments.map((child) => (
+                        <div key={`child-${child.id}`} className="relative">
                             {/* Individual Vertical Link */}
                             <div className="absolute -top-10 left-1/2 w-0.5 h-10 bg-slate-400/30 -translate-x-1/2" />
                             {renderNode(child)}
@@ -201,8 +201,8 @@ const OrgChartPage = () => {
                         <div className="relative">
                             {hierarchy.length > 0 ? (
                                 <div className="flex flex-wrap justify-center gap-20 pb-40">
-                                    {hierarchy.map((node, index) => (
-                                        <div key={`root-${node.id}-${index}`}>
+                                    {hierarchy.map((node) => (
+                                        <div key={`root-${node.id}`}>
                                             {renderNode(node)}
                                         </div>
                                     ))}

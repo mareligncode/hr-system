@@ -35,11 +35,12 @@ export default defineConfig({
         },
     },
     server: {
-        port: 5173,
+        port: 5174,
         proxy: {
-            // Proxy API calls to backend in dev so no CORS config needed
+            // Inside Docker: backend is reachable via the service name "backend"
+            // Outside Docker (plain npm run dev): falls back to localhost:5000
             '/api': {
-                target: 'http://localhost:5000',
+                target: process.env.VITE_BACKEND_URL || 'http://localhost:5000',
                 changeOrigin: true,
             },
         },
