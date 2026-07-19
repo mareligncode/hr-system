@@ -1,8 +1,8 @@
 
 FROM node:20-alpine
 
-# Install dumb-init for proper signal handling even in dev
-RUN apk add --no-cache dumb-init
+# Install dumb-init and postgresql-client for proper signal handling and DB access
+RUN apk add --no-cache dumb-init postgresql-client
 
 WORKDIR /app
 
@@ -12,6 +12,9 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
+
+# Make scripts executable
+RUN chmod +x scripts/*.sh 2>/dev/null || true
 
 EXPOSE 5000
 

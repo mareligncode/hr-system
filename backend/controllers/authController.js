@@ -587,22 +587,8 @@ export const verifyEmail = async (req, res) => {
 };
 
 export const refresh = async (req, res) => {
-    try {
-        // Simple token issuance, assuming the old token is still validly evaluated by protect MiddleWare
-        // In fully stateless JWT, you typically send a refresh token in httpOnly cookie.
-        const newToken = generateToken(req.user.id);
-        res.json({
-            message: 'Token refreshed',
-            token: newToken
-        });
-    } catch (error) {
-        console.error('Auth Error:', error);
-        res.status(500).json({
-            message: 'Server error',
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
-    }
+    // This is now handled by the refreshToken function above
+    return refreshToken(req, res);
 };
 
 export const changePassword = async (req, res) => {
@@ -632,6 +618,322 @@ export const changePassword = async (req, res) => {
             message: 'Server error',
             error: error.message,
             stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
+    }
+};
+
+/**
+ * Generate MFA setup QR code
+ */
+export const setupMfa = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findByPk(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Check if MFA is already enabled
+        const existingMfa = await UserMfa.findOne({ where: { user_id: userId } });
+        if (existingMfa && existingMfa.is_enabled) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'MFA is already enabled for this account' 
+            });
+        }
+
+        // Generate MFA secret and QR code
+        const mfaData = await AuthService.generateMfaSecret(user);
+        const backupCodes = await AuthService.generateBackupCodes();
+
+        // Store secret (not enabled yet - user needs to verify first)
+        await UserMfa.upsert({
+            user_id: userId,
+            secret_key: mfaData.secret,
+            backup_codes: backupCodes.map(code => ({
+                code: crypto.createHash('sha256').update(code).digest('hex'),
+                used: false
+            })),
+            is_enabled: false
+        });
+
+        res.json({
+            success: true,
+            message: 'MFA setup initiated',
+            qrCode: mfaData.qrCode,
+            manualEntryKey: mfaData.manualEntryKey,
+            backupCodes: backupCodes
+        });
+
+    } catch (error) {
+        logger.error({ err: error }, 'MFA setup error');
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+};
+
+/**
+ * Verify MFA setup and enable it
+ */
+export const verifyMfa = async (req, res) => {
+    try {
+        const { totp_token } = req.body;
+        const userId = req.user.id;
+
+        const userMfa = await UserMfa.findOne({ where: { user_id: userId } });
+        if (!userMfa) {
+            return res.status(404).json({
+                success: false,
+                message: 'MFA setup not found. Please start MFA setup first.'
+            });
+        }
+
+        if (userMfa.is_enabled) {
+            return res.status(400).json({
+                success: false,
+                message: 'MFA is already enabled'
+            });
+        }
+
+        // Verify TOTP token
+        const isValid = AuthService.verifyTotpToken(userMfa.secret_key, totp_token);
+        if (!isValid) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid TOTP token'
+            });
+        }
+
+        // Enable MFA
+        await userMfa.update({
+            is_enabled: true,
+            enabled_at: new Date()
+        });
+
+        await User.update(
+            { mfa_enabled: true },
+            { where: { id: userId } }
+        );
+
+        await logActivity(
+            userId, 'MFA_ENABLED', 'User', userId,
+            null, null, req
+        );
+
+        res.json({
+            success: true,
+            message: 'MFA enabled successfully'
+        });
+
+    } catch (error) {
+        logger.error({ err: error }, 'MFA verification error');
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+};
+
+/**
+ * Disable MFA
+ */
+export const disableMfa = async (req, res) => {
+    try {
+        const { password, totp_token } = req.body;
+        const userId = req.user.id;
+
+        const user = await User.findByPk(userId, {
+            include: [{ model: UserMfa }]
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Verify password
+        if (!(await user.validPassword(password))) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid password'
+            });
+        }
+
+        if (!user.UserMfa || !user.UserMfa.is_enabled) {
+            return res.status(400).json({
+                success: false,
+                message: 'MFA is not enabled'
+            });
+        }
+
+        // Verify TOTP token
+        const isValid = AuthService.verifyTotpToken(user.UserMfa.secret_key, totp_token);
+        if (!isValid) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid TOTP token'
+            });
+        }
+
+        // Disable MFA
+        await user.UserMfa.destroy();
+        await user.update({ mfa_enabled: false });
+
+        await logActivity(
+            userId, 'MFA_DISABLED', 'User', userId,
+            null, null, req
+        );
+
+        res.json({
+            success: true,
+            message: 'MFA disabled successfully'
+        });
+
+    } catch (error) {
+        logger.error({ err: error }, 'MFA disable error');
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+};
+
+/**
+ * Get user's active sessions
+ */
+export const getSessions = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const sessions = await UserSession.findAll({
+            where: {
+                user_id: userId,
+                terminated_at: null
+            },
+            order: [['last_activity_at', 'DESC']],
+            attributes: [
+                'id', 'device_name', 'device_type', 'browser_name', 
+                'browser_version', 'os_name', 'os_version', 'ip_address',
+                'location', 'is_current', 'created_at', 'last_activity_at'
+            ]
+        });
+
+        res.json({
+            success: true,
+            sessions: sessions
+        });
+
+    } catch (error) {
+        logger.error({ err: error }, 'Get sessions error');
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+};
+
+/**
+ * Revoke a specific session
+ */
+export const revokeSession = async (req, res) => {
+    try {
+        const { sessionId } = req.params;
+        const userId = req.user.id;
+
+        const session = await UserSession.findOne({
+            where: {
+                id: sessionId,
+                user_id: userId,
+                terminated_at: null
+            }
+        });
+
+        if (!session) {
+            return res.status(404).json({
+                success: false,
+                message: 'Session not found'
+            });
+        }
+
+        // Terminate session
+        await session.update({ terminated_at: new Date() });
+
+        // Revoke associated refresh tokens
+        await RefreshToken.update(
+            { is_revoked: true, revoked_at: new Date() },
+            {
+                where: {
+                    user_id: userId,
+                    ip_address: session.ip_address,
+                    is_revoked: false
+                }
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'Session revoked successfully'
+        });
+
+    } catch (error) {
+        logger.error({ err: error }, 'Revoke session error');
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+};
+
+/**
+ * Revoke all other sessions (keep current)
+ */
+export const revokeAllSessions = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const currentSessionToken = req.cookies.refreshToken;
+
+        // Find current refresh token to preserve it
+        let currentRefreshToken = null;
+        if (currentSessionToken) {
+            currentRefreshToken = await RefreshToken.findOne({
+                where: { token: currentSessionToken, user_id: userId }
+            });
+        }
+
+        // Revoke all refresh tokens except current
+        const whereClause = { user_id: userId, is_revoked: false };
+        if (currentRefreshToken) {
+            whereClause.id = { [Op.ne]: currentRefreshToken.id };
+        }
+
+        await RefreshToken.update(
+            { is_revoked: true, revoked_at: new Date() },
+            { where: whereClause }
+        );
+
+        // Terminate all sessions except current
+        const sessionWhereClause = { user_id: userId, terminated_at: null };
+        if (currentRefreshToken) {
+            sessionWhereClause.ip_address = { [Op.ne]: currentRefreshToken.ip_address };
+        }
+
+        await UserSession.update(
+            { terminated_at: new Date() },
+            { where: sessionWhereClause }
+        );
+
+        res.json({
+            success: true,
+            message: 'All other sessions revoked successfully'
+        });
+
+    } catch (error) {
+        logger.error({ err: error }, 'Revoke all sessions error');
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
         });
     }
 };

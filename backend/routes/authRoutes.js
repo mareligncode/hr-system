@@ -4,10 +4,17 @@ import {
     login,
     logout,
     refresh,
+    refreshToken,
     forgotPassword,
     resetPassword,
     changePassword,
     verifyEmail,
+    setupMfa,
+    verifyMfa,
+    disableMfa,
+    getSessions,
+    revokeSession,
+    revokeAllSessions
 } from '../controllers/authController.js';
 import { protect, authorize } from '../middlewares/authMiddleware.js';
 
@@ -74,8 +81,19 @@ router.post('/register', register);
  */
 router.post('/login', login);
 router.post('/logout', protect, logout);
-router.post('/refresh', protect, refresh);
+router.post('/refresh', refreshToken); // No auth required - uses cookie
+router.post('/refresh-legacy', protect, refresh); // Legacy endpoint
 router.post('/change-password', protect, changePassword);
+
+// MFA endpoints
+router.post('/mfa/setup', protect, setupMfa);
+router.post('/mfa/verify', protect, verifyMfa);
+router.post('/mfa/disable', protect, disableMfa);
+
+// Session management
+router.get('/sessions', protect, getSessions);
+router.delete('/sessions/:sessionId', protect, revokeSession);
+router.post('/sessions/revoke-all', protect, revokeAllSessions);
 
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);

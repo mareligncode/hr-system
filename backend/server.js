@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import pinoHttp from 'pino-http';
+import cookieParser from 'cookie-parser';
 import logger from './utils/logger.js';
 import { requestId } from './middlewares/requestId.js';
 import { connectDB } from './config/database.js';
@@ -40,6 +41,7 @@ import financialRoutes from './routes/financialRoutes.js';
 import { setupSwagger } from './config/swagger.js';
 import { checkAndNotifyExpiries } from './services/notificationService.js';
 import { initCronJobs } from './services/cronService.js';
+import { initAuthCleanup } from './jobs/authCleanup.js';
 
 if (process.env.DOCKER !== 'true') {
     const { default: dotenv } = await import('dotenv');
@@ -116,6 +118,7 @@ app.use(
 // ─── Body parsers ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser()); // Parse cookies for refresh token
 
 // ─── Static files ─────────────────────────────────────────────────────────────
 app.use('/uploads', express.static('uploads'));
@@ -207,6 +210,7 @@ setTimeout(() => {
         logger.error({ err }, 'Initial expiry check failed'),
     );
     initCronJobs();
+    initAuthCleanup(); // Start auth cleanup job
 }, 10_000);
 
 // Re-run expiry check every 24 hours

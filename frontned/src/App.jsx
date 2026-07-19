@@ -17,6 +17,7 @@ const VerifyEmailPage        = lazy(() => import('./pages/auth/VerifyEmailPage.j
 // ─── Core pages ───────────────────────────────────────────────────────────────
 const LandingPage            = lazy(() => import('./pages/LandingPage.jsx'));
 const ProfilePage            = lazy(() => import('./pages/ProfilePage.jsx'));
+const SecuritySettingsPage  = lazy(() => import('./pages/security/SecuritySettingsPage.jsx'));
 
 // ─── Admin pages ──────────────────────────────────────────────────────────────
 const Dashboard              = lazy(() => import('./pages/admin/Dashboard.jsx'));
@@ -175,6 +176,7 @@ function App() {
                             {/* Core */}
                             <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/profile"   element={<ProfilePage />} />
+                            <Route path="/security"  element={<SecuritySettingsPage />} />
 
                             {/* Attendance */}
                             <Route path="/attendance"          element={<AttendanceDashboard />} />
