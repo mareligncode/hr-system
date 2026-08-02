@@ -35,7 +35,12 @@ export default defineConfig({
         },
     },
     server: {
+        host: '0.0.0.0', // Listen on all interfaces (required for Docker)
         port: 5174,
+        strictPort: true,
+        watch: {
+            usePolling: true, // Necessary for Docker on Windows
+        },
         proxy: {
             // Inside Docker: backend is reachable via the service name "backend"
             // Outside Docker (plain npm run dev): falls back to localhost:5000
