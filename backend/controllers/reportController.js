@@ -15,6 +15,7 @@ import {
 import { Op } from 'sequelize';
 import sequelize from '../config/database.js';
 import ExcelJS from 'exceljs';
+import ReportPDFService from '../services/reportPDFService.js';
 
 // Helper for monthly breakdown
 const getMonthsLastYear = () => {
@@ -400,5 +401,67 @@ export const getReportData = async (req, res) => {
         res.status(200).json({ message: `Report data for ${type} coming soon` });
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch report data' });
+    }
+};
+
+/**
+ * Export Report as PDF
+ */
+export const exportReportPDF = async (req, res) => {
+    try {
+        const { type } = req.params;
+        const { startDate, endDate } = req.query;
+
+        let doc;
+
+        switch (type) {
+            case 'employee-headcount':
+                doc = await ReportPDFService.generateEmployeeHeadcountPDF();
+                break;
+
+            case 'payroll-summary':
+                doc = await ReportPDFService.generatePayrollSummaryPDF();
+                break;
+
+            case 'attendance-summary':
+                if (!startDate || !endDate) {
+                    return res.status(400).json({ 
+                        error: 'startDate and endDate are required for attendance report' 
+                    });
+                }
+                doc = await ReportPDFService.generateAttendanceSummaryPDF(startDate, endDate);
+                break;
+
+            case 'leave-summary':
+                if (!startDate || !endDate) {
+                    return res.status(400).json({ 
+                        error: 'startDate and endDate are required for leave report' 
+                    });
+                }
+                doc = await ReportPDFService.generateLeaveSummaryPDF(startDate, endDate);
+                break;
+
+            case 'recruitment-summary':
+                doc = await ReportPDFService.generateRecruitmentSummaryPDF();
+                break;
+
+            default:
+                return res.status(400).json({ error: 'Invalid report type' });
+        }
+
+        // Set response headers
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader(
+            'Content-Disposition', 
+            `attachment; filename=report-${type}-${new Date().getTime()}.pdf`
+        );
+
+        // Pipe the PDF to response
+        doc.pipe(res);
+        doc.end();
+
+    } catch (error) {
+        console.error('PDF Export Error:', error);
+        res.status(500).json({ error: 'Failed to export PDF report' });
     }
 };

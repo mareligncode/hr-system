@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     FileText, Download, Users, Calendar,
     DollarSign, Briefcase, Award, Activity,
-    TrendingUp, UserPlus, Clock
+    TrendingUp, UserPlus, Clock, FileDown
 } from 'lucide-react';
 import reportService from '../../services/reportService';
 import { useSettings } from '../../context/SettingsContext';
 import Button from '../../components/ui/Button';
+import toast from 'react-hot-toast';
 
 const reports = [
     { id: 'employee-headcount', titleKey: 'report_employee_headcount_title', category: 'Workforce', icon: Users, descKey: 'report_employee_headcount_desc' },
@@ -28,9 +29,40 @@ const reports = [
 
 const ReportCenter = () => {
     const { t } = useSettings();
+    const [loadingReport, setLoadingReport] = useState(null);
 
-    const handleExport = (type) => {
-        reportService.exportReport(type);
+    const handleExport = async (type, format = 'excel') => {
+        setLoadingReport(`${type}-${format}`);
+        try {
+            toast.loading(`Generating ${format.toUpperCase()} report...`);
+            
+            if (format === 'pdf') {
+                // For reports that need date range
+                if (['attendance-summary', 'leave-summary'].includes(type)) {
+                    const startDate = new Date();
+                    startDate.setMonth(startDate.getMonth() - 1);
+                    const endDate = new Date();
+                    
+                    await reportService.exportReportPDF(type, {
+                        startDate: startDate.toISOString().split('T')[0],
+                        endDate: endDate.toISOString().split('T')[0]
+                    });
+                } else {
+                    await reportService.exportReportPDF(type);
+                }
+            } else {
+                await reportService.exportReport(type);
+            }
+            
+            toast.dismiss();
+            toast.success(`${format.toUpperCase()} report downloaded successfully!`);
+        } catch (error) {
+            console.error('Export error:', error);
+            toast.dismiss();
+            toast.error(`Failed to generate ${format.toUpperCase()} report`);
+        } finally {
+            setLoadingReport(null);
+        }
     };
 
     return (
@@ -58,13 +90,46 @@ const ReportCenter = () => {
                             </p>
                         </div>
 
-                        <Button
-                            onClick={() => handleExport(report.id)}
-                            variant="secondary"
-                            className="w-full py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border-[var(--border-main)] hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-all flex items-center justify-center gap-2"
-                        >
-                            <Download className="w-3.5 h-3.5" /> {t('exportExcel') || 'Export to Excel'}
-                        </Button>
+                        {/* Export Buttons */}
+                        <div className="flex gap-2">
+                            {/* PDF Export Button */}
+                            <Button
+                                onClick={() => handleExport(report.id, 'pdf')}
+                                disabled={loadingReport === `${report.id}-pdf`}
+                                variant="primary"
+                                className="flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white border-0 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {loadingReport === `${report.id}-pdf` ? (
+                                    <>
+                                        <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                        Loading...
+                                    </>
+                                ) : (
+                                    <>
+                                        <FileText className="w-3.5 h-3.5" /> PDF
+                                    </>
+                                )}
+                            </Button>
+
+                            {/* Excel Export Button */}
+                            <Button
+                                onClick={() => handleExport(report.id, 'excel')}
+                                disabled={loadingReport === `${report.id}-excel`}
+                                variant="secondary"
+                                className="flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border-[var(--border-main)] hover:bg-green-500 hover:text-white hover:border-green-500 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {loadingReport === `${report.id}-excel` ? (
+                                    <>
+                                        <div className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin"></div>
+                                        Loading...
+                                    </>
+                                ) : (
+                                    <>
+                                        <FileDown className="w-3.5 h-3.5" /> Excel
+                                    </>
+                                )}
+                            </Button>
+                        </div>
                     </div>
                 ))}
             </div>

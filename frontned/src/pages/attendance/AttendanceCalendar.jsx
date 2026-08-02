@@ -20,11 +20,17 @@ import {
     Eye,
     Coffee,
     Activity,
-    BarChart3
+    BarChart3,
+    FileText,
+    Check,
+    X as XIcon,
+    Upload
 } from 'lucide-react';
 import attendanceService from '../../services/attendanceService';
 import { useSettings } from '../../context/SettingsContext';
 import usePermission from '../../hooks/usePermission';
+import PDFExportDialog from '../../components/attendance/PDFExportDialog';
+import toast from 'react-hot-toast';
 import {
     format,
     addMonths,
@@ -54,6 +60,9 @@ const AttendanceCalendar = () => {
     const [selectedDay, setSelectedDay] = useState(null);
     const [viewMode, setViewMode] = useState('my'); // 'my' or 'team'
     const [selectedDepartment, setSelectedDepartment] = useState(null);
+    const [showPDFExport, setShowPDFExport] = useState(false);
+    const [bulkSelectMode, setBulkSelectMode] = useState(false);
+    const [selectedRecords, setSelectedRecords] = useState([]);
     const [stats, setStats] = useState({
         present: 0,
         absent: 0,
@@ -197,16 +206,165 @@ const AttendanceCalendar = () => {
                         </button>
                     </div>
 
-                    {/* Export Button */}
-                    <button
-                        className="p-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-main)] hover:bg-[var(--bg-surface-soft)] transition-colors"
-                        title="Export Calendar"
-                    >
-                        <Download className="w-5 h-5" />
-                    </button>
+                    {/* Export Buttons */}
+                    {/* Bulk Actions (Manager/HR/Admin only) */}
+                    {viewMode === 'team' && canViewTeam && (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setBulkSelectMode(!bulkSelectMode)}
+                                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${
+                                    bulkSelectMode
+                                        ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25'
+                                        : 'bg-[var(--bg-surface)] border border-[var(--border-main)] hover:bg-[var(--bg-surface-soft)]'
+                                }`}
+                            >
+                                <CheckCircle2 className="w-4 h-4" />
+                                <span className="hidden sm:inline">
+                                    {bulkSelectMode ? 'Done' : 'Bulk Select'}
+                                </span>
+                            </button>
+                            
+                            {bulkSelectMode && selectedRecords.length > 0 && (
+                                <>
+                                    <button
+                                        onClick={handleBulkApprove}
+                                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 text-white font-black text-xs uppercase tracking-widest hover:shadow-lg hover:scale-105 transition-all"
+                                    >
+                                        <Check className="w-4 h-4" />
+                                        Approve ({selectedRecords.length})
+                                    </button>
+                                    <button
+                                        onClick={handleBulkReject}
+                                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500 text-white font-black text-xs uppercase tracking-widest hover:shadow-lg hover:scale-105 transition-all"
+                                    >
+                                        <XIcon className="w-4 h-4" />
+                                        Reject ({selectedRecords.length})
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Export Buttons */}
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setShowPDFExport(true)}
+                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 text-white font-black text-xs uppercase tracking-widest hover:shadow-lg hover:scale-105 transition-all shadow-red-500/25"
+                            title="Export as PDF"
+                        >
+                            <FileText className="w-4 h-4" />
+                            <span className="hidden sm:inline">PDF</span>
+                        </button>
+                        <button
+                            onClick={handleExportCSV}
+                            className="p-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-main)] hover:bg-[var(--bg-surface-soft)] transition-colors"
+                            title="Export as CSV"
+                        >
+                            <Download className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
             </div>
         );
+    };
+
+    const handleExportCSV = async () => {
+        try {
+            toast.loading('Exporting CSV...');
+            const startDate = format(startOfMonth(currentMonth), 'yyyy-MM-dd');
+            const endDate = format(endOfMonth(currentMonth), 'yyyy-MM-dd');
+            
+            const blob = await attendanceService.exportAttendance(startDate, endDate);
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `attendance_${format(currentMonth, 'yyyy-MM')}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+            toast.dismiss();
+            toast.success('CSV exported successfully!');
+        } catch (error) {
+            console.error('Export error:', error);
+            toast.dismiss();
+            toast.error('Failed to export CSV');
+        }
+    };
+
+    const handleBulkApprove = async () => {
+        if (selectedRecords.length === 0) {
+            toast.error('No records selected');
+            return;
+        }
+
+        const confirmMsg = `Are you sure you want to approve ${selectedRecords.length} attendance record(s)?`;
+        if (!window.confirm(confirmMsg)) return;
+
+        try {
+            toast.loading('Approving records...');
+            await Promise.all(
+                selectedRecords.map(id => 
+                    attendanceService.approveAttendance(id, { status: 'approved' })
+                )
+            );
+            toast.dismiss();
+            toast.success(`${selectedRecords.length} record(s) approved successfully!`);
+            setSelectedRecords([]);
+            setBulkSelectMode(false);
+            fetchAttendance();
+        } catch (error) {
+            console.error('Bulk approve error:', error);
+            toast.dismiss();
+            toast.error('Failed to approve some records');
+        }
+    };
+
+    const handleBulkReject = async () => {
+        if (selectedRecords.length === 0) {
+            toast.error('No records selected');
+            return;
+        }
+
+        const reason = window.prompt(`Rejection reason for ${selectedRecords.length} record(s):`);
+        if (!reason) return;
+
+        try {
+            toast.loading('Rejecting records...');
+            await Promise.all(
+                selectedRecords.map(id => 
+                    attendanceService.approveAttendance(id, { 
+                        status: 'rejected',
+                        admin_comment: reason 
+                    })
+                )
+            );
+            toast.dismiss();
+            toast.success(`${selectedRecords.length} record(s) rejected successfully!`);
+            setSelectedRecords([]);
+            setBulkSelectMode(false);
+            fetchAttendance();
+        } catch (error) {
+            console.error('Bulk reject error:', error);
+            toast.dismiss();
+            toast.error('Failed to reject some records');
+        }
+    };
+
+    const toggleRecordSelection = (recordId) => {
+        setSelectedRecords(prev => 
+            prev.includes(recordId) 
+                ? prev.filter(id => id !== recordId)
+                : [...prev, recordId]
+        );
+    };
+
+    const selectAllPending = () => {
+        const pendingRecords = attendanceData
+            .filter(a => a.status === 'pending')
+            .map(a => a.id);
+        setSelectedRecords(pendingRecords);
+        toast.success(`${pendingRecords.length} pending records selected`);
     };
 
     const renderStats = () => {
@@ -305,13 +463,36 @@ const AttendanceCalendar = () => {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: i * 0.02 }}
-                        onClick={() => attendance && setSelectedDay(attendance)}
-                        className={`min-h-[140px] p-3 border-r border-b ${borderColor} ${statusColor} transition-all duration-200 ${
+                        onClick={() => {
+                            if (bulkSelectMode && attendance) {
+                                toggleRecordSelection(attendance.id);
+                            } else if (attendance) {
+                                setSelectedDay(attendance);
+                            }
+                        }}
+                        className={`min-h-[140px] p-3 border-r border-b ${borderColor} ${statusColor} transition-all duration-200 relative ${
                             !isCurrentMonth ? 'opacity-30' : ''
                         } ${isTodayDate ? 'ring-2 ring-blue-500 ring-inset' : ''} ${
                             attendance ? 'cursor-pointer hover:shadow-lg hover:scale-[1.02]' : ''
-                        } ${isWeekendDay ? 'bg-slate-50/50' : ''}`}
+                        } ${isWeekendDay ? 'bg-slate-50/50' : ''} ${
+                            selectedRecords.includes(attendance?.id) ? 'ring-2 ring-blue-500' : ''
+                        }`}
                     >
+                        {/* Bulk Select Checkbox */}
+                        {bulkSelectMode && attendance && viewMode === 'team' && (
+                            <div className="absolute top-2 left-2 z-10">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedRecords.includes(attendance.id)}
+                                    onChange={(e) => {
+                                        e.stopPropagation();
+                                        toggleRecordSelection(attendance.id);
+                                    }}
+                                    className="w-5 h-5 rounded border-2 border-blue-500 text-blue-500 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                />
+                            </div>
+                        )}
+
                         <div className="flex justify-between items-start mb-3">
                             <span
                                 className={`text-sm font-black ${
@@ -624,6 +805,30 @@ const AttendanceCalendar = () => {
     return (
         <div className="space-y-8 pb-20">
             {renderHeader()}
+            
+            {/* Bulk Select Helper */}
+            {bulkSelectMode && viewMode === 'team' && (
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-center justify-between"
+                >
+                    <div className="flex items-center gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-blue-500" />
+                        <div>
+                            <p className="text-sm font-black text-blue-900">Bulk Selection Mode</p>
+                            <p className="text-xs text-blue-600">Click on attendance records to select/deselect</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={selectAllPending}
+                        className="px-4 py-2 rounded-xl bg-blue-500 text-white text-xs font-black uppercase tracking-widest hover:bg-blue-600 transition-colors"
+                    >
+                        Select All Pending
+                    </button>
+                </motion.div>
+            )}
+
             {renderStats()}
 
             <div className="bg-[var(--bg-surface)] rounded-[2.5rem] border border-[var(--border-main)] shadow-sm overflow-hidden">
@@ -642,6 +847,16 @@ const AttendanceCalendar = () => {
 
             {renderLegend()}
             {renderDayDetailModal()}
+            
+            {/* PDF Export Dialog */}
+            {showPDFExport && (
+                <PDFExportDialog
+                    isOpen={showPDFExport}
+                    onClose={() => setShowPDFExport(false)}
+                    currentMonth={currentMonth}
+                    userRole={role}
+                />
+            )}
         </div>
     );
 };
