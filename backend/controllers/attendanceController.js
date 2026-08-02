@@ -354,7 +354,8 @@ export const getAttendanceSummary = async (req, res) => {
         startOfWeek.setHours(0, 0, 0, 0);
 
         const attendance = await Attendance.findAll({
-            where: { user_id: userId, clock_in: { [Op.gte]: startOfWeek } }
+            where: { user_id: userId, clock_in: { [Op.gte]: startOfWeek } },
+            include: [{ model: AttendanceBreak }]
         });
 
         const totalHours = attendance.reduce((sum, a) => sum + (parseFloat(a.work_hours) || 0), 0);
