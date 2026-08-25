@@ -36,10 +36,10 @@ export const getAllEmployees = async (req, res) => {
 
         if (search) {
             userWhere[Op.or] = [
-                { first_name: { [Op.like]: `%${search}%` } },
-                { last_name: { [Op.like]: `%${search}%` } },
-                { email: { [Op.like]: `%${search}%` } },
-                { employee_id: { [Op.like]: `%${search}%` } }
+                { first_name: { [Op.iLike]: `%${search}%` } },
+                { last_name: { [Op.iLike]: `%${search}%` } },
+                { email: { [Op.iLike]: `%${search}%` } },
+                { employee_id: { [Op.iLike]: `%${search}%` } }
             ];
         }
 
@@ -83,6 +83,10 @@ export const getAllEmployees = async (req, res) => {
 export const getEmployeeById = async (req, res) => {
     try {
         const { id } = req.params;
+
+        if (isNaN(parseInt(id))) {
+            return res.status(400).json({ error: 'Invalid employee ID format' });
+        }
 
         // Access control: only admin, HR, or the employee themselves can view full details
         if (req.user.role !== 'admin' && req.user.role !== 'hr' && req.user.id !== parseInt(id)) {

@@ -1,4 +1,4 @@
-import { Employee, Department, Position, EmployeeDocument, EmployeeCertification, User, AuditLog, Attendance, PayrollItem, PayrollPeriod } from '../models/index.js';
+import { Employee, Department, Position, EmployeeDocument, EmployeeCertification, User, AuditLog, Attendance, PayrollItem, PayrollPeriod, JobPosting } from '../models/index.js';
 import { Op } from 'sequelize';
 
 export const getDashboardStats = async (req, res) => {
@@ -17,8 +17,16 @@ export const getDashboardStats = async (req, res) => {
         const totalEmployees = await Employee.count({ where: whereClause });
         const totalDepartments = managerDeptId ? 1 : await Department.count();
 
-        const positionWhere = managerDeptId ? { department_id: managerDeptId } : {};
-        const totalPositions = await Position.count({ where: positionWhere });
+        // Open Positions should reflect active job postings
+        const jobPostingWhere = { status: 'published' };
+        const totalPositions = await JobPosting.count({
+            where: jobPostingWhere,
+            include: managerDeptId ? [{
+                model: Position,
+                where: { department_id: managerDeptId },
+                attributes: []
+            }] : []
+        });
 
         const activeCertifications = await EmployeeCertification.count({
             where: {
@@ -39,7 +47,7 @@ export const getDashboardStats = async (req, res) => {
                 model: Employee,
                 attributes: []
             }],
-            group: ['Department.id']
+            group: ['Department.id', 'Department.name']
         });
 
         // Contract Distribution (Permanent vs Temporary) - useful for HR/Admin/Finance
@@ -60,12 +68,12 @@ export const getDashboardStats = async (req, res) => {
                 status: 'approved'
             },
             attributes: [
-                [Employee.sequelize.fn('DATE_FORMAT', Employee.sequelize.col('clock_in'), '%Y-%u'), 'week'],
+                [Employee.sequelize.fn('TO_CHAR', Employee.sequelize.col('clock_in'), 'YYYY-IW'), 'week'],
                 [Employee.sequelize.fn('COUNT', Employee.sequelize.col('id')), 'count'],
                 [Employee.sequelize.fn('SUM', Employee.sequelize.col('work_hours')), 'total_hours']
             ],
-            group: [Employee.sequelize.fn('DATE_FORMAT', Employee.sequelize.col('clock_in'), '%Y-%u')],
-            order: [[Employee.sequelize.fn('DATE_FORMAT', Employee.sequelize.col('clock_in'), '%Y-%u'), 'ASC']]
+            group: [Employee.sequelize.fn('TO_CHAR', Employee.sequelize.col('clock_in'), 'YYYY-IW')],
+            order: [[Employee.sequelize.fn('TO_CHAR', Employee.sequelize.col('clock_in'), 'YYYY-IW'), 'ASC']]
         });
 
         // 2. Payroll Trends (Last 6 Months)
@@ -76,13 +84,19 @@ export const getDashboardStats = async (req, res) => {
                 end_date: { [Op.gte]: sixMonthsAgo },
                 status: 'approved'
             },
-            attributes: ['end_date', 'description'],
+            attributes: [
+                'end_date',
+                'description',
+                [Employee.sequelize.fn('SUM', Employee.sequelize.col('PayrollItems.gross_pay')), 'total_payroll']
+            ],
             include: [{
                 model: PayrollItem,
-                attributes: [[Employee.sequelize.fn('SUM', Employee.sequelize.col('gross_pay')), 'total_payroll']],
+                attributes: [],
+                required: false
             }],
-            group: ['PayrollPeriod.id'],
-            order: [['end_date', 'ASC']]
+            group: ['PayrollPeriod.id', 'PayrollPeriod.end_date', 'PayrollPeriod.description'],
+            order: [['end_date', 'ASC']],
+            raw: true
         });
 
         // 3. Employee Growth (Last 6 Months)
@@ -92,11 +106,11 @@ export const getDashboardStats = async (req, res) => {
                 hire_date: { [Op.gte]: sixMonthsAgo }
             },
             attributes: [
-                [Employee.sequelize.fn('DATE_FORMAT', Employee.sequelize.col('hire_date'), '%Y-%m'), 'month'],
+                [Employee.sequelize.fn('TO_CHAR', Employee.sequelize.col('hire_date'), 'YYYY-MM'), 'month'],
                 [Employee.sequelize.fn('COUNT', Employee.sequelize.col('user_id')), 'hires']
             ],
-            group: [Employee.sequelize.fn('DATE_FORMAT', Employee.sequelize.col('hire_date'), '%Y-%m')],
-            order: [[Employee.sequelize.fn('DATE_FORMAT', Employee.sequelize.col('hire_date'), '%Y-%m'), 'ASC']]
+            group: [Employee.sequelize.fn('TO_CHAR', Employee.sequelize.col('hire_date'), 'YYYY-MM')],
+            order: [[Employee.sequelize.fn('TO_CHAR', Employee.sequelize.col('hire_date'), 'YYYY-MM'), 'ASC']]
         });
 
         res.status(200).json({

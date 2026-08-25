@@ -11,6 +11,7 @@ const OrgChartPage = () => {
     const { hasPermission } = usePermission();
     const canManageOrg = hasPermission('manage_org');
     const [isDragging, setIsDragging] = useState(false);
+    const [viewMode, setViewMode] = useState('tree'); // 'tree' or 'list'
 
     useEffect(() => {
         dispatch(fetchDepartmentHierarchy());
@@ -135,8 +136,8 @@ const OrgChartPage = () => {
                     {/* Vertical Link from parent */}
                     <div className="absolute -top-10 left-1/2 w-0.5 h-10 bg-slate-400/30 -translate-x-1/2" />
 
-                    {node.subDepartments.map((child, index) => (
-                        <div key={`child-${child.id}-${index}`} className="relative">
+                    {node.subDepartments.map((child) => (
+                        <div key={`child-${child.id}`} className="relative">
                             {/* Individual Vertical Link */}
                             <div className="absolute -top-10 left-1/2 w-0.5 h-10 bg-slate-400/30 -translate-x-1/2" />
                             {renderNode(child)}
@@ -149,11 +150,26 @@ const OrgChartPage = () => {
 
     return (
         <div className="min-h-[80vh] flex flex-col overflow-hidden">
-            <div className="mb-10 text-center relative">
+            <div className="mb-10 text-center relative flex flex-col items-center">
                 <h1 className="text-4xl font-extrabold tracking-tight mb-2 uppercase">{t('orgChart')}</h1>
-                <p className="text-[var(--text-muted)] font-medium tracking-widest uppercase text-[10px]">{t('hierarchicalStructuralModel')}</p>
+                <p className="text-[var(--text-muted)] font-medium tracking-widest uppercase text-[10px] mb-6">{t('hierarchicalStructuralModel')}</p>
 
-                {canManageOrg && (
+                <div className="flex items-center gap-2 bg-[var(--bg-surface)] p-1 rounded-2xl border border-[var(--border-main)] shadow-sm mb-6">
+                    <button
+                        onClick={() => setViewMode('tree')}
+                        className={`px-6 py-2 text-sm font-bold rounded-xl transition-all ${viewMode === 'tree' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-[var(--text-soft)] hover:text-[var(--text-main)]'}`}
+                    >
+                        {t('tree') || 'Tree'}
+                    </button>
+                    <button
+                        onClick={() => setViewMode('list')}
+                        className={`px-6 py-2 text-sm font-bold rounded-xl transition-all ${viewMode === 'list' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'text-[var(--text-soft)] hover:text-[var(--text-main)]'}`}
+                    >
+                        {t('list') || 'List'}
+                    </button>
+                </div>
+
+                {canManageOrg && viewMode === 'tree' && (
                     <div className="absolute right-0 top-0">
                         <div className="text-xs bg-blue-50 text-blue-600 px-4 py-2 rounded-xl font-medium border border-blue-100 flex items-center gap-2 shadow-sm">
                             🖐️ {t('dragAndDropToRearrange')}
@@ -162,42 +178,109 @@ const OrgChartPage = () => {
                 )}
             </div>
 
-            {canManageOrg && isDragging && (
-                <div
-                    className="w-full max-w-2xl mx-auto border-2 border-dashed border-blue-400 bg-blue-50 p-6 rounded-3xl flex justify-center items-center text-blue-600 font-bold uppercase tracking-wider text-sm mb-10 transition-all shadow-inner"
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                        e.preventDefault();
-                        const draggedId = e.dataTransfer.getData('departmentId');
-                        if (draggedId) {
-                            handleDrop(draggedId, null);
-                            setIsDragging(false);
-                        }
-                    }}
-                >
-                    ⬇️ {t('dropToMakeTopLevel')}
-                </div>
-            )}
-
-            <div className="flex-1 overflow-auto p-20 pt-10 flex justify-center items-start custom-scrollbar">
-                <div className="relative">
-                    {hierarchy.length > 0 ? (
-                        <div className="flex flex-wrap justify-center gap-20 pb-40">
-                            {hierarchy.map((node, index) => (
-                                <div key={`root-${node.id}-${index}`}>
-                                    {renderNode(node)}
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-20 bg-[var(--bg-surface)] rounded-3xl border-2 border-dashed border-[var(--border-main)] px-20">
-                            <span className="text-6xl mb-6 block">🗺️</span>
-                            <h3 className="text-xl font-bold mb-2">{t('structureNotFound')}</h3>
-                            <p className="text-[var(--text-soft)]">{t('defineDepartmentsFirst')}</p>
+            {viewMode === 'tree' ? (
+                <>
+                    {canManageOrg && isDragging && (
+                        <div
+                            className="w-full max-w-2xl mx-auto border-2 border-dashed border-blue-400 bg-blue-50 p-6 rounded-3xl flex justify-center items-center text-blue-600 font-bold uppercase tracking-wider text-sm mb-10 transition-all shadow-inner"
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                const draggedId = e.dataTransfer.getData('departmentId');
+                                if (draggedId) {
+                                    handleDrop(draggedId, null);
+                                    setIsDragging(false);
+                                }
+                            }}
+                        >
+                            ⬇️ {t('dropToMakeTopLevel')}
                         </div>
                     )}
+
+                    <div className="flex-1 overflow-auto p-20 pt-10 flex justify-center items-start custom-scrollbar">
+                        <div className="relative">
+                            {hierarchy.length > 0 ? (
+                                <div className="flex flex-wrap justify-center gap-20 pb-40">
+                                    {hierarchy.map((node) => (
+                                        <div key={`root-${node.id}`}>
+                                            {renderNode(node)}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-20 bg-[var(--bg-surface)] rounded-3xl border-2 border-dashed border-[var(--border-main)] px-20">
+                                    <span className="text-6xl mb-6 block">🗺️</span>
+                                    <h3 className="text-xl font-bold mb-2">{t('structureNotFound')}</h3>
+                                    <p className="text-[var(--text-soft)]">{t('defineDepartmentsFirst')}</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </>
+            ) : (
+                <div className="flex-1 max-w-5xl mx-auto w-full px-4 mb-20">
+                    <div className="bg-[var(--bg-surface)] border border-[var(--border-main)] rounded-3xl overflow-hidden shadow-xl">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-[var(--bg-surface-soft)]/50 border-b border-[var(--border-main)]">
+                                    <tr>
+                                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Department</th>
+                                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Code</th>
+                                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)]">Manager</th>
+                                        <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-muted)] text-center">Staff Count</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-[var(--border-main)]/50">
+                                    {(() => {
+                                        const flatList = [];
+                                        const flatten = (nodes, level = 0) => {
+                                            nodes.forEach(node => {
+                                                flatList.push({ ...node, level });
+                                                if (node.subDepartments) flatten(node.subDepartments, level + 1);
+                                            });
+                                        };
+                                        flatten(hierarchy);
+                                        return flatList.map((dept) => (
+                                            <tr key={dept.id} className="hover:bg-blue-500/[0.02] transition-colors">
+                                                <td className="px-8 py-5">
+                                                    <div className="flex items-center gap-3" style={{ paddingLeft: `${dept.level * 2}rem` }}>
+                                                        <div className="w-8 h-8 rounded-lg bg-blue-600/10 flex items-center justify-center text-blue-600">
+                                                            <span>🏢</span>
+                                                        </div>
+                                                        <span className="font-bold text-sm text-[var(--text-main)]">{dept.name}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-8 py-5">
+                                                    <span className="text-[10px] font-mono font-bold text-blue-500 bg-blue-500/10 px-2.5 py-1 rounded-full uppercase tracking-widest">
+                                                        {dept.code}
+                                                    </span>
+                                                </td>
+                                                <td className="px-8 py-5">
+                                                    {dept.Manager ? (
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 border border-slate-200">
+                                                                {dept.Manager.first_name[0]}{dept.Manager.last_name[0]}
+                                                            </div>
+                                                            <span className="text-xs font-bold text-[var(--text-soft)]">{dept.Manager.first_name} {dept.Manager.last_name}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest">No Manager</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-8 py-5 text-center">
+                                                    <span className="text-xs font-black text-blue-600 tabular-nums">
+                                                        {dept.Employees?.length || 0}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ));
+                                    })()}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            )}
 
             <style dangerouslySetInnerHTML={{
                 __html: `

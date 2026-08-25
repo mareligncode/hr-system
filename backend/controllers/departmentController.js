@@ -23,7 +23,7 @@ export const getAllDepartments = async (req, res) => {
                 { model: User, as: 'Manager', attributes: ['id', 'first_name', 'last_name', 'email'] },
                 { model: Employee, as: 'Employees', attributes: [] }
             ],
-            group: ['Department.id'],
+            group: ['Department.id', 'Department.name', 'Department.code', 'Department.is_active', 'Department.parent_department_id', 'Department.manager_id', 'Department.created_at', 'Department.updated_at', 'Department.deleted_at', 'ParentDepartment.id', 'Manager.id'],
             order: [['name', 'ASC']]
         });
         res.status(200).json(departments);

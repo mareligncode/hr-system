@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Search, Filter, SlidersHorizontal, Users, User, Briefcase, Building2, LayoutGrid, List, Download, ShieldCheck } from 'lucide-react';
+import { Plus, Search, Filter, SlidersHorizontal, Users, User, Briefcase, Building2, LayoutGrid, List, Download, ShieldCheck, CheckCircle2, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { fetchEmployees } from '../../store/employeeSlice';
 import { useSettings } from '../../context/SettingsContext';
@@ -86,6 +86,40 @@ const EmployeeDirectory = () => {
         setCurrentPage(1); // Reset to page 1 when limit changes
     };
 
+    const handleDeactivate = async (id) => {
+        if (!window.confirm(t('confirmDeactivate') || 'Are you sure you want to deactivate this employee?')) return;
+        try {
+            await employeeService.updateEmployee(id, { employment_status: 'inactive' });
+            dispatch(fetchEmployees({
+                page: currentPage,
+                limit: itemsPerPage,
+                search: searchTerm,
+                status: activeFilter === 'all' ? '' : activeFilter,
+                department_id: selectedDept
+            }));
+        } catch (err) {
+            console.error('Deactivation failed', err);
+            alert(err.response?.data?.error || t('deactivateFailed') || 'Deactivation failed');
+        }
+    };
+
+    const handleActivate = async (id) => {
+        if (!window.confirm(t('confirmActivate') || 'Are you sure you want to activate this employee?')) return;
+        try {
+            await employeeService.updateEmployee(id, { employment_status: 'active' });
+            dispatch(fetchEmployees({
+                page: currentPage,
+                limit: itemsPerPage,
+                search: searchTerm,
+                status: activeFilter === 'all' ? '' : activeFilter,
+                department_id: selectedDept
+            }));
+        } catch (err) {
+            console.error('Activation failed', err);
+            alert(err.response?.data?.error || t('activateFailed') || 'Activation failed');
+        }
+    };
+
     const exportToCSV = async () => {
         try {
             const blob = await employeeService.exportEmployees();
@@ -161,7 +195,7 @@ const EmployeeDirectory = () => {
 
                     <div className="flex flex-col sm:flex-row xl:flex-row items-stretch sm:items-center gap-4">
                         <div className="flex bg-[var(--bg-surface-soft)] p-1 rounded-xl sm:rounded-2xl border border-[var(--border-main)] overflow-x-auto no-scrollbar scroll-smooth">
-                            {['all', 'active', 'on_leave', 'terminated'].map((f) => (
+                            {['all', 'active', 'inactive', 'on_leave', 'terminated'].map((f) => (
                                 <button
                                     key={f}
                                     onClick={() => handleFilterChange(f)}
@@ -275,12 +309,33 @@ const EmployeeDirectory = () => {
                                             </span>
                                         </td>
                                         <td className="p-4 text-right">
-                                            <Link
-                                                to={`/employees/${emp.user_id}`}
-                                                className="text-sm font-semibold text-blue-500 hover:text-blue-600 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors"
-                                            >
-                                                View
-                                            </Link>
+                                            <div className="flex justify-end gap-2">
+                                                {hasPermission('manage_employees') && (
+                                                    emp.employment_status === 'inactive' || emp.employment_status === 'terminated' ? (
+                                                        <button
+                                                            onClick={() => handleActivate(emp.user_id)}
+                                                            className="p-2 hover:bg-emerald-500/10 text-emerald-500 rounded-lg transition-colors"
+                                                            title={t('activate') || 'Activate'}
+                                                        >
+                                                            <CheckCircle2 className="w-4 h-4" />
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleDeactivate(emp.user_id)}
+                                                            className="p-2 hover:bg-rose-500/10 text-rose-500 rounded-lg transition-colors"
+                                                            title={t('deactivate') || 'Deactivate'}
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    )
+                                                )}
+                                                <Link
+                                                    to={`/employees/${emp.user_id}`}
+                                                    className="text-sm font-semibold text-blue-500 hover:text-blue-600 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors"
+                                                >
+                                                    {t('view') || 'View'}
+                                                </Link>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

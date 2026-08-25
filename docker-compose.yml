@@ -1,57 +1,112 @@
+
+name: hr-system-dev
+
 services:
+
+  # ── PostgreSQL Database ────────────────────────────────────────────────────
   db:
-    image: mysql:8.0
-    restart: always
+    image: postgres:16-alpine
+    restart: unless-stopped
     environment:
-      MYSQL_DATABASE: hotel_hr_database
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_USER: hr_user
-      MYSQL_PASSWORD: hr_password
-    ports:
-      - "3307:3306"
+      POSTGRES_DB:       ${DB_NAME:-hr_database}
+      POSTGRES_USER:     ${DB_USER:-hr_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-hr_password}
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-hr_user} -d ${DB_NAME:-hr_database}"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
+  # ── Backend ────────────────────────────────────────────────────────────────
   backend:
-    build: ./backend
-    restart: always
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    command: sh -c "npm run docker-start"
+    restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "${BACKEND_PORT:-4000}:5000"
     volumes:
       - ./backend:/app
-      - /app/node_modules
+      - /app/node_modules 
     environment:
-      - DB_HOST=db
-      - DB_USER=hr_user
-      - DB_PASSWORD=hr_password
-      - DB_NAME=hotel_hr_database
-      - DB_PORT=3306
-      - JWT_SECRET=super_secret_jwt_key_here_please_change_in_production
-      - NODE_ENV=development
-      - PORT=5000
+      NODE_ENV:   development
+      PORT:       5000
+      LOG_LEVEL:  ${LOG_LEVEL:-debug}
+      DOCKER:     "true"
+
+      # Database — "db" resolves to the postgres container via Docker DNS
+      DATABASE_URL: ""
+      DB_HOST:      db
+      DB_USER:      ${DB_USER:-hr_user}
+      DB_PASSWORD:  ${DB_PASSWORD:-hr_password}
+      DB_NAME:      ${DB_NAME:-hr_database}
+      DB_DIALECT:   postgres
+      DB_PORT:      5432
+
+      # Auth
+      JWT_SECRET:         ${JWT_SECRET:-change_me_use_64_char_random_hex}
+      JWT_EXPIRES_IN:     ${JWT_EXPIRES_IN:-15m}
+      REFRESH_EXPIRES_IN: ${REFRESH_EXPIRES_IN:-7d}
+      MAX_LOGIN_ATTEMPTS: ${MAX_LOGIN_ATTEMPTS:-5}
+      LOCKOUT_DURATION:   ${LOCKOUT_DURATION:-30}
+
+      # CORS
+      ALLOWED_ORIGINS: "http://localhost:5174,http://localhost:5173,http://localhost:4000"
+      FRONTEND_URL:    http://localhost:5174
+      API_URL:         http://localhost:4000
+
+      # Email
+      SMTP_HOST:  ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT:  ${SMTP_PORT:-587}
+      SMTP_USER:  ${SMTP_USER}
+      SMTP_PASS:  ${SMTP_PASS}
+      EMAIL_FROM: ${EMAIL_FROM}
+
+      # Cloudinary
+      CLOUDINARY_CLOUD_NAME:  ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY:     ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET:  ${CLOUDINARY_API_SECRET}
+      CLOUDINARY_FOLDER:      ${CLOUDINARY_FOLDER:-hr-system}
+
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5000/api/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
+  # ── Frontend (Vite dev server with HMR) ────────────────────────────────────
   frontend:
     build:
       context: ./frontned
-      args:
-        - VITE_API_URL=http://localhost:5000/api
-    restart: always
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
     ports:
-      - "5173:80"
+      - "${FRONTEND_PORT:-5174}:5174"
     volumes:
       - ./frontned:/app
       - /app/node_modules
-      - /app/dist
+    environment:
+      # Must be development so npm install includes devDependencies (vite, plugin-react)
+      NODE_ENV: development
+      VITE_API_URL: /api
+      # Tells vite.config.js proxy where to forward /api requests inside Docker
+      VITE_BACKEND_URL: http://backend:5000
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   db_data:
+    name: hr-system-db-data
+
+networks:
+  default:
+    name: hr-system-dev-network

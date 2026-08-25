@@ -51,6 +51,10 @@ import Accommodation from './Accommodation.js';
 import WelfareRequest from './WelfareRequest.js';
 import Expense from './Expense.js';
 import TipPool from './TipPool.js';
+import RefreshToken from './RefreshToken.js';
+import UserSession from './UserSession.js';
+import LoginAttempt from './LoginAttempt.js';
+import UserMfa from './UserMfa.js';
 
 // User & Role (Many-to-Many)
 User.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id' });
@@ -287,6 +291,19 @@ Department.hasMany(TipPool, { foreignKey: 'department_id' });
 TipPool.belongsTo(Department, { foreignKey: 'department_id' });
 TipPool.belongsTo(User, { as: 'Distributor', foreignKey: 'distributed_by' });
 
+// Auth & Security relationships
+User.hasMany(RefreshToken, { foreignKey: 'user_id', onDelete: 'CASCADE' });
+RefreshToken.belongsTo(User, { foreignKey: 'user_id' });
+
+User.hasMany(UserSession, { foreignKey: 'user_id', onDelete: 'CASCADE' });
+UserSession.belongsTo(User, { foreignKey: 'user_id' });
+
+User.hasMany(LoginAttempt, { foreignKey: 'user_id' });
+LoginAttempt.belongsTo(User, { foreignKey: 'user_id' });
+
+User.hasOne(UserMfa, { foreignKey: 'user_id', onDelete: 'CASCADE' });
+UserMfa.belongsTo(User, { foreignKey: 'user_id' });
+
 export {
     User,
     Department,
@@ -340,5 +357,9 @@ export {
     Accommodation,
     WelfareRequest,
     Expense,
-    TipPool
+    TipPool,
+    RefreshToken,
+    UserSession,
+    LoginAttempt,
+    UserMfa
 };

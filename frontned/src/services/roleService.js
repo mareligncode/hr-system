@@ -26,7 +26,7 @@ const roleService = {
         return response.data;
     },
     unassignRole: async (assignmentData) => {
-        const response = await api.delete('/roles/unassign', { data: assignmentData });
+        const response = await api.post('/roles/unassign', assignmentData);
         return response.data;
     }
 };

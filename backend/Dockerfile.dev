@@ -1,0 +1,22 @@
+
+FROM node:20-alpine
+
+# Install dumb-init and postgresql-client for proper signal handling and DB access
+RUN apk add --no-cache dumb-init postgresql-client
+
+WORKDIR /app
+
+COPY package*.json ./
+
+# Install ALL dependencies including devDependencies (nodemon, jest, etc.)
+RUN npm install
+
+COPY . .
+
+# Make scripts executable
+RUN chmod +x scripts/*.sh 2>/dev/null || true
+
+EXPOSE 5000
+
+# nodemon is started via docker-compose command override
+CMD ["dumb-init", "npx", "nodemon", "server.js"]

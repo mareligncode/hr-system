@@ -1,6 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 const User = sequelize.define('User', {
     id: {
@@ -67,6 +67,18 @@ const User = sequelize.define('User', {
     reset_code_expires_at: {
         type: DataTypes.DATE,
         allowNull: true
+    },
+    failed_login_attempts: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0
+    },
+    locked_until: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    mfa_enabled: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
     },
     profile_picture_url: {
         type: DataTypes.VIRTUAL,

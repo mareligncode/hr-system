@@ -1,8 +1,10 @@
-import { User, Role, Permission, Employee, Department, Position } from '../models/index.js';
+import { User, Role, Permission, Employee, Department, Position, UserMfa, RefreshToken, UserSession, LoginAttempt } from '../models/index.js';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../services/emailService.js';
 import { logActivity } from '../services/auditService.js';
+import { AuthService } from '../services/authService.js';
+import logger from '../utils/logger.js';
 
 // Helper to generate generic JWT tokens
 const generateToken = (id) => {
@@ -66,83 +68,324 @@ export const register = async (req, res) => {
     }
 };
 
+/**
+ * Enhanced login with refresh tokens, MFA, and session management
+ */
 export const login = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, totp_token, remember_device } = req.body;
+        const ipAddress = req.ip || req.connection.remoteAddress;
+        const userAgent = req.headers['user-agent'];
+        const deviceInfo = AuthService.parseDeviceInfo(userAgent);
+
+        // Find user
         const user = await User.findOne({
             where: { email },
-            include: [{
-                model: Employee,
-                include: [Department, Position]
-            }]
+            include: [{ model: UserMfa }]
         });
 
-        if (user && (await user.validPassword(password))) {
-
-            user.last_login_at = new Date();
-            user.last_login_ip = req.ip;
-            await user.save();
-
-            await logActivity(user.id, 'LOGIN', 'User', user.id, null, { ip: req.ip }, req);
-
-            // Fetch primary role and its permissions based on the user's string 'role' enum
-            const primaryRole = await Role.findOne({
-                where: { code: user.role },
-                include: [Permission]
+        if (!user) {
+            await AuthService.logLoginAttempt(
+                email, null, ipAddress, userAgent, false, 'user_not_found'
+            );
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Invalid credentials' 
             });
-
-            const permissions = new Set();
-            primaryRole?.Permissions?.forEach(p => permissions.add(p.code));
-
-            // Also check join table if they have additional roles
-            const userWithPerms = await User.findByPk(user.id, {
-                include: [{ model: Role, include: [Permission] }]
-            });
-
-            userWithPerms.Roles?.forEach(role => {
-                role.Permissions?.forEach(p => permissions.add(p.code));
-            });
-
-            res.json({
-                message: 'Login successful',
-                user: {
-                    id: user.id,
-                    employee_id: user.employee_id,
-                    email: user.email,
-                    first_name: user.first_name,
-                    last_name: user.last_name,
-                    status: user.status,
-                    role: user.role,
-                    profile_picture: user.profile_picture,
-                    profile_picture_url: user.profile_picture_url,
-                    permissions: Array.from(permissions),
-                    employee_details: user.Employee ? {
-                        id: user.Employee.id,
-                        department: user.Employee.Department?.name,
-                        department_id: user.Employee.Department?.id,
-                        position: user.Employee.Position?.title,
-                        position_id: user.Employee.Position?.id,
-                        employee_number: user.Employee.employee_number
-                    } : null
-                },
-                token: generateToken(user.id),
-            });
-        } else {
-            res.status(401).json({ message: 'Invalid email or password' });
         }
+
+        // Check if account is locked
+        if (await AuthService.isAccountLocked(user)) {
+            await AuthService.logLoginAttempt(
+                email, user.id, ipAddress, userAgent, false, 'account_locked'
+            );
+            return res.status(423).json({
+                success: false,
+                message: 'Account temporarily locked due to multiple failed login attempts',
+                lockUntil: user.locked_until
+            });
+        }
+
+        // Check if account is active
+        if (user.status !== 'active') {
+            await AuthService.logLoginAttempt(
+                email, user.id, ipAddress, userAgent, false, 'account_inactive'
+            );
+            return res.status(403).json({
+                success: false,
+                message: 'Account is not active'
+            });
+        }
+
+        // Verify password
+        const isPasswordValid = await user.validPassword(password);
+        if (!isPasswordValid) {
+            await AuthService.handleFailedLogin(user);
+            await AuthService.logLoginAttempt(
+                email, user.id, ipAddress, userAgent, false, 'invalid_password'
+            );
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid credentials'
+            });
+        }
+
+        // Check MFA if enabled
+        if (user.mfa_enabled && user.UserMfa?.is_enabled) {
+            if (!totp_token) {
+                return res.status(200).json({
+                    success: false,
+                    mfa_required: true,
+                    message: 'MFA token required'
+                });
+            }
+
+            const isValidTotp = AuthService.verifyTotpToken(
+                user.UserMfa.secret_key,
+                totp_token
+            );
+
+            if (!isValidTotp) {
+                await AuthService.handleFailedLogin(user);
+                await AuthService.logLoginAttempt(
+                    email, user.id, ipAddress, userAgent, false, 'mfa_failed'
+                );
+                return res.status(401).json({
+                    success: false,
+                    message: 'Invalid MFA token'
+                });
+            }
+
+            // Update MFA last used
+            await user.UserMfa.update({ last_used_at: new Date() });
+        }
+
+        // Successful login - reset failed attempts
+        await AuthService.resetFailedAttempts(user);
+
+        // Generate tokens
+        const accessToken = AuthService.generateAccessToken(user);
+        const refreshToken = await AuthService.generateRefreshToken(
+            user, deviceInfo, ipAddress
+        );
+
+        // Create session
+        const session = await AuthService.createSession(
+            user, deviceInfo, ipAddress
+        );
+
+        // Log successful login
+        await AuthService.logLoginAttempt(
+            email, user.id, ipAddress, userAgent, true
+        );
+
+        // Fetch permissions and employee details
+        const primaryRole = await Role.findOne({
+            where: { code: user.role },
+            include: [Permission]
+        });
+
+        const permissions = new Set();
+        primaryRole?.Permissions?.forEach(p => permissions.add(p.code));
+
+        const userWithPerms = await User.findByPk(user.id, {
+            include: [
+                { model: Role, include: [Permission] },
+                { model: Employee, include: [Department, Position] }
+            ]
+        });
+
+        userWithPerms.Roles?.forEach(role => {
+            role.Permissions?.forEach(p => permissions.add(p.code));
+        });
+
+        // Audit log
+        await logActivity(
+            user.id, 'LOGIN', 'User', user.id,
+            { device: deviceInfo, ip: ipAddress }, null, req
+        );
+
+        logger.info({
+            userId: user.id,
+            email: user.email,
+            ip: ipAddress,
+            device: deviceInfo
+        }, 'User login successful');
+
+        // Set refresh token in httpOnly cookie
+        const cookieOptions = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        };
+
+        res.cookie('refreshToken', refreshToken, cookieOptions);
+
+        res.json({
+            success: true,
+            message: 'Login successful',
+            access_token: accessToken,
+            user: {
+                id: user.id,
+                employee_id: user.employee_id,
+                email: user.email,
+                first_name: user.first_name,
+                last_name: user.last_name,
+                role: user.role,
+                status: user.status,
+                profile_picture: user.profile_picture,
+                profile_picture_url: user.profile_picture_url,
+                mfa_enabled: user.mfa_enabled,
+                permissions: Array.from(permissions),
+                employee_details: userWithPerms.Employee ? {
+                    id: userWithPerms.Employee.id,
+                    department: userWithPerms.Employee.Department?.name,
+                    department_id: userWithPerms.Employee.Department?.id,
+                    position: userWithPerms.Employee.Position?.title,
+                    position_id: userWithPerms.Employee.Position?.id,
+                    employee_number: userWithPerms.Employee.employee_number
+                } : null
+            },
+            session: {
+                id: session.id,
+                device: deviceInfo,
+                created_at: session.created_at
+            }
+        });
+
     } catch (error) {
-        console.error('Auth Error:', error);
+        logger.error({ err: error }, 'Login error');
         res.status(500).json({
-            message: 'Server error',
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            success: false,
+            message: 'Internal server error',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 };
 
+/**
+ * Refresh access token using refresh token
+ */
+export const refreshToken = async (req, res) => {
+    try {
+        const { refreshToken: token } = req.cookies;
+
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: 'Refresh token not provided'
+            });
+        }
+
+        const refreshTokenRecord = await AuthService.verifyRefreshToken(token);
+        if (!refreshTokenRecord) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid or expired refresh token'
+            });
+        }
+
+        const user = refreshTokenRecord.User;
+        const newAccessToken = AuthService.generateAccessToken(user);
+
+        // Update session activity
+        await UserSession.update(
+            { last_activity_at: new Date() },
+            {
+                where: {
+                    user_id: user.id,
+                    is_current: true,
+                    terminated_at: null
+                }
+            }
+        );
+
+        // Get permissions
+        const primaryRole = await Role.findOne({
+            where: { code: user.role },
+            include: [Permission]
+        });
+
+        const permissions = new Set();
+        primaryRole?.Permissions?.forEach(p => permissions.add(p.code));
+
+        const userWithPerms = await User.findByPk(user.id, {
+            include: [{ model: Role, include: [Permission] }]
+        });
+
+        userWithPerms.Roles?.forEach(role => {
+            role.Permissions?.forEach(p => permissions.add(p.code));
+        });
+
+        res.json({
+            success: true,
+            access_token: newAccessToken,
+            user: {
+                id: user.id,
+                employee_id: user.employee_id,
+                email: user.email,
+                first_name: user.first_name,
+                last_name: user.last_name,
+                role: user.role,
+                mfa_enabled: user.mfa_enabled,
+                permissions: Array.from(permissions)
+            }
+        });
+
+    } catch (error) {
+        logger.error({ err: error }, 'Refresh token error');
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+};
+
+/**
+ * Logout - revoke tokens and end session
+ */
 export const logout = async (req, res) => {
-    // In stateless JWT auth, logout is handled client-side by dropping the token.
-    res.json({ message: 'Logged out successfully' });
+    try {
+        const { refreshToken: token } = req.cookies;
+        const userId = req.user.id;
+
+        if (token) {
+            await AuthService.revokeRefreshToken(token);
+        }
+
+        // End current session
+        await UserSession.update(
+            { terminated_at: new Date() },
+            {
+                where: {
+                    user_id: userId,
+                    is_current: true,
+                    terminated_at: null
+                }
+            }
+        );
+
+        // Clear refresh token cookie
+        res.clearCookie('refreshToken');
+
+        await logActivity(
+            userId, 'LOGOUT', 'User', userId,
+            { ip: req.ip }, null, req
+        );
+
+        res.json({
+            success: true,
+            message: 'Logged out successfully'
+        });
+
+    } catch (error) {
+        logger.error({ err: error }, 'Logout error');
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
 };
 
 export const getProfile = async (req, res) => {
@@ -344,22 +587,8 @@ export const verifyEmail = async (req, res) => {
 };
 
 export const refresh = async (req, res) => {
-    try {
-        // Simple token issuance, assuming the old token is still validly evaluated by protect MiddleWare
-        // In fully stateless JWT, you typically send a refresh token in httpOnly cookie.
-        const newToken = generateToken(req.user.id);
-        res.json({
-            message: 'Token refreshed',
-            token: newToken
-        });
-    } catch (error) {
-        console.error('Auth Error:', error);
-        res.status(500).json({
-            message: 'Server error',
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        });
-    }
+    // This is now handled by the refreshToken function above
+    return refreshToken(req, res);
 };
 
 export const changePassword = async (req, res) => {
@@ -389,6 +618,322 @@ export const changePassword = async (req, res) => {
             message: 'Server error',
             error: error.message,
             stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
+    }
+};
+
+/**
+ * Generate MFA setup QR code
+ */
+export const setupMfa = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const user = await User.findByPk(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Check if MFA is already enabled
+        const existingMfa = await UserMfa.findOne({ where: { user_id: userId } });
+        if (existingMfa && existingMfa.is_enabled) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'MFA is already enabled for this account' 
+            });
+        }
+
+        // Generate MFA secret and QR code
+        const mfaData = await AuthService.generateMfaSecret(user);
+        const backupCodes = await AuthService.generateBackupCodes();
+
+        // Store secret (not enabled yet - user needs to verify first)
+        await UserMfa.upsert({
+            user_id: userId,
+            secret_key: mfaData.secret,
+            backup_codes: backupCodes.map(code => ({
+                code: crypto.createHash('sha256').update(code).digest('hex'),
+                used: false
+            })),
+            is_enabled: false
+        });
+
+        res.json({
+            success: true,
+            message: 'MFA setup initiated',
+            qrCode: mfaData.qrCode,
+            manualEntryKey: mfaData.manualEntryKey,
+            backupCodes: backupCodes
+        });
+
+    } catch (error) {
+        logger.error({ err: error }, 'MFA setup error');
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+};
+
+/**
+ * Verify MFA setup and enable it
+ */
+export const verifyMfa = async (req, res) => {
+    try {
+        const { totp_token } = req.body;
+        const userId = req.user.id;
+
+        const userMfa = await UserMfa.findOne({ where: { user_id: userId } });
+        if (!userMfa) {
+            return res.status(404).json({
+                success: false,
+                message: 'MFA setup not found. Please start MFA setup first.'
+            });
+        }
+
+        if (userMfa.is_enabled) {
+            return res.status(400).json({
+                success: false,
+                message: 'MFA is already enabled'
+            });
+        }
+
+        // Verify TOTP token
+        const isValid = AuthService.verifyTotpToken(userMfa.secret_key, totp_token);
+        if (!isValid) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid TOTP token'
+            });
+        }
+
+        // Enable MFA
+        await userMfa.update({
+            is_enabled: true,
+            enabled_at: new Date()
+        });
+
+        await User.update(
+            { mfa_enabled: true },
+            { where: { id: userId } }
+        );
+
+        await logActivity(
+            userId, 'MFA_ENABLED', 'User', userId,
+            null, null, req
+        );
+
+        res.json({
+            success: true,
+            message: 'MFA enabled successfully'
+        });
+
+    } catch (error) {
+        logger.error({ err: error }, 'MFA verification error');
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+};
+
+/**
+ * Disable MFA
+ */
+export const disableMfa = async (req, res) => {
+    try {
+        const { password, totp_token } = req.body;
+        const userId = req.user.id;
+
+        const user = await User.findByPk(userId, {
+            include: [{ model: UserMfa }]
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Verify password
+        if (!(await user.validPassword(password))) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid password'
+            });
+        }
+
+        if (!user.UserMfa || !user.UserMfa.is_enabled) {
+            return res.status(400).json({
+                success: false,
+                message: 'MFA is not enabled'
+            });
+        }
+
+        // Verify TOTP token
+        const isValid = AuthService.verifyTotpToken(user.UserMfa.secret_key, totp_token);
+        if (!isValid) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid TOTP token'
+            });
+        }
+
+        // Disable MFA
+        await user.UserMfa.destroy();
+        await user.update({ mfa_enabled: false });
+
+        await logActivity(
+            userId, 'MFA_DISABLED', 'User', userId,
+            null, null, req
+        );
+
+        res.json({
+            success: true,
+            message: 'MFA disabled successfully'
+        });
+
+    } catch (error) {
+        logger.error({ err: error }, 'MFA disable error');
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+};
+
+/**
+ * Get user's active sessions
+ */
+export const getSessions = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const sessions = await UserSession.findAll({
+            where: {
+                user_id: userId,
+                terminated_at: null
+            },
+            order: [['last_activity_at', 'DESC']],
+            attributes: [
+                'id', 'device_name', 'device_type', 'browser_name', 
+                'browser_version', 'os_name', 'os_version', 'ip_address',
+                'location', 'is_current', 'created_at', 'last_activity_at'
+            ]
+        });
+
+        res.json({
+            success: true,
+            sessions: sessions
+        });
+
+    } catch (error) {
+        logger.error({ err: error }, 'Get sessions error');
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+};
+
+/**
+ * Revoke a specific session
+ */
+export const revokeSession = async (req, res) => {
+    try {
+        const { sessionId } = req.params;
+        const userId = req.user.id;
+
+        const session = await UserSession.findOne({
+            where: {
+                id: sessionId,
+                user_id: userId,
+                terminated_at: null
+            }
+        });
+
+        if (!session) {
+            return res.status(404).json({
+                success: false,
+                message: 'Session not found'
+            });
+        }
+
+        // Terminate session
+        await session.update({ terminated_at: new Date() });
+
+        // Revoke associated refresh tokens
+        await RefreshToken.update(
+            { is_revoked: true, revoked_at: new Date() },
+            {
+                where: {
+                    user_id: userId,
+                    ip_address: session.ip_address,
+                    is_revoked: false
+                }
+            }
+        );
+
+        res.json({
+            success: true,
+            message: 'Session revoked successfully'
+        });
+
+    } catch (error) {
+        logger.error({ err: error }, 'Revoke session error');
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
+        });
+    }
+};
+
+/**
+ * Revoke all other sessions (keep current)
+ */
+export const revokeAllSessions = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const currentSessionToken = req.cookies.refreshToken;
+
+        // Find current refresh token to preserve it
+        let currentRefreshToken = null;
+        if (currentSessionToken) {
+            currentRefreshToken = await RefreshToken.findOne({
+                where: { token: currentSessionToken, user_id: userId }
+            });
+        }
+
+        // Revoke all refresh tokens except current
+        const whereClause = { user_id: userId, is_revoked: false };
+        if (currentRefreshToken) {
+            whereClause.id = { [Op.ne]: currentRefreshToken.id };
+        }
+
+        await RefreshToken.update(
+            { is_revoked: true, revoked_at: new Date() },
+            { where: whereClause }
+        );
+
+        // Terminate all sessions except current
+        const sessionWhereClause = { user_id: userId, terminated_at: null };
+        if (currentRefreshToken) {
+            sessionWhereClause.ip_address = { [Op.ne]: currentRefreshToken.ip_address };
+        }
+
+        await UserSession.update(
+            { terminated_at: new Date() },
+            { where: sessionWhereClause }
+        );
+
+        res.json({
+            success: true,
+            message: 'All other sessions revoked successfully'
+        });
+
+    } catch (error) {
+        logger.error({ err: error }, 'Revoke all sessions error');
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error'
         });
     }
 };

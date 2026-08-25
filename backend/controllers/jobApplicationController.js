@@ -181,7 +181,8 @@ export const getPipelineAnalytics = async (req, res) => {
                 'status',
                 [sequelize.fn('COUNT', sequelize.col('id')), 'count']
             ],
-            group: ['status']
+            group: ['status'],
+            raw: true
         });
 
         res.json(analytics);

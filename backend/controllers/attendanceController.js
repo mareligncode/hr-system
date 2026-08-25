@@ -2,9 +2,11 @@ import { Attendance, AttendanceCorrection, AttendanceBreak, User, Employee, Depa
 import { Op } from 'sequelize';
 import sequelize from '../config/database.js';
 import { logActivity } from '../services/auditService.js';
+import PDFReportService from '../services/pdfReportService.js';
 import ExcelJS from 'exceljs';
 import https from 'https';
 import http from 'http';
+
 
 import { calculateDistance } from '../utils/geoUtils.js';
 
@@ -354,7 +356,8 @@ export const getAttendanceSummary = async (req, res) => {
         startOfWeek.setHours(0, 0, 0, 0);
 
         const attendance = await Attendance.findAll({
-            where: { user_id: userId, clock_in: { [Op.gte]: startOfWeek } }
+            where: { user_id: userId, clock_in: { [Op.gte]: startOfWeek } },
+            include: [{ model: AttendanceBreak }]
         });
 
         const totalHours = attendance.reduce((sum, a) => sum + (parseFloat(a.work_hours) || 0), 0);
@@ -821,5 +824,200 @@ export const endBreak = async (req, res) => {
     } catch (error) {
         console.error('End Break Error:', error);
         res.status(500).json({ error: 'Failed to end break' });
+    }
+};
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PDF REPORT GENERATION ENDPOINTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Generate PDF Report - Individual Employee
+ * GET /api/attendance/reports/pdf/my
+ */
+export const generateMyPDFReport = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { start_date, end_date } = req.query;
+
+        // Default to current month if not specified
+        const startDate = start_date ? new Date(start_date) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+        const endDate = end_date ? new Date(end_date) : new Date();
+
+        // Generate PDF
+        const doc = await PDFReportService.generateEmployeeReport(userId, startDate, endDate);
+
+        // Set response headers
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=attendance_report_${format(startDate, 'yyyy-MM')}.pdf`);
+
+        // Pipe PDF to response
+        doc.pipe(res);
+        doc.end();
+
+    } catch (error) {
+        console.error('PDF Generation Error:', error);
+        res.status(500).json({ error: 'Failed to generate PDF report', details: error.message });
+    }
+};
+
+/**
+ * Generate PDF Report - Department (Manager/HR)
+ * GET /api/attendance/reports/pdf/department/:departmentId
+ */
+export const generateDepartmentPDFReport = async (req, res) => {
+    try {
+        const { departmentId } = req.params;
+        const { start_date, end_date } = req.query;
+
+        // Authorization check
+        if (req.user.role === 'manager') {
+            const manager = await Employee.findOne({ where: { user_id: req.user.id } });
+            if (!manager || manager.department_id !== parseInt(departmentId)) {
+                return res.status(403).json({ error: 'Access denied: You can only view reports for your own department' });
+            }
+        } else if (req.user.role !== 'admin' && req.user.role !== 'hr') {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        const startDate = start_date ? new Date(start_date) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+        const endDate = end_date ? new Date(end_date) : new Date();
+
+        // Generate PDF
+        const doc = await PDFReportService.generateDepartmentReport(parseInt(departmentId), startDate, endDate);
+
+        // Set response headers
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=department_report_${format(startDate, 'yyyy-MM')}.pdf`);
+
+        // Pipe PDF to response
+        doc.pipe(res);
+        doc.end();
+
+    } catch (error) {
+        console.error('Department PDF Generation Error:', error);
+        res.status(500).json({ error: 'Failed to generate department PDF report', details: error.message });
+    }
+};
+
+/**
+ * Generate PDF Report - Company-Wide (Admin/HR)
+ * GET /api/attendance/reports/pdf/company
+ */
+export const generateCompanyPDFReport = async (req, res) => {
+    try {
+        const { start_date, end_date, include_details } = req.query;
+
+        // Authorization check
+        if (req.user.role !== 'admin' && req.user.role !== 'hr') {
+            return res.status(403).json({ error: 'Access denied: Admin or HR role required' });
+        }
+
+        const startDate = start_date ? new Date(start_date) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+        const endDate = end_date ? new Date(end_date) : new Date();
+
+        const options = {
+            includeDetails: include_details === 'true'
+        };
+
+        // Generate PDF
+        const doc = await PDFReportService.generateCompanyReport(startDate, endDate, options);
+
+        // Set response headers
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=company_report_${format(startDate, 'yyyy-MM')}.pdf`);
+
+        // Pipe PDF to response
+        doc.pipe(res);
+        doc.end();
+
+    } catch (error) {
+        console.error('Company PDF Generation Error:', error);
+        res.status(500).json({ error: 'Failed to generate company PDF report', details: error.message });
+    }
+};
+
+/**
+ * Generate Custom PDF Report with Filters
+ * POST /api/attendance/reports/pdf/custom
+ */
+export const generateCustomPDFReport = async (req, res) => {
+    try {
+        const { 
+            start_date, 
+            end_date, 
+            department_ids, 
+            employee_ids, 
+            include_violations,
+            include_breaks,
+            report_type 
+        } = req.body;
+
+        // Authorization check
+        if (!['admin', 'hr', 'manager'].includes(req.user.role)) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        const startDate = start_date ? new Date(start_date) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+        const endDate = end_date ? new Date(end_date) : new Date();
+
+        // Fetch filtered data
+        const whereClause = {
+            clock_in: { [Op.between]: [startDate, endDate] }
+        };
+
+        if (employee_ids && employee_ids.length > 0) {
+            whereClause.user_id = { [Op.in]: employee_ids };
+        }
+
+        let includeClause = [
+            {
+                model: User,
+                include: [{
+                    model: Employee,
+                    include: [Department]
+                }]
+            }
+        ];
+
+        if (include_violations) {
+            includeClause.push({ model: AttendanceViolation });
+        }
+
+        if (include_breaks) {
+            includeClause.push({ model: AttendanceBreak });
+        }
+
+        const attendance = await Attendance.findAll({
+            where: whereClause,
+            include: includeClause,
+            order: [['clock_in', 'DESC']]
+        });
+
+        // Filter by department if specified
+        let filteredAttendance = attendance;
+        if (department_ids && department_ids.length > 0) {
+            filteredAttendance = attendance.filter(a => 
+                department_ids.includes(a.User?.Employee?.department_id)
+            );
+        }
+
+        // Choose appropriate report generator
+        const doc = await PDFReportService.generateEmployeeReport(
+            req.user.id,
+            startDate,
+            endDate
+        );
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=custom_report_${Date.now()}.pdf`);
+
+        doc.pipe(res);
+        doc.end();
+
+    } catch (error) {
+        console.error('Custom PDF Generation Error:', error);
+        res.status(500).json({ error: 'Failed to generate custom PDF report', details: error.message });
     }
 };
