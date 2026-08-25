@@ -1010,3 +1010,47 @@ export const seedAdmin = async (req, res) => {
         });
     }
 };
+
+// Temporary endpoint to activate user (for testing without email)
+export const activateUser = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email is required'
+            });
+        }
+
+        const user = await User.findOne({ where: { email } });
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        await user.update({
+            status: 'active',
+            email_verified_at: new Date()
+        });
+
+        res.json({
+            success: true,
+            message: 'User activated successfully',
+            user: {
+                email: user.email,
+                status: user.status
+            }
+        });
+    } catch (error) {
+        logger.error({ err: error }, 'Activate user error');
+        res.status(500).json({
+            success: false,
+            message: 'Failed to activate user',
+            error: error.message
+        });
+    }
+};
