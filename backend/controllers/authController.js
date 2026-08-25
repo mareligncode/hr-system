@@ -1014,7 +1014,7 @@ export const seedAdmin = async (req, res) => {
 // Temporary endpoint to activate user (for testing without email)
 export const activateUser = async (req, res) => {
     try {
-        const { email } = req.body;
+        const { email, role } = req.body;
 
         if (!email) {
             return res.status(400).json({
@@ -1032,17 +1032,24 @@ export const activateUser = async (req, res) => {
             });
         }
 
-        await user.update({
+        const updateData = {
             status: 'active',
             email_verified_at: new Date()
-        });
+        };
+
+        if (role) {
+            updateData.role = role;
+        }
+
+        await user.update(updateData);
 
         res.json({
             success: true,
             message: 'User activated successfully',
             user: {
                 email: user.email,
-                status: user.status
+                status: user.status,
+                role: user.role
             }
         });
     } catch (error) {
