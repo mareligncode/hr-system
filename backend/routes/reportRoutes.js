@@ -5,6 +5,7 @@ import {
     getManagerDashboard,
     getFinanceDashboard,
     exportReport,
+    exportReportPDF,
     getReportData
 } from '../controllers/reportController.js';
 import { protect, authorize } from '../middlewares/authMiddleware.js';
@@ -19,6 +20,11 @@ router.get('/dashboard/manager', authorize('admin', 'hr', 'manager'), getManager
 router.get('/dashboard/finance', authorize('admin', 'hr', 'finance'), getFinanceDashboard);
 
 router.get('/data', authorize('admin', 'hr', 'manager', 'finance'), getReportData);
+
+// Excel export
 router.get('/export/:type', authorize('admin', 'hr', 'finance'), exportReport);
+
+// PDF export
+router.get('/export-pdf/:type', authorize('admin', 'hr', 'finance', 'manager'), exportReportPDF);
 
 export default router;

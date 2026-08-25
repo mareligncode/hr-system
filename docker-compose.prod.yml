@@ -1,0 +1,83 @@
+name: hr-system-prod
+
+services:
+
+  # ── Backend ────────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      target: production
+    restart: always
+    # Do NOT expose port 5000 to the host — only nginx can reach it internally
+    expose:
+      - "5000"
+    volumes:
+      # Persist uploaded files across deployments
+      - uploads_data:/app/uploads
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DOCKER: "true"
+
+      # Database
+      DATABASE_URL:   ${DATABASE_URL}
+      DB_HOST:        ${DB_HOST}
+      DB_USER:        ${DB_USER}
+      DB_PASSWORD:    ${DB_PASSWORD}
+      DB_NAME:        ${DB_NAME}
+      DB_DIALECT:     ${DB_DIALECT:-postgres}
+      DB_PORT:        ${DB_PORT:-5432}
+
+      # Auth
+      JWT_SECRET:     ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+
+      # CORS — in production the frontend and API share the same origin via nginx
+      # so CORS is effectively not needed, but set it for direct API access
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      FRONTEND_URL:    ${FRONTEND_URL}
+      API_URL:         ${API_URL}
+
+      # Email
+      SMTP_HOST:  ${SMTP_HOST}
+      SMTP_PORT:  ${SMTP_PORT:-587}
+      SMTP_USER:  ${SMTP_USER}
+      SMTP_PASS:  ${SMTP_PASS}
+      EMAIL_FROM: ${EMAIL_FROM}
+
+      # Cloudinary
+      CLOUDINARY_CLOUD_NAME:   ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY:      ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET:   ${CLOUDINARY_API_SECRET}
+      CLOUDINARY_FOLDER:       ${CLOUDINARY_FOLDER:-hr-system}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ── Frontend + nginx reverse proxy ────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontned
+      target: production
+      args:
+        # /api is relative — nginx rewrites it to http://backend:5000
+        VITE_API_URL: /api
+    restart: always
+    ports:
+      # Only nginx is exposed to the host/internet
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+networks:
+  default:
+    name: hr-system-prod-network
+
+volumes:
+  uploads_data:
+    name: hr-system-uploads

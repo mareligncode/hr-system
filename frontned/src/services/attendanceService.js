@@ -85,6 +85,51 @@ const attendanceService = {
             responseType: 'blob'
         });
         return response.data;
+    },
+
+    // PDF Report Generation
+    downloadMyPDFReport: async (startDate, endDate) => {
+        const params = {};
+        if (startDate) params.start_date = startDate;
+        if (endDate) params.end_date = endDate;
+
+        const response = await api.get('/attendance/reports/pdf/my', {
+            params,
+            responseType: 'blob'
+        });
+        return response.data;
+    },
+
+    downloadDepartmentPDFReport: async (departmentId, startDate, endDate) => {
+        const params = {};
+        if (startDate) params.start_date = startDate;
+        if (endDate) params.end_date = endDate;
+
+        const response = await api.get(`/attendance/reports/pdf/department/${departmentId}`, {
+            params,
+            responseType: 'blob'
+        });
+        return response.data;
+    },
+
+    downloadCompanyPDFReport: async (startDate, endDate, includeDetails = false) => {
+        const params = {};
+        if (startDate) params.start_date = startDate;
+        if (endDate) params.end_date = endDate;
+        params.include_details = includeDetails;
+
+        const response = await api.get('/attendance/reports/pdf/company', {
+            params,
+            responseType: 'blob'
+        });
+        return response.data;
+    },
+
+    downloadCustomPDFReport: async (filters) => {
+        const response = await api.post('/attendance/reports/pdf/custom', filters, {
+            responseType: 'blob'
+        });
+        return response.data;
     }
 };
 

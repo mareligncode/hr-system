@@ -182,7 +182,12 @@ export const getShiftAssignments = async (req, res) => {
         }
 
         const where = {};
-        if (employee_id) where.employee_id = employee_id;
+        if (employee_id && !isNaN(parseInt(employee_id))) {
+            where.employee_id = parseInt(employee_id);
+        } else if (employee_id) {
+            // Handle cases like "add" or other non-numeric strings
+            return res.status(400).json({ error: 'Invalid employee_id format' });
+        }
         if (status) where.status = status;
 
         if (from && to) {
@@ -1380,7 +1385,7 @@ export const generateIntelligentSchedule = async (req, res) => {
 
         const pattern = template.pattern;
         const assignments = [];
-        
+
         let curr = new Date(start_date);
         const last = new Date(end_date);
 
@@ -1392,10 +1397,10 @@ export const generateIntelligentSchedule = async (req, res) => {
             for (const p of dailyPatterns) {
                 // Get recommendations for this specific slot
                 const recs = await optimizationService.getEmployeeRecommendations(dateStr, p.shift_type_id, template.department_id);
-                
+
                 // Pick the best available one who isn't already assigned in this run for the same day
                 const best = recs.find(r => !assignments.some(a => a.employee_id === r.employee_id && a.assignment_date === dateStr));
-                
+
                 if (best) {
                     assignments.push({
                         employee_id: best.employee_id,
@@ -1412,10 +1417,10 @@ export const generateIntelligentSchedule = async (req, res) => {
         const created = await ShiftAssignment.bulkCreate(assignments, { transaction });
         await transaction.commit();
 
-        res.status(201).json({ 
-            message: 'Intelligent schedule generated', 
+        res.status(201).json({
+            message: 'Intelligent schedule generated',
             count: created.length,
-            assignments: created 
+            assignments: created
         });
     } catch (error) {
         if (transaction) await transaction.rollback();

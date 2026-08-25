@@ -4,9 +4,9 @@ import sequelize from './config/database.js';
 
 async function inspectTable() {
     try {
-        const [results] = await sequelize.query('DESCRIBE positions');
+        const results = await sequelize.getQueryInterface().describeTable('positions');
         console.log('Positions Table Schema:');
-        results.forEach(row => console.log(JSON.stringify(row)));
+        console.table(results);
     } catch (error) {
         console.error('FAILED to inspect table:', error);
     } finally {

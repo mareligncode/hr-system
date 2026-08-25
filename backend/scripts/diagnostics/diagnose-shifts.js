@@ -31,7 +31,7 @@ async function diagnoseShifts() {
 
         // 3. Check for recent bulk creation (same minute)
         const [bulk] = await sequelize.query(`
-            SELECT DATE_FORMAT(created_at, '%Y-%m-%d %H:%i') as minute, COUNT(*) as count
+            SELECT TO_CHAR(created_at, 'YYYY-MM-DD HH24:MI') as minute, COUNT(*) as count
             FROM shift_assignments
             GROUP BY minute
             HAVING count > 5

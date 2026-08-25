@@ -1,0 +1,74 @@
+services:
+  - type: web
+    name: hr-system-backend
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run render-start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DOCKER
+        value: "false"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hr-system-db
+          property: connectionString
+      - key: DB_HOST
+        fromDatabase:
+          name: hr-system-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: hr-system-db
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: hr-system-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: hr-system-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: hr-system-db
+          property: database
+      - key: DB_DIALECT
+        value: postgres
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 15m
+      - key: ALLOWED_ORIGINS
+        value: https://hr-system-frontend.onrender.com
+      - key: FRONTEND_URL
+        value: https://hr-system-frontend.onrender.com
+      - key: API_URL
+        value: https://hr-system-backend.onrender.com
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_FOLDER
+        value: hr-system
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+
+databases:
+  - name: hr-system-db
+    databaseName: hr_database
+    user: hr_user

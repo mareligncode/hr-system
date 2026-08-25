@@ -53,6 +53,24 @@ const Department = sequelize.define('Department', {
     location: {
         type: DataTypes.STRING(100)
     },
+    latitude: {
+        type: DataTypes.DECIMAL(10, 8),
+        allowNull: true,
+        validate: {
+            min: -90,
+            max: 90,
+            isDecimal: true
+        }
+    },
+    longitude: {
+        type: DataTypes.DECIMAL(11, 8),
+        allowNull: true,
+        validate: {
+            min: -180,
+            max: 180,
+            isDecimal: true
+        }
+    },
     is_active: {
         type: DataTypes.BOOLEAN,
         defaultValue: true

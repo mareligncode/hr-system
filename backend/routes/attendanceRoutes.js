@@ -13,7 +13,11 @@ import {
     exportAttendance,
     getCorrectionRequests,
     startBreak,
-    endBreak
+    endBreak,
+    generateMyPDFReport,
+    generateDepartmentPDFReport,
+    generateCompanyPDFReport,
+    generateCustomPDFReport
 } from '../controllers/attendanceController.js';
 import { protect, authorize } from '../middlewares/authMiddleware.js';
 
@@ -37,6 +41,12 @@ router.post('/break/end', endBreak);
 // ─── Export — employees get own data, managers/hr get team/all ───────────────
 // BUG FIX: was missing 'employee' role — now employees can export own records
 router.get('/export', authorize('admin', 'hr', 'manager', 'finance', 'employee'), exportAttendance);
+
+// ─── PDF Reports — Beautiful, structured PDF exports ─────────────────────────
+router.get('/reports/pdf/my', generateMyPDFReport);
+router.get('/reports/pdf/department/:departmentId', authorize('admin', 'hr', 'manager'), generateDepartmentPDFReport);
+router.get('/reports/pdf/company', authorize('admin', 'hr'), generateCompanyPDFReport);
+router.post('/reports/pdf/custom', authorize('admin', 'hr', 'manager'), generateCustomPDFReport);
 
 // ─── Manager / HR / Admin routes ─────────────────────────────────────────────
 router.get('/today', authorize('admin', 'hr', 'manager'), getTodayAttendance);
