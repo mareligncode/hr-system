@@ -937,3 +937,76 @@ export const revokeAllSessions = async (req, res) => {
         });
     }
 };
+
+// Temporary endpoint to seed admin user (for Render deployment)
+export const seedAdmin = async (req, res) => {
+    try {
+        // Create admin role
+        const [adminRole] = await Role.findOrCreate({
+            where: { code: 'admin' },
+            defaults: {
+                name: 'Admin',
+                code: 'admin',
+                description: 'Full system access',
+                is_system: true
+            }
+        });
+
+        // Create admin user
+        const adminEmail = 'admin@hotel.com';
+        const adminPassword = 'Admin@1234';
+
+        const [adminUser, created] = await User.findOrCreate({
+            where: { email: adminEmail },
+            defaults: {
+                employee_id: 'SYSTEM001',
+                email: adminEmail,
+                password_hash: adminPassword,
+                first_name: 'System',
+                last_name: 'Administrator',
+                role: 'admin',
+                status: 'active',
+                email_verified_at: new Date()
+            }
+        });
+
+        if (created) {
+            logger.info('Super Admin created!');
+        } else {
+            await adminUser.update({ role: 'admin', status: 'active' });
+            logger.info('Admin user already exists, refreshed role and status');
+        }
+
+        // Seed standard roles
+        const standardRoles = [
+            { code: 'hr', name: 'HR Manager' },
+            { code: 'manager', name: 'Department Manager' },
+            { code: 'finance', name: 'Finance Officer' },
+            { code: 'employee', name: 'Employee' },
+            { code: 'gm', name: 'General Manager' },
+        ];
+
+        for (const r of standardRoles) {
+            await Role.findOrCreate({
+                where: { code: r.code },
+                defaults: { name: r.name, code: r.code, is_system: true }
+            });
+        }
+
+        res.json({
+            success: true,
+            message: created ? 'Admin user created successfully' : 'Admin user already exists',
+            admin: {
+                email: adminEmail,
+                password: adminPassword
+            }
+        });
+    } catch (error) {
+        logger.error({ err: error }, 'Seed admin error');
+        res.status(500).json({
+            success: false,
+            message: 'Failed to seed admin user',
+            error: error.message
+        });
+    }
+};

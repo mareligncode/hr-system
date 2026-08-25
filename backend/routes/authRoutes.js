@@ -14,7 +14,8 @@ import {
     disableMfa,
     getSessions,
     revokeSession,
-    revokeAllSessions
+    revokeAllSessions,
+    seedAdmin
 } from '../controllers/authController.js';
 import { protect, authorize } from '../middlewares/authMiddleware.js';
 
@@ -98,5 +99,8 @@ router.post('/sessions/revoke-all', protect, revokeAllSessions);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
 router.get('/verify-email/:token', verifyEmail);
+
+// Temporary endpoint to seed admin user (for Render deployment)
+router.post('/seed-admin', seedAdmin);
 
 export default router;
