@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import {
     Container,
     Paper,
@@ -42,10 +43,9 @@ import {
     Shield as ShieldIcon
 } from '@mui/icons-material';
 import { authService } from '../../services/authService';
-import { useAuth } from '../../context/AuthContext';
 
 const SecuritySettingsPage = () => {
-    const { user } = useAuth();
+    const user = useSelector((state) => state.auth.user);
     const [sessions, setSessions] = useState([]);
     const [mfaEnabled, setMfaEnabled] = useState(false);
     const [loading, setLoading] = useState(true);
