@@ -1,5 +1,5 @@
 import PDFDocument from 'pdfkit';
-import { Attendance, User, Employee, Department, AttendanceBreak, AttendanceViolation } from '../models/index.js';
+import { Attendance, User, Employee, Department, AttendanceBreak } from '../models/index.js';
 import { Op } from 'sequelize';
 import { format } from 'date-fns';
 import fs from 'fs';
@@ -476,18 +476,18 @@ class PDFReportService {
                 clock_in: { [Op.between]: [startDate, endDate] }
             },
             include: [
-                { model: AttendanceBreak },
-                { model: AttendanceViolation }
+                { model: AttendanceBreak }
+                // { model: AttendanceViolation } // Model doesn't exist
             ],
             order: [['clock_in', 'DESC']]
         });
 
-        const violations = await AttendanceViolation.findAll({
-            where: {
-                user_id: userId,
-                created_at: { [Op.between]: [startDate, endDate] }
-            }
-        });
+        // const violations = await AttendanceViolation.findAll({
+        //     where: {
+        //         user_id: userId,
+        //         created_at: { [Op.between]: [startDate, endDate] }
+        //     }
+        // });
 
         // Calculate statistics
         const stats = this.calculateStats(attendance);
@@ -538,7 +538,7 @@ class PDFReportService {
                         model: Attendance,
                         where: { clock_in: { [Op.between]: [startDate, endDate] } },
                         required: false,
-                        include: [AttendanceBreak, AttendanceViolation]
+                        include: [AttendanceBreak] // AttendanceViolation model doesn't exist
                     }]
                 }]
             }]
@@ -615,7 +615,7 @@ class PDFReportService {
                         model: Attendance,
                         where: { clock_in: { [Op.between]: [startDate, endDate] } },
                         required: false,
-                        include: [AttendanceBreak, AttendanceViolation]
+                        include: [AttendanceBreak] // AttendanceViolation model doesn't exist
                     }]
                 }]
             }]
@@ -625,10 +625,10 @@ class PDFReportService {
             dept.Employees.flatMap(emp => emp.User?.Attendances || [])
         );
 
-        const allViolations = await AttendanceViolation.findAll({
-            where: { created_at: { [Op.between]: [startDate, endDate] } },
-            include: [User]
-        });
+        // const allViolations = await AttendanceViolation.findAll({
+        //     where: { created_at: { [Op.between]: [startDate, endDate] } },
+        //     include: [User]
+        // });
 
         // Calculate company-wide statistics
         const stats = this.calculateStats(allAttendance);
@@ -710,9 +710,10 @@ class PDFReportService {
             return hours > 9 || (hours === 9 && minutes > 5);
         }).length;
 
-        const violations = attendance.reduce((sum, a) => 
-            sum + (a.AttendanceViolations?.length || 0), 0
-        );
+        // const violations = attendance.reduce((sum, a) => 
+        //     sum + (a.AttendanceViolations?.length || 0), 0
+        // );
+        const violations = 0; // AttendanceViolation model doesn't exist
 
         const approved = attendance.filter(a => a.status === 'approved').length;
         const pending = attendance.filter(a => a.status === 'pending').length;

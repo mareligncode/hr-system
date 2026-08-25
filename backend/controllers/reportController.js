@@ -15,7 +15,7 @@ import {
 import { Op } from 'sequelize';
 import sequelize from '../config/database.js';
 import ExcelJS from 'exceljs';
-import ReportPDFService from '../services/reportPDFService.js';
+import ReportPDFService from '../services/pdfReportService.js';
 
 // Helper for monthly breakdown
 const getMonthsLastYear = () => {

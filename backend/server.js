@@ -69,7 +69,9 @@ app.use(
         },
     }),
 );
-
+app.get('/', (req, res) => {
+    res.send('Hello World!');
+});
 // ─── Security headers ─────────────────────────────────────────────────────────
 app.use(
     helmet({
